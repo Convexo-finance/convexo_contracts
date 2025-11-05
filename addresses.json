@@ -1,0 +1,48 @@
+{
+  "1301": {
+    "name": "Unichain Sepolia",
+    "convexo_lps": {
+      "address": "0x4ACB3B523889f437D9FfEe9F2A50BBBa9580198d",
+      "deployed_at": "2025-11-05T17:10:00Z",
+      "tx_hash": "0x9f73f6f1a663d44cfcb38ac0b715f6278dc5a20e53d5d5d23d4e1698f6e006aa",
+      "block_number": 35528644
+    },
+    "convexo_vaults": {
+      "address": "0xc056c0Ddf959b8b63fb6Bc73b5E79e85a6bFB9b5",
+      "deployed_at": "2025-11-05T17:10:00Z",
+      "tx_hash": "0x8f5ad205f394be68e384b4975e53bf27fd72d20e50884dcdae4338cd83959167",
+      "block_number": 35528675
+    }
+  },
+  "84532": {
+    "name": "Base Sepolia",
+    "convexo_lps": {
+      "address": "0x4ACB3B523889f437D9FfEe9F2A50BBBa9580198d",
+      "deployed_at": "2025-11-05T17:15:00Z",
+      "tx_hash": "0x606f0bd062b5b276a2dea246dd2d1b6012587aa5217ecc43835c09abb1b9872b",
+      "block_number": 33306585
+    },
+    "convexo_vaults": {
+      "address": "0xc056c0Ddf959b8b63fb6Bc73b5E79e85a6bFB9b5",
+      "deployed_at": "2025-11-05T17:15:00Z",
+      "tx_hash": "0x6157c05db7529ed555b91e915de79ddb22c4f2c6afae57762fee34c5654472b7",
+      "block_number": 33306611
+    }
+  },
+  "11155111": {
+    "name": "Ethereum Sepolia",
+    "convexo_lps": {
+      "address": "0x4ACB3B523889f437D9FfEe9F2A50BBBa9580198d",
+      "deployed_at": "2025-11-05T17:20:00Z",
+      "tx_hash": "0x8653c02601919de38a06476c4822591f5b9fdbf9eea73ebbc7e5d63827f841c6",
+      "block_number": 9575737
+    },
+    "convexo_vaults": {
+      "address": "0xc056c0Ddf959b8b63fb6Bc73b5E79e85a6bFB9b5",
+      "deployed_at": "2025-11-05T17:20:00Z",
+      "tx_hash": "0x95c7c8bca18603e56d0601c1b71da6cadc210668e3218808ba467904ef5c998a",
+      "block_number": 9568828
+    }
+  }
+}
+
