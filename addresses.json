@@ -27,6 +27,34 @@
       "deployed_at": "2025-11-05T17:15:00Z",
       "tx_hash": "0x6157c05db7529ed555b91e915de79ddb22c4f2c6afae57762fee34c5654472b7",
       "block_number": 33306611
+    },
+    "pool_registry": {
+      "address": "0xC0561AB6dB7762Cf81a6b1E54394551e9124Df50",
+      "deployed_at": "2025-11-09T12:00:00Z"
+    },
+    "price_feed_manager": {
+      "address": "0x98E1F6d3Fd8b1EA91a24A43FD84f2F6B9f4EaEb2",
+      "deployed_at": "2025-11-09T12:00:00Z"
+    },
+    "contract_signer": {
+      "address": "0x87af0C8203C84192dBf07f4B6D934fD00eB3F723",
+      "deployed_at": "2025-11-09T12:00:00Z"
+    },
+    "reputation_manager": {
+      "address": "0x99612857Bb85b1de04d06385E44Fa53DC2aF79E1",
+      "deployed_at": "2025-11-09T12:00:00Z"
+    },
+    "vault_factory": {
+      "address": "0xDe8daB3182426234ACf68E4197A1eDF5172450dD",
+      "deployed_at": "2025-11-09T12:00:00Z"
+    },
+    "invoice_factoring": {
+      "address": "0xbc4023284D789D7EB8512c1EDe245C77591a5D96",
+      "deployed_at": "2025-11-09T12:00:00Z"
+    },
+    "tokenized_bond_credits": {
+      "address": "0xC058588A8D82B2E2129119B209c80af8bF3d4961",
+      "deployed_at": "2025-11-09T12:00:00Z"
     }
   },
   "11155111": {
