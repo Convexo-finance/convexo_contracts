@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import {IHooks, BeforeSwapDelta, PoolKey, BalanceDelta, ModifyLiquidityParams, SwapParams} from "../interfaces/IHooks.sol";
+import {
+    IHooks, BeforeSwapDelta, PoolKey, BalanceDelta, ModifyLiquidityParams, SwapParams
+} from "../interfaces/IHooks.sol";
 import {IPoolManager} from "../interfaces/IPoolManager.sol";
 
 /// @notice Base contract for Uniswap V4 hooks
@@ -60,12 +62,11 @@ abstract contract BaseHook is IHooks {
         revert HookNotImplemented();
     }
 
-    function beforeRemoveLiquidity(
-        address,
-        PoolKey calldata,
-        ModifyLiquidityParams calldata,
-        bytes calldata
-    ) external virtual returns (bytes4) {
+    function beforeRemoveLiquidity(address, PoolKey calldata, ModifyLiquidityParams calldata, bytes calldata)
+        external
+        virtual
+        returns (bytes4)
+    {
         revert HookNotImplemented();
     }
 
@@ -112,4 +113,3 @@ abstract contract BaseHook is IHooks {
         revert HookNotImplemented();
     }
 }
-

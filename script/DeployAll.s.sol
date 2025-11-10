@@ -39,7 +39,7 @@ contract DeployAll is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address minter = vm.envAddress("MINTER_ADDRESS");
-        
+
         // Get environment variables (optional, with defaults for local testing)
         address poolManager = vm.envOr("POOL_MANAGER_ADDRESS", address(0));
         address usdc = vm.envOr("USDC_ADDRESS", address(0));
@@ -51,10 +51,10 @@ contract DeployAll is Script {
         // Phase 1: Deploy NFTs
         // ============================================================
         console.log("Phase 1: Deploying NFTs...");
-        
+
         convexoLPs = new Convexo_LPs(ADMIN, minter);
         console.log("Convexo_LPs deployed at:", address(convexoLPs));
-        
+
         convexoVaults = new Convexo_Vaults(ADMIN, minter);
         console.log("Convexo_Vaults deployed at:", address(convexoVaults));
 
@@ -62,21 +62,18 @@ contract DeployAll is Script {
         // Phase 2: Deploy Hook System
         // ============================================================
         console.log("\nPhase 2: Deploying Hook System...");
-        
+
         hookDeployer = new HookDeployer();
         console.log("HookDeployer deployed at:", address(hookDeployer));
-        
+
         // Only deploy hook if PoolManager is provided
         if (poolManager != address(0)) {
-            compliantLPHook = new CompliantLPHook(
-                IPoolManager(poolManager),
-                IConvexoLPs(address(convexoLPs))
-            );
+            compliantLPHook = new CompliantLPHook(IPoolManager(poolManager), IConvexoLPs(address(convexoLPs)));
             console.log("CompliantLPHook deployed at:", address(compliantLPHook));
         } else {
             console.log("Skipping CompliantLPHook deployment (no POOL_MANAGER_ADDRESS set)");
         }
-        
+
         poolRegistry = new PoolRegistry(ADMIN);
         console.log("PoolRegistry deployed at:", address(poolRegistry));
 
@@ -84,13 +81,11 @@ contract DeployAll is Script {
         // Phase 3: Deploy Core Infrastructure
         // ============================================================
         console.log("\nPhase 3: Deploying Core Infrastructure...");
-        
-        reputationManager = new ReputationManager(
-            IConvexoLPs(address(convexoLPs)),
-            IConvexoVaults(address(convexoVaults))
-        );
+
+        reputationManager =
+            new ReputationManager(IConvexoLPs(address(convexoLPs)), IConvexoVaults(address(convexoVaults)));
         console.log("ReputationManager deployed at:", address(reputationManager));
-        
+
         priceFeedManager = new PriceFeedManager(ADMIN);
         console.log("PriceFeedManager deployed at:", address(priceFeedManager));
 
@@ -98,34 +93,22 @@ contract DeployAll is Script {
         // Phase 4: Deploy Products & Vaults
         // ============================================================
         console.log("\nPhase 4: Deploying Products & Vaults...");
-        
+
         contractSigner = new ContractSigner(ADMIN);
         console.log("ContractSigner deployed at:", address(contractSigner));
-        
+
         // Only deploy VaultFactory if USDC is provided
         if (usdc != address(0)) {
-            vaultFactory = new VaultFactory(
-                ADMIN,
-                usdc,
-                protocolFeeCollector,
-                contractSigner
-            );
+            vaultFactory = new VaultFactory(ADMIN, usdc, protocolFeeCollector, contractSigner);
             console.log("VaultFactory deployed at:", address(vaultFactory));
         } else {
             console.log("Skipping VaultFactory deployment (no USDC_ADDRESS set)");
         }
-        
-        invoiceFactoring = new InvoiceFactoring(
-            ADMIN,
-            reputationManager
-        );
+
+        invoiceFactoring = new InvoiceFactoring(ADMIN, reputationManager);
         console.log("InvoiceFactoring deployed at:", address(invoiceFactoring));
-        
-        tokenizedBondCredits = new TokenizedBondCredits(
-            ADMIN,
-            reputationManager,
-            priceFeedManager
-        );
+
+        tokenizedBondCredits = new TokenizedBondCredits(ADMIN, reputationManager, priceFeedManager);
         console.log("TokenizedBondCredits deployed at:", address(tokenizedBondCredits));
 
         vm.stopBroadcast();
@@ -158,4 +141,3 @@ contract DeployAll is Script {
         console.log("========================================\n");
     }
 }
-

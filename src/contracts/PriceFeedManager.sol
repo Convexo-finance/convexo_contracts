@@ -25,6 +25,7 @@ contract PriceFeedManager is AccessControl {
         USDC_CHF, // Swiss Franc
         USDC_ARS, // Argentine Peso
         USDC_MXN // Mexican Peso
+
     }
 
     /// @notice Mapping from currency pair to price feed
@@ -169,4 +170,3 @@ contract PriceFeedManager is AccessControl {
         return (answer, feed.decimals, timestamp);
     }
 }
-

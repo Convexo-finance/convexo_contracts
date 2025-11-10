@@ -35,26 +35,10 @@ contract HookDeployer {
         view
         returns (address)
     {
-        bytes32 bytecodeHash = keccak256(
-            abi.encodePacked(
-                type(CompliantLPHook).creationCode, abi.encode(poolManager, convexoLPs)
-            )
-        );
+        bytes32 bytecodeHash =
+            keccak256(abi.encodePacked(type(CompliantLPHook).creationCode, abi.encode(poolManager, convexoLPs)));
 
-        return address(
-            uint160(
-                uint256(
-                    keccak256(
-                        abi.encodePacked(
-                            bytes1(0xff),
-                            address(this),
-                            salt,
-                            bytecodeHash
-                        )
-                    )
-                )
-            )
-        );
+        return address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, bytecodeHash)))));
     }
 
     /// @notice Find a salt that produces a hook address with the correct permissions
@@ -75,51 +59,36 @@ contract HookDeployer {
     /// @param maxIterations The maximum number of iterations to try
     /// @return salt The salt that produces the correct address
     /// @return hookAddress The resulting hook address
-    function findSalt(
-        IPoolManager poolManager,
-        IConvexoLPs convexoLPs,
-        bytes32 startingSalt,
-        uint256 maxIterations
-    ) external view returns (bytes32 salt, address hookAddress) {
+    function findSalt(IPoolManager poolManager, IConvexoLPs convexoLPs, bytes32 startingSalt, uint256 maxIterations)
+        external
+        view
+        returns (bytes32 salt, address hookAddress)
+    {
         // Required permissions: beforeAddLiquidity, beforeRemoveLiquidity, beforeSwap
         // This corresponds to bits 157, 155, and 153 being set
         // Binary: 10101000... (in the high bits)
         // This means the address should have specific bit patterns
 
-        bytes32 bytecodeHash = keccak256(
-            abi.encodePacked(
-                type(CompliantLPHook).creationCode, abi.encode(poolManager, convexoLPs)
-            )
-        );
+        bytes32 bytecodeHash =
+            keccak256(abi.encodePacked(type(CompliantLPHook).creationCode, abi.encode(poolManager, convexoLPs)));
 
         uint256 currentSalt = uint256(startingSalt);
 
         for (uint256 i = 0; i < maxIterations; i++) {
             bytes32 saltToTry = bytes32(currentSalt + i);
-            
+
             address predicted = address(
-                uint160(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                bytes1(0xff),
-                                address(this),
-                                saltToTry,
-                                bytecodeHash
-                            )
-                        )
-                    )
-                )
+                uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), saltToTry, bytecodeHash))))
             );
 
             // Check if the address has the correct permission bits
             // For our hook: beforeAddLiquidity (157), beforeRemoveLiquidity (155), beforeSwap (153)
             uint160 addr = uint160(predicted);
-            
+
             bool hasBeforeAddLiquidity = (addr & (1 << 157)) != 0;
             bool hasBeforeRemoveLiquidity = (addr & (1 << 155)) != 0;
             bool hasBeforeSwap = (addr & (1 << 153)) != 0;
-            
+
             // Check that unwanted permissions are NOT set
             bool noBeforeInitialize = (addr & (1 << 159)) == 0;
             bool noAfterInitialize = (addr & (1 << 158)) == 0;
@@ -131,8 +100,8 @@ contract HookDeployer {
 
             if (
                 hasBeforeAddLiquidity && hasBeforeRemoveLiquidity && hasBeforeSwap && noBeforeInitialize
-                    && noAfterInitialize && noAfterAddLiquidity && noAfterRemoveLiquidity && noAfterSwap
-                    && noBeforeDonate && noAfterDonate
+                    && noAfterInitialize && noAfterAddLiquidity && noAfterRemoveLiquidity && noAfterSwap && noBeforeDonate
+                    && noAfterDonate
             ) {
                 return (saltToTry, predicted);
             }
@@ -141,4 +110,3 @@ contract HookDeployer {
         revert("No valid salt found within iteration limit");
     }
 }
-

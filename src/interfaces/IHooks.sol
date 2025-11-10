@@ -31,9 +31,7 @@ struct SwapParams {
 /// @notice Interface for Uniswap V4 Hooks
 interface IHooks {
     /// @notice Hook called before initializing a pool
-    function beforeInitialize(address sender, PoolKey calldata key, uint160 sqrtPriceX96)
-        external
-        returns (bytes4);
+    function beforeInitialize(address sender, PoolKey calldata key, uint160 sqrtPriceX96) external returns (bytes4);
 
     /// @notice Hook called after initializing a pool
     function afterInitialize(address sender, PoolKey calldata key, uint160 sqrtPriceX96, int24 tick)
@@ -77,12 +75,9 @@ interface IHooks {
     ) external returns (bytes4, BalanceDelta);
 
     /// @notice Hook called before a swap is executed
-    function beforeSwap(
-        address sender,
-        PoolKey calldata key,
-        SwapParams calldata params,
-        bytes calldata hookData
-    ) external returns (bytes4, BeforeSwapDelta, uint24);
+    function beforeSwap(address sender, PoolKey calldata key, SwapParams calldata params, bytes calldata hookData)
+        external
+        returns (bytes4, BeforeSwapDelta, uint24);
 
     /// @notice Hook called after a swap is executed
     function afterSwap(
@@ -114,4 +109,3 @@ interface IHooks {
 
 /// @notice Delta for beforeSwap hook
 type BeforeSwapDelta is int256;
-

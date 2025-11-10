@@ -2,7 +2,9 @@
 pragma solidity ^0.8.27;
 
 import {BaseHook} from "./BaseHook.sol";
-import {IHooks, BeforeSwapDelta, PoolKey, BalanceDelta, ModifyLiquidityParams, SwapParams} from "../interfaces/IHooks.sol";
+import {
+    IHooks, BeforeSwapDelta, PoolKey, BalanceDelta, ModifyLiquidityParams, SwapParams
+} from "../interfaces/IHooks.sol";
 import {IPoolManager} from "../interfaces/IPoolManager.sol";
 import {IConvexoLPs} from "../interfaces/IConvexoLPs.sol";
 
@@ -54,7 +56,7 @@ contract CompliantLPHook is BaseHook {
     /// @dev Reverts if user doesn't hold NFT or if NFT is not active
     function _checkCompliance(address user) internal view {
         uint256 balance = convexoLPs.balanceOf(user);
-        
+
         if (balance == 0) {
             revert MustHoldConvexoLPsNFT();
         }
@@ -81,17 +83,16 @@ contract CompliantLPHook is BaseHook {
     /// @param params The swap parameters
     /// @param hookData Additional hook data
     /// @return The function selector, BeforeSwapDelta, and fee
-    function beforeSwap(
-        address sender,
-        PoolKey calldata key,
-        SwapParams calldata params,
-        bytes calldata hookData
-    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
+    function beforeSwap(address sender, PoolKey calldata key, SwapParams calldata params, bytes calldata hookData)
+        external
+        override
+        returns (bytes4, BeforeSwapDelta, uint24)
+    {
         // Check compliance
         _checkCompliance(sender);
-        
+
         emit AccessGranted(sender, convexoLPs.balanceOf(sender));
-        
+
         return (IHooks.beforeSwap.selector, BeforeSwapDelta.wrap(0), 0);
     }
 
@@ -109,9 +110,9 @@ contract CompliantLPHook is BaseHook {
     ) external override returns (bytes4) {
         // Check compliance
         _checkCompliance(sender);
-        
+
         emit AccessGranted(sender, convexoLPs.balanceOf(sender));
-        
+
         return IHooks.beforeAddLiquidity.selector;
     }
 
@@ -129,10 +130,9 @@ contract CompliantLPHook is BaseHook {
     ) external override returns (bytes4) {
         // Check compliance
         _checkCompliance(sender);
-        
+
         emit AccessGranted(sender, convexoLPs.balanceOf(sender));
-        
+
         return IHooks.beforeRemoveLiquidity.selector;
     }
 }
-

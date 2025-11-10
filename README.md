@@ -1,6 +1,6 @@
 # Convexo Protocol
 
-**Enabling international funding for SMEs in Latin America using stablecoins, liquidity pools, and NFT-permissioned vaults.**
+**Reducing the Gap funding for SMEs in Latin America using stablecoins, NFT-permissioned  liquidity pools and vaults.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/Tests-49%2F49%20Passing-brightgreen)](./test)

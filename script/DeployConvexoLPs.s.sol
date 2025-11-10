@@ -20,4 +20,3 @@ contract DeployConvexoLPs is Script {
         return nft;
     }
 }
-

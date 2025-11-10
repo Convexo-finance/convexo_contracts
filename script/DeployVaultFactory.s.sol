@@ -13,19 +13,14 @@ contract DeployVaultFactory is Script {
         address contractSigner = vm.envAddress("CONTRACT_SIGNER_ADDRESS");
         address usdc = vm.envAddress("USDC_ADDRESS");
         address protocolFeeCollector = vm.envAddress("PROTOCOL_FEE_COLLECTOR");
-        
+
         vm.startBroadcast(deployerPrivateKey);
-        
-        VaultFactory vaultFactory = new VaultFactory(
-            ADMIN,
-            usdc,
-            protocolFeeCollector,
-            ContractSigner(contractSigner)
-        );
+
+        VaultFactory vaultFactory = new VaultFactory(ADMIN, usdc, protocolFeeCollector, ContractSigner(contractSigner));
         console.log("VaultFactory deployed at:", address(vaultFactory));
-        
+
         vm.stopBroadcast();
-        
+
         return vaultFactory;
     }
 }

@@ -133,8 +133,7 @@ contract TokenizedBondCredits is AccessControl {
 
         // Check reputation (must have Creditscore tier for bond credits)
         require(
-            reputationManager.getReputationTierNumeric(borrower) >= 2,
-            "Borrower must have Creditscore reputation tier"
+            reputationManager.getReputationTierNumeric(borrower) >= 2, "Borrower must have Creditscore reputation tier"
         );
 
         creditId = _nextCreditId++;
@@ -288,4 +287,3 @@ contract TokenizedBondCredits is AccessControl {
         return _nextCreditId;
     }
 }
-

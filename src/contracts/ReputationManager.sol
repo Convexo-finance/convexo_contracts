@@ -16,6 +16,7 @@ contract ReputationManager {
         None, // 0 NFTs
         Compliant, // 1 NFT (Convexo_LPs)
         Creditscore // 2 NFTs (Convexo_LPs + Convexo_Vaults)
+
     }
 
     /// @notice The Convexo_LPs NFT contract (Compliant)
@@ -125,4 +126,3 @@ contract ReputationManager {
         require(getReputationTier(user) == ReputationTier.Creditscore, "Must have Creditscore tier");
     }
 }
-

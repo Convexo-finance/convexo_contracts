@@ -9,7 +9,6 @@ import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 /// @notice Manages on-chain contract signing with document hashes stored on-chain
 /// @dev Stores document hashes and signatures, with full documents stored off-chain (IPFS/Supabase)
 contract ContractSigner is AccessControl {
-
     bytes32 public constant VERIFIER_ROLE = keccak256("VERIFIER_ROLE");
 
     /// @notice Agreement types supported by the system
@@ -244,4 +243,3 @@ contract ContractSigner is AccessControl {
         return documentHashes[index];
     }
 }
-

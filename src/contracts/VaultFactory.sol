@@ -161,4 +161,3 @@ contract VaultFactory is AccessControl {
         return contractHashToVaultId[contractHash] != 0;
     }
 }
-

@@ -11,17 +11,14 @@ contract DeployInvoiceFactoring is Script {
     function run() public returns (InvoiceFactoring) {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address reputationManager = vm.envAddress("REPUTATION_MANAGER_ADDRESS");
-        
+
         vm.startBroadcast(deployerPrivateKey);
-        
-        InvoiceFactoring invoiceFactoring = new InvoiceFactoring(
-            ADMIN,
-            ReputationManager(reputationManager)
-        );
+
+        InvoiceFactoring invoiceFactoring = new InvoiceFactoring(ADMIN, ReputationManager(reputationManager));
         console.log("InvoiceFactoring deployed at:", address(invoiceFactoring));
-        
+
         vm.stopBroadcast();
-        
+
         return invoiceFactoring;
     }
 }

@@ -13,18 +13,15 @@ contract DeployTokenizedBondCredits is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address reputationManager = vm.envAddress("REPUTATION_MANAGER_ADDRESS");
         address priceFeedManager = vm.envAddress("PRICE_FEED_MANAGER_ADDRESS");
-        
+
         vm.startBroadcast(deployerPrivateKey);
-        
-        TokenizedBondCredits tokenizedBondCredits = new TokenizedBondCredits(
-            ADMIN,
-            ReputationManager(reputationManager),
-            PriceFeedManager(priceFeedManager)
-        );
+
+        TokenizedBondCredits tokenizedBondCredits =
+            new TokenizedBondCredits(ADMIN, ReputationManager(reputationManager), PriceFeedManager(priceFeedManager));
         console.log("TokenizedBondCredits deployed at:", address(tokenizedBondCredits));
-        
+
         vm.stopBroadcast();
-        
+
         return tokenizedBondCredits;
     }
 }

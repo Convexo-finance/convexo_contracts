@@ -100,7 +100,10 @@ contract TokenizedBondVault is ERC20, AccessControl {
     /// @notice Purchase vault shares by depositing USDC
     /// @param amount The amount of USDC to deposit
     function purchaseShares(uint256 amount) external {
-        require(vaultInfo.state == VaultState.Pending || vaultInfo.state == VaultState.Active, "Vault not accepting deposits");
+        require(
+            vaultInfo.state == VaultState.Pending || vaultInfo.state == VaultState.Active,
+            "Vault not accepting deposits"
+        );
         require(amount > 0, "Amount must be greater than 0");
         require(vaultInfo.totalRaised + amount <= vaultInfo.principalAmount, "Exceeds principal amount");
 
@@ -218,7 +221,7 @@ contract TokenizedBondVault is ERC20, AccessControl {
 
         // Total interest = principal * 12% (or interestRate)
         uint256 totalInterest = (vaultInfo.principalAmount * vaultInfo.interestRate) / 10000;
-        
+
         // Accrued = what's been repaid minus principal
         if (vaultInfo.totalRepaid > vaultInfo.principalAmount) {
             accruedInterest = vaultInfo.totalRepaid - vaultInfo.principalAmount;
@@ -242,15 +245,10 @@ contract TokenizedBondVault is ERC20, AccessControl {
     /// @return currentValue The current value of their shares
     /// @return profit The profit earned (currentValue - invested)
     /// @return apy The effective APY based on time elapsed
-    function getInvestorReturn(address investor) 
-        external 
-        view 
-        returns (
-            uint256 invested,
-            uint256 currentValue,
-            uint256 profit,
-            uint256 apy
-        ) 
+    function getInvestorReturn(address investor)
+        external
+        view
+        returns (uint256 invested, uint256 currentValue, uint256 profit, uint256 apy)
     {
         uint256 shares = balanceOf(investor);
         if (shares == 0) {
@@ -292,9 +290,9 @@ contract TokenizedBondVault is ERC20, AccessControl {
     /// @return targetAmount Target amount to reach
     /// @return fundingProgress Funding progress in basis points (10000 = 100%)
     /// @return currentAPY Current APY for investors
-    function getVaultMetrics() 
-        external 
-        view 
+    function getVaultMetrics()
+        external
+        view
         returns (
             uint256 totalShares,
             uint256 sharePrice,
@@ -302,13 +300,13 @@ contract TokenizedBondVault is ERC20, AccessControl {
             uint256 targetAmount,
             uint256 fundingProgress,
             uint256 currentAPY
-        ) 
+        )
     {
         totalShares = totalSupply();
         sharePrice = this.getShareValue();
         totalValueLocked = usdc.balanceOf(address(this));
         targetAmount = vaultInfo.principalAmount;
-        
+
         // Funding progress (0-10000, where 10000 = 100%)
         if (targetAmount > 0) {
             fundingProgress = (vaultInfo.totalRaised * 10000) / targetAmount;
@@ -327,22 +325,17 @@ contract TokenizedBondVault is ERC20, AccessControl {
     /// @return totalPaid Amount paid so far
     /// @return remaining Amount still to pay
     /// @return protocolFee Protocol fee amount
-    function getRepaymentStatus() 
-        external 
-        view 
-        returns (
-            uint256 totalDue,
-            uint256 totalPaid,
-            uint256 remaining,
-            uint256 protocolFee
-        ) 
+    function getRepaymentStatus()
+        external
+        view
+        returns (uint256 totalDue, uint256 totalPaid, uint256 remaining, uint256 protocolFee)
     {
         // Total due = principal + 12% interest
         totalDue = vaultInfo.principalAmount + (vaultInfo.principalAmount * vaultInfo.interestRate / 10000);
-        
+
         // Total paid
         totalPaid = vaultInfo.totalRepaid;
-        
+
         // Remaining
         if (totalDue > totalPaid) {
             remaining = totalDue - totalPaid;
@@ -356,4 +349,3 @@ contract TokenizedBondVault is ERC20, AccessControl {
         return (totalDue, totalPaid, remaining, protocolFee);
     }
 }
-

@@ -13,17 +13,14 @@ contract DeployReputationManager is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address convexoLPs = vm.envAddress("CONVEXO_LPS_ADDRESS");
         address convexoVaults = vm.envAddress("CONVEXO_VAULTS_ADDRESS");
-        
+
         vm.startBroadcast(deployerPrivateKey);
-        
-        ReputationManager reputationManager = new ReputationManager(
-            IConvexoLPs(convexoLPs),
-            IConvexoVaults(convexoVaults)
-        );
-        
+
+        ReputationManager reputationManager =
+            new ReputationManager(IConvexoLPs(convexoLPs), IConvexoVaults(convexoVaults));
+
         vm.stopBroadcast();
-        
+
         return reputationManager;
     }
 }
-

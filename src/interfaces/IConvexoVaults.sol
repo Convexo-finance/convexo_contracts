@@ -18,4 +18,3 @@ interface IConvexoVaults {
     /// @return True if the token is active, false otherwise
     function getTokenState(uint256 tokenId) external view returns (bool);
 }
-

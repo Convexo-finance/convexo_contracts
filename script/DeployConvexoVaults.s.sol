@@ -20,4 +20,3 @@ contract DeployConvexoVaults is Script {
         return nft;
     }
 }
-

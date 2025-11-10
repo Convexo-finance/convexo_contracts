@@ -9,14 +9,14 @@ contract DeployPoolRegistry is Script {
 
     function run() public returns (PoolRegistry) {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        
+
         vm.startBroadcast(deployerPrivateKey);
-        
+
         PoolRegistry poolRegistry = new PoolRegistry(ADMIN);
         console.log("PoolRegistry deployed at:", address(poolRegistry));
-        
+
         vm.stopBroadcast();
-        
+
         return poolRegistry;
     }
 }

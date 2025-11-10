@@ -9,14 +9,13 @@ contract DeployPriceFeedManager is Script {
 
     function run() public returns (PriceFeedManager) {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        
+
         vm.startBroadcast(deployerPrivateKey);
-        
+
         PriceFeedManager priceFeedManager = new PriceFeedManager(ADMIN);
-        
+
         vm.stopBroadcast();
-        
+
         return priceFeedManager;
     }
 }
-

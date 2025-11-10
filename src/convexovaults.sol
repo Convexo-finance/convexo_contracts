@@ -22,18 +22,16 @@ contract Convexo_Vaults is ERC721, ERC721Burnable, ERC721URIStorage, AccessContr
 
     error SoulboundToken();
 
-    constructor(address defaultAdmin, address minter)
-        ERC721("Convexo_vaults", "CNXVaults")
-    {
+    constructor(address defaultAdmin, address minter) ERC721("Convexo_vaults", "CNXVaults") {
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
         _grantRole(MINTER_ROLE, minter);
     }
 
-    function safeMint(
-        address to,
-        string memory companyId,
-        string memory uri
-    ) public onlyRole(MINTER_ROLE) returns (uint256) {
+    function safeMint(address to, string memory companyId, string memory uri)
+        public
+        onlyRole(MINTER_ROLE)
+        returns (uint256)
+    {
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
@@ -42,10 +40,7 @@ contract Convexo_Vaults is ERC721, ERC721Burnable, ERC721URIStorage, AccessContr
         return tokenId;
     }
 
-    function setTokenState(uint256 tokenId, bool isActive)
-        public
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setTokenState(uint256 tokenId, bool isActive) public onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
         _tokenStates[tokenId] = isActive ? TokenState.Active : TokenState.NonActive;
     }
@@ -55,12 +50,7 @@ contract Convexo_Vaults is ERC721, ERC721Burnable, ERC721URIStorage, AccessContr
         return _tokenStates[tokenId] == TokenState.Active;
     }
 
-    function getCompanyId(uint256 tokenId)
-        public
-        view
-        onlyRole(DEFAULT_ADMIN_ROLE)
-        returns (string memory)
-    {
+    function getCompanyId(uint256 tokenId) public view onlyRole(DEFAULT_ADMIN_ROLE) returns (string memory) {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
         return _companyIds[tokenId];
     }
@@ -93,12 +83,7 @@ contract Convexo_Vaults is ERC721, ERC721Burnable, ERC721URIStorage, AccessContr
         return super.supportsInterface(interfaceId);
     }
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override(ERC721, ERC721URIStorage)
-        returns (string memory)
-    {
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
         return super.tokenURI(tokenId);
     }
 }

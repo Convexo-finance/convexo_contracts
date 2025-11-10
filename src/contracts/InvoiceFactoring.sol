@@ -170,4 +170,3 @@ contract InvoiceFactoring is AccessControl {
         return invoice.isActive && !invoice.isPaidOut;
     }
 }
-

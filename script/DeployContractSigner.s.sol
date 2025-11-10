@@ -9,14 +9,14 @@ contract DeployContractSigner is Script {
 
     function run() public returns (ContractSigner) {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        
+
         vm.startBroadcast(deployerPrivateKey);
-        
+
         ContractSigner contractSigner = new ContractSigner(ADMIN);
         console.log("ContractSigner deployed at:", address(contractSigner));
-        
+
         vm.stopBroadcast();
-        
+
         return contractSigner;
     }
 }

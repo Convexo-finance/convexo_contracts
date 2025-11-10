@@ -181,4 +181,3 @@ contract ConvexoVaultsTest is Test {
         assertTrue(nft.supportsInterface(0x7965db0b)); // AccessControl
     }
 }
-

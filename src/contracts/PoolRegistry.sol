@@ -154,4 +154,3 @@ contract PoolRegistry is AccessControl {
         return pools[poolId].hookAddress;
     }
 }
-
