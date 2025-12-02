@@ -1,194 +1,194 @@
 {
   "1301": {
     "name": "Unichain Sepolia",
-    "version": "2.0",
+    "version": "2.2",
     "convexo_lps": {
-      "address": "0xbb13194b2792e291109402369cb4fc0358aed132",
-      "deployed_at": "2025-12-02T07:40:00Z",
+      "address": "0x6ba429488cad3795af1ec65d80be760b70f58e4b",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "blockscout": "https://unichain-sepolia.blockscout.com/address/0xbb13194b2792e291109402369cb4fc0358aed132"
+      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x6ba429488cad3795af1ec65d80be760b70f58e4b"
     },
     "convexo_vaults": {
-      "address": "0xec02a78f2e6db438eb9b75aa173ac0f0d1d3126a",
-      "deployed_at": "2025-12-02T07:40:00Z",
+      "address": "0x64fd5631ffe78e907da7b48542abfb402680891a",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "blockscout": "https://unichain-sepolia.blockscout.com/address/0xec02a78f2e6db438eb9b75aa173ac0f0d1d3126a"
+      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x64fd5631ffe78e907da7b48542abfb402680891a"
     },
     "hook_deployer": {
-      "address": "0xc98bce4617f9708dd1363f21177be5ef21fb4993",
-      "deployed_at": "2025-12-02T07:40:00Z",
+      "address": "0x1917aac9c182454b3ab80aa8703734d2831adf08",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "blockscout": "https://unichain-sepolia.blockscout.com/address/0xc98bce4617f9708dd1363f21177be5ef21fb4993"
+      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x1917aac9c182454b3ab80aa8703734d2831adf08"
     },
     "compliant_lp_hook": {
-      "address": "0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7",
-      "deployed_at": "2025-12-02T07:40:00Z",
+      "address": "0x3933f0018fc7d21756b86557640d66b97f514bae",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7"
+      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x3933f0018fc7d21756b86557640d66b97f514bae"
     },
     "pool_registry": {
-      "address": "0x5a1f415986a189d79d19d65cb6e3d6dd7b807268",
-      "deployed_at": "2025-12-02T07:40:00Z",
+      "address": "0x9fee07c87bcc09b07f76c728cce56e6c8fdffb02",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x5a1f415986a189d79d19d65cb6e3d6dd7b807268"
+      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x9fee07c87bcc09b07f76c728cce56e6c8fdffb02"
     },
     "reputation_manager": {
-      "address": "0x6b51adc34a503b23db99444048ac7c2dc735a12e",
-      "deployed_at": "2025-12-02T07:40:00Z",
+      "address": "0x7c22db98a3f8da11f8c79d60a78d12df4a18516b",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x6b51adc34a503b23db99444048ac7c2dc735a12e"
+      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x7c22db98a3f8da11f8c79d60a78d12df4a18516b"
     },
     "price_feed_manager": {
-      "address": "0x5d88bcf0d62f17846d41e161e92e497d4224764d",
-      "deployed_at": "2025-12-02T07:40:00Z",
+      "address": "0x8b346a47413991077f6ad38bfa4bfd3693187e6e",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x5d88bcf0d62f17846d41e161e92e497d4224764d"
+      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x8b346a47413991077f6ad38bfa4bfd3693187e6e"
     },
     "contract_signer": {
-      "address": "0x6a6357c387331e75d6eeb4d4abc0f0200cd32830",
-      "deployed_at": "2025-12-02T07:40:00Z",
+      "address": "0x834dbab5c4bf2f9f2c80c9d7513ff986d3a835c8",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x6a6357c387331e75d6eeb4d4abc0f0200cd32830"
+      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x834dbab5c4bf2f9f2c80c9d7513ff986d3a835c8"
     },
     "vault_factory": {
-      "address": "0xafb16cfaf1389713c59f7aee3c1a08d3cedc3ee3",
-      "deployed_at": "2025-12-02T07:40:00Z",
+      "address": "0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "blockscout": "https://unichain-sepolia.blockscout.com/address/0xafb16cfaf1389713c59f7aee3c1a08d3cedc3ee3"
+      "blockscout": "https://unichain-sepolia.blockscout.com/address/0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841"
     },
     "notes": {
       "usdc_address": "0x31d0220469e10c4E71834a79b1f276d740d3768F",
       "ecop_address": "0xbb0d7c4141ee1fed53db766e1ffcb9c618df8260",
       "pool_manager": "0x00B036B58a818B1BC34d502D3fE730Db729e62AC",
-      "deployment_status": "Complete - All 9 contracts deployed and verified ✅"
+      "deployment_status": "Complete - All 9 contracts deployed and verified ✅ (v2.2)"
     }
   },
   "84532": {
     "name": "Base Sepolia",
-    "version": "2.0",
+    "version": "2.2",
     "convexo_lps": {
-      "address": "0xbABEe8acECC117c1295F8950f51Db59F7a881646",
-      "deployed_at": "2025-12-02T07:35:00Z",
+      "address": "0xd05df511dbe7d793d82b7344a955f15485ff0787",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "basescan": "https://sepolia.basescan.org/address/0xbABEe8acECC117c1295F8950f51Db59F7a881646"
+      "basescan": "https://sepolia.basescan.org/address/0xd05df511dbe7d793d82b7344a955f15485ff0787"
     },
     "convexo_vaults": {
-      "address": "0xd189d95eE1a126A66fc5A84934372Aa0Fc0bb6d2",
-      "deployed_at": "2025-12-02T07:35:00Z",
+      "address": "0xfb965542aa0b58538a9b50fe020314dd687eb128",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "basescan": "https://sepolia.basescan.org/address/0xd189d95eE1a126A66fc5A84934372Aa0Fc0bb6d2"
+      "basescan": "https://sepolia.basescan.org/address/0xfb965542aa0b58538a9b50fe020314dd687eb128"
     },
     "hook_deployer": {
-      "address": "0xE0c0d95701558eF10768A13A944F56311EAD4649",
-      "deployed_at": "2025-12-02T07:35:00Z",
+      "address": "0x503f203ce6d6462f433cd04c7ad2b05d61b56548",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "basescan": "https://sepolia.basescan.org/address/0xE0c0d95701558eF10768A13A944F56311EAD4649"
+      "basescan": "https://sepolia.basescan.org/address/0x503f203ce6d6462f433cd04c7ad2b05d61b56548"
     },
     "compliant_lp_hook": {
-      "address": "0xDd973cE09ba55260e217d10f9DeC6D7945D73E79",
-      "deployed_at": "2025-12-02T07:35:00Z",
+      "address": "0xab83ce760054c1d048d5a9de5194b05398a09d41",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "basescan": "https://sepolia.basescan.org/address/0xDd973cE09ba55260e217d10f9DeC6D7945D73E79"
+      "basescan": "https://sepolia.basescan.org/address/0xab83ce760054c1d048d5a9de5194b05398a09d41"
     },
     "pool_registry": {
-      "address": "0x24d91b11B0Dd12d6520E58c72F8FCC9dC1C5b935",
-      "deployed_at": "2025-12-02T07:35:00Z",
+      "address": "0x18fb358bc74054b0c2530c48ef23f8a8d464cb18",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "basescan": "https://sepolia.basescan.org/address/0x24d91b11B0Dd12d6520E58c72F8FCC9dC1C5b935"
+      "basescan": "https://sepolia.basescan.org/address/0x18fb358bc74054b0c2530c48ef23f8a8d464cb18"
     },
     "reputation_manager": {
-      "address": "0x3770Bb3BBEb0102a36f51aA253E69034058E4F84",
-      "deployed_at": "2025-12-02T07:35:00Z",
+      "address": "0x50ace0dce54df668477adee4e9d6a6c0df4fedee",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "basescan": "https://sepolia.basescan.org/address/0x3770Bb3BBEb0102a36f51aA253E69034058E4F84"
+      "basescan": "https://sepolia.basescan.org/address/0x50ace0dce54df668477adee4e9d6a6c0df4fedee"
     },
     "price_feed_manager": {
-      "address": "0x2Fa95f79Ce8C5c01581f6792ACc4181282aaEFB0",
-      "deployed_at": "2025-12-02T07:35:00Z",
+      "address": "0xa46629011e0b8561a45ea03b822d28c0b2432c3a",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "basescan": "https://sepolia.basescan.org/address/0x2Fa95f79Ce8C5c01581f6792ACc4181282aaEFB0"
+      "basescan": "https://sepolia.basescan.org/address/0xa46629011e0b8561a45ea03b822d28c0b2432c3a"
     },
     "contract_signer": {
-      "address": "0xf8dce148AB008f7ae47A26377252673438801712",
-      "deployed_at": "2025-12-02T07:35:00Z",
+      "address": "0x62227ff7ccbdb4d72c3511290b28c3424f1500ef",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "basescan": "https://sepolia.basescan.org/address/0xf8dce148AB008f7ae47A26377252673438801712"
+      "basescan": "https://sepolia.basescan.org/address/0x62227ff7ccbdb4d72c3511290b28c3424f1500ef"
     },
     "vault_factory": {
-      "address": "0x3D684Ac58f25a95c107565bCFfffb219B00557C7",
-      "deployed_at": "2025-12-02T07:35:00Z",
+      "address": "0x8efc7e25c12a815329331da5f0e96affb4014472",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "basescan": "https://sepolia.basescan.org/address/0x3D684Ac58f25a95c107565bCFfffb219B00557C7"
+      "basescan": "https://sepolia.basescan.org/address/0x8efc7e25c12a815329331da5f0e96affb4014472"
     },
     "notes": {
       "usdc_address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
       "ecop_address": "0xb934dcb57fb0673b7bc0fca590c5508f1cde955d",
       "pool_manager": "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408",
-      "deployment_status": "Complete - All 9 contracts deployed and verified ✅"
+      "deployment_status": "Complete - All 9 contracts deployed and verified ✅ (v2.2)"
     }
   },
   "11155111": {
     "name": "Ethereum Sepolia",
-    "version": "2.0",
+    "version": "2.2",
     "convexo_lps": {
-      "address": "0x7fd91438eacffe828f61737d64926ee44cf6695c",
-      "deployed_at": "2025-12-02T07:30:00Z",
+      "address": "0x2a0d9da5a72dfe20b65b25e9fefc0e6e090ac194",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0x7fd91438eacffe828f61737d64926ee44cf6695c"
+      "etherscan": "https://sepolia.etherscan.io/address/0x2a0d9da5a72dfe20b65b25e9fefc0e6e090ac194"
     },
     "convexo_vaults": {
-      "address": "0xf02d84e56da48cec9233cb7982db0ac82f29a973",
-      "deployed_at": "2025-12-02T07:30:00Z",
+      "address": "0x744e39b3eb1be014cb8d14a585c31e22b7f4a9b8",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0xf02d84e56da48cec9233cb7982db0ac82f29a973"
+      "etherscan": "https://sepolia.etherscan.io/address/0x744e39b3eb1be014cb8d14a585c31e22b7f4a9b8"
     },
     "hook_deployer": {
-      "address": "0x1843c76dfe7a353d239912d8e23bdebda712f4c9",
-      "deployed_at": "2025-12-02T07:30:00Z",
+      "address": "0xb2785f4341b5bf26be07f7e2037550769ce830cd",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0x1843c76dfe7a353d239912d8e23bdebda712f4c9"
+      "etherscan": "https://sepolia.etherscan.io/address/0xb2785f4341b5bf26be07f7e2037550769ce830cd"
     },
     "compliant_lp_hook": {
-      "address": "0x9fe009296cc964573cc8fb394598a3d5b9800394",
-      "deployed_at": "2025-12-02T07:30:00Z",
+      "address": "0x3738d60fcb27d719fdd5113b855e1158b93a95b1",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0x9fe009296cc964573cc8fb394598a3d5b9800394"
+      "etherscan": "https://sepolia.etherscan.io/address/0x3738d60fcb27d719fdd5113b855e1158b93a95b1"
     },
     "pool_registry": {
-      "address": "0x0f0e9e5e7e6a47d35e261dd876438cd144f97f1e",
-      "deployed_at": "2025-12-02T07:30:00Z",
+      "address": "0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0x0f0e9e5e7e6a47d35e261dd876438cd144f97f1e"
+      "etherscan": "https://sepolia.etherscan.io/address/0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff"
     },
     "reputation_manager": {
-      "address": "0x6ba429488cad3795af1ec65d80be760b70f58e4b",
-      "deployed_at": "2025-12-02T07:30:00Z",
+      "address": "0xe4a58592171cd0770e6792600ea3098060a42d46",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0x6ba429488cad3795af1ec65d80be760b70f58e4b"
+      "etherscan": "https://sepolia.etherscan.io/address/0xe4a58592171cd0770e6792600ea3098060a42d46"
     },
     "price_feed_manager": {
-      "address": "0x64fd5631ffe78e907da7b48542abfb402680891a",
-      "deployed_at": "2025-12-02T07:30:00Z",
+      "address": "0xd7cf4aba5b9b4877419ab8af3979da637493afb1",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0x64fd5631ffe78e907da7b48542abfb402680891a"
+      "etherscan": "https://sepolia.etherscan.io/address/0xd7cf4aba5b9b4877419ab8af3979da637493afb1"
     },
     "contract_signer": {
-      "address": "0x1917aac9c182454b3ab80aa8703734d2831adf08",
-      "deployed_at": "2025-12-02T07:30:00Z",
+      "address": "0x99e9880a08e14112a18c091bd49a2b1713133687",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0x1917aac9c182454b3ab80aa8703734d2831adf08"
+      "etherscan": "https://sepolia.etherscan.io/address/0x99e9880a08e14112a18c091bd49a2b1713133687"
     },
     "vault_factory": {
-      "address": "0x3933f0018fc7d21756b86557640d66b97f514bae",
-      "deployed_at": "2025-12-02T07:30:00Z",
+      "address": "0xf54e26527bec4847f66afb5166a7a5c3d1fd6304",
+      "deployed_at": "2025-12-02T14:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0x3933f0018fc7d21756b86557640d66b97f514bae"
+      "etherscan": "https://sepolia.etherscan.io/address/0xf54e26527bec4847f66afb5166a7a5c3d1fd6304"
     },
     "notes": {
       "usdc_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
       "ecop_address": "0x19ac2612e560b2bbedf88660a2566ef53c0a15a1",
       "pool_manager": "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
-      "deployment_status": "Complete - All 9 contracts deployed and verified ✅"
+      "deployment_status": "Complete - All 9 contracts deployed and verified ✅ (v2.2)"
     }
   }
 }

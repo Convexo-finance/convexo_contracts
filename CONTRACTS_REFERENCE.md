@@ -34,7 +34,7 @@ This guide provides detailed documentation for:
 - **Funded**: Fully funded, awaiting contract signatures
 - **Active**: Contract signed, borrower can withdraw funds
 - **Repaying**: Funds withdrawn, borrower making repayments
-- **Completed**: All repayments made, investors can redeem
+- **Completed**: All debt repaid AND all funds withdrawn by protocol & investors
 - **Defaulted**: Borrower failed to repay by maturity date
 
 **New Vault Flow:**
@@ -44,11 +44,11 @@ This guide provides detailed documentation for:
 4. **All parties** sign the contract
 5. **Admin** executes contract
 6. **Borrower** attaches contract to vault → State: `Active`
-7. **Borrower** withdraws funds → State: `Repaying`
-8. **Borrower** makes repayments (can be partial or full)
+7. **Borrower** withdraws funds → State: `Repaying` (timestamp recorded)
+8. **Borrower** makes repayments (can be partial or full, anytime)
 9. **Protocol Collector** withdraws fees (proportional to repayments)
 10. **Investors** redeem shares (proportional to available funds)
-11. When fully repaid → State: `Completed`
+11. When fully repaid AND all funds withdrawn → State: `Completed`
 
 ---
 
@@ -272,45 +272,28 @@ function getRepaymentStatus()
 
 **Calculation:**
 ```
-Total Interest: 50,000 * 12% = 6,000 USDC
-Total Due: 50,000 + 6,000 = 56,000 USDC
+Principal: 50,000 USDC
+Interest (12%): 50,000 * 12% = 6,000 USDC
+Protocol Fee (2%): 50,000 * 2% = 1,000 USDC
 
-Distribution when completed:
-1. Protocol Fee: 50,000 * 2% = 1,000 USDC → Convexo
-2. Investor Returns: 56,000 - 1,000 = 55,000 USDC → Investors
-   - Investors get: 55,000 / 50,000 = 1.10 = 10% net return
-   
-Wait, let me recalculate:
-- Borrower pays: 50,000 * (1 + 10%) = 55,000 USDC (10% interest to borrower)
-- Protocol takes: 50,000 * 2% = 1,000 USDC
-- Investors get: 55,000 - 1,000 = 54,000 USDC
-- Investor return: (54,000 - 50,000) / 50,000 = 8% ... that's not 12%
+Total Due from Borrower: 50,000 + 6,000 + 1,000 = 57,000 USDC
 
-Actually, let me check the contract logic again. The contract says:
-- interestRate = 1200 (12%)
-- totalDue = principal + (principal * 12%)
-- After protocol fee (2%), investors get the rest
+Distribution when fully repaid:
+1. Protocol Fee: 1,000 USDC → Convexo (2% of principal)
+2. Investor Returns: 56,000 USDC → Investors (principal + interest)
+   - Investor net return: (56,000 - 50,000) / 50,000 = 12%
 
-So:
-- Borrower pays: 50,000 * 1.12 = 56,000 USDC
-- Protocol fee: 50,000 * 0.02 = 1,000 USDC  
-- To investors: 56,000 - 1,000 = 55,000 USDC
-- Investor return: (55,000 - 50,000) / 50,000 = 10%
-
-The description says "12% for LPs, 2% protocol, 10% by SME"
-So the intended math might be:
-- SME pays: 10% interest
-- LPs get: 12% return
-- Protocol gets: 2%
-- Total: 10% + 12% + 2% = 24%? That doesn't add up.
-
-I think it means:
-- SME pays 12% total
-- From that 12%: 10% goes to LPs, 2% goes to protocol
-- So: LPs get 10%, Protocol gets 2%, SME pays 12%
-
-Let me document it as the contract currently works and note the intended distribution.
+Summary:
+- Borrower pays: 57,000 USDC total (14% total cost)
+- Protocol receives: 1,000 USDC (2% fee)
+- Investors receive: 56,000 USDC (12% return)
 ```
+
+**Important Notes:**
+- Borrower's total payment = Principal + Interest + Protocol Fee
+- Investors get Principal + Interest (12% return)
+- Protocol gets 2% fee on principal
+- Vault state changes to `Completed` only when all funds are withdrawn
 
 **Current Contract Logic:**
 ```
@@ -319,6 +302,113 @@ Protocol fee: 50,000 * 2% = 1,000 USDC
 Investors receive: 56,000 - 1,000 = 55,000 USDC
 Investor return: 10% net (55k on 50k invested)
 ```
+
+### Protocol Fee Protection
+
+**NEW in v2.2:** Protocol fees are now protected from investor withdrawals.
+
+#### Get Available Funds for Investors
+```solidity
+// Get funds available for investor redemptions (excluding reserved protocol fees)
+function getAvailableForInvestors() public view returns (uint256)
+```
+
+**Example:**
+```typescript
+// Check how much is available for investors
+const availableForInvestors = await vault.getAvailableForInvestors();
+
+// This amount EXCLUDES protocol fees that haven't been withdrawn yet
+console.log(`Available for investors: ${formatUnits(availableForInvestors, 6)} USDC`);
+
+// Example scenario:
+// - Vault balance: $57,000
+// - Protocol fees not withdrawn: $1,000
+// - Available for investors: $56,000 ✅
+```
+
+**Why This Matters:**
+- ✅ **Security**: Investors cannot accidentally or maliciously withdraw protocol fees
+- ✅ **Transparency**: Frontend can show exact amounts available
+- ✅ **Fairness**: Protocol always gets their 2% fee
+- ✅ **Compliance**: Clear separation of funds
+
+**How It Works:**
+```
+Total Vault Balance: $57,000
+- Reserved Protocol Fees: $1,000 (earned but not withdrawn)
+= Available for Investors: $56,000
+
+When investors redeem shares:
+- They split the $56,000 proportionally
+- Protocol fee of $1,000 remains protected
+- Protocol collector can withdraw anytime
+```
+
+### Vault Timeline & Timestamps
+
+**NEW in v2.1:** Track important vault milestones with timestamps.
+
+#### Get Vault Timestamps
+```solidity
+// Get vault creation timestamp
+function getVaultCreatedAt() external view returns (uint256)
+
+// Get timestamp when vault was fully funded
+function getVaultFundedAt() external view returns (uint256)
+// Returns 0 if not yet funded
+
+// Get timestamp when contract was attached
+function getVaultContractAttachedAt() external view returns (uint256)
+// Returns 0 if no contract attached
+
+// Get timestamp when borrower withdrew funds
+function getVaultFundsWithdrawnAt() external view returns (uint256)
+// Returns 0 if funds not yet withdrawn
+
+// Calculate actual due date based on withdrawal time
+function getActualDueDate() external view returns (uint256)
+// Returns 0 if funds not withdrawn yet
+// Otherwise: fundsWithdrawnAt + loan duration
+```
+
+**Example Usage:**
+```typescript
+// Get all vault timestamps
+const createdAt = await vault.getVaultCreatedAt();
+const fundedAt = await vault.getVaultFundedAt();
+const contractAttachedAt = await vault.getVaultContractAttachedAt();
+const fundsWithdrawnAt = await vault.getVaultFundsWithdrawnAt();
+const actualDueDate = await vault.getActualDueDate();
+
+// Display timeline
+console.log(`Created: ${new Date(createdAt * 1000)}`);
+console.log(`Funded: ${new Date(fundedAt * 1000)}`);
+console.log(`Contract Attached: ${new Date(contractAttachedAt * 1000)}`);
+console.log(`Funds Withdrawn: ${new Date(fundsWithdrawnAt * 1000)}`);
+console.log(`Due Date: ${new Date(actualDueDate * 1000)}`);
+
+// Calculate days remaining
+const now = Math.floor(Date.now() / 1000);
+const daysRemaining = Math.floor((actualDueDate - now) / 86400);
+console.log(`Days remaining: ${daysRemaining}`);
+```
+
+**Why This Matters:**
+- **Accurate Due Dates**: The due date is calculated from when funds are withdrawn, not when the vault is created
+- **Timeline Tracking**: Frontend can show a complete timeline of vault milestones
+- **Compliance**: Timestamps provide an immutable audit trail
+- **User Experience**: Borrowers and investors can see exact dates for all events
+
+**Vault State Completion Logic:**
+The vault state changes to `Completed` **only** when:
+1. ✅ All debt is repaid (principal + interest + protocol fee)
+2. ✅ **AND** all funds have been withdrawn by:
+   - Protocol fee collector (via `withdrawProtocolFees()`)
+   - All investors (via `redeemShares()`)
+3. ✅ Vault balance < 0.0001 USDC (dust)
+
+This ensures the vault isn't marked as complete until everyone has received their funds.
 
 ---
 

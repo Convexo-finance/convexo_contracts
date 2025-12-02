@@ -425,17 +425,49 @@ SME needs $50k for inventory
 
 ---
 
+## ✨ What's New in v2.2
+
+### 🔒 Critical Security Fix: Protocol Fee Protection
+- **FIXED**: Investors can no longer withdraw protocol fees
+- **NEW**: `_calculateReservedProtocolFees()` - Internal function to calculate reserved fees
+- **NEW**: `getAvailableForInvestors()` - Public view function showing funds available for investors
+- **CHANGED**: `redeemShares()` now excludes protocol fees from available balance
+- **BENEFIT**: Protocol fees are protected and guaranteed for the protocol
+
+### 📊 Vault Timeline Tracking (v2.1)
+- **NEW**: Complete timestamp tracking for all vault milestones
+- `getVaultCreatedAt()` - When vault was created
+- `getVaultFundedAt()` - When vault reached full funding
+- `getVaultContractAttachedAt()` - When contract was attached
+- `getVaultFundsWithdrawnAt()` - When borrower withdrew funds
+- `getActualDueDate()` - Calculated due date based on withdrawal time
+
+### ✅ Improved Vault Completion Logic (v2.1)
+- **CHANGED**: Vault state now changes to `Completed` only when:
+  - ✅ All debt is repaid (principal + interest + protocol fee)
+  - ✅ **AND** all funds withdrawn by protocol collector & investors
+  - ✅ Vault balance < 0.0001 USDC (dust)
+- **BENEFIT**: More accurate vault lifecycle tracking
+
+### 🧪 Enhanced Testing
+- **NEW**: `testProtocolFeesAreProtectedFromInvestorRedemption()` - Comprehensive test
+- **RESULT**: 15/15 tests passing (100% coverage)
+
+---
+
 ## 📊 Key Metrics
 
 | Metric | Value |
 |--------|-------|
-| **Test Coverage** | 14/14 tests passing (100%) |
+| **Version** | 2.2 (Protocol Fee Protection) |
+| **Test Coverage** | 15/15 tests passing (100%) |
 | **Contracts Deployed** | 9 contracts |
 | **Networks Supported** | 3 testnets (Ethereum, Base, Unichain Sepolia) |
 | **Investor Returns** | 12% APY |
 | **Min Credit Score** | 70 (for vault creation) |
-| **Protocol Fee** | 2% of principal |
+| **Protocol Fee** | 2% of principal (protected) |
 | **Repayment** | Flexible (anytime before maturity) |
+| **Security** | Protocol fees protected from investor withdrawals ✅ |
 
 ---
 

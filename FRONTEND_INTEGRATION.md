@@ -11,49 +11,49 @@ All 9 contracts are deployed, tested, and verified on **3 testnets**:
 
 ---
 
-## 📝 Deployed Contract Addresses
+## 📝 Deployed Contract Addresses (v2.2)
 
 ### Ethereum Sepolia (Chain ID: 11155111)
 
 | Contract | Address | Verified |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x7fd91438eacffe828f61737d64926ee44cf6695c` | ✅ [View](https://sepolia.etherscan.io/address/0x7fd91438eacffe828f61737d64926ee44cf6695c) |
-| **Convexo_Vaults** | `0xf02d84e56da48cec9233cb7982db0ac82f29a973` | ✅ [View](https://sepolia.etherscan.io/address/0xf02d84e56da48cec9233cb7982db0ac82f29a973) |
-| **HookDeployer** | `0x1843c76dfe7a353d239912d8e23bdebda712f4c9` | ✅ [View](https://sepolia.etherscan.io/address/0x1843c76dfe7a353d239912d8e23bdebda712f4c9) |
-| **CompliantLPHook** | `0x9fe009296cc964573cc8fb394598a3d5b9800394` | ✅ [View](https://sepolia.etherscan.io/address/0x9fe009296cc964573cc8fb394598a3d5b9800394) |
-| **PoolRegistry** | `0x0f0e9e5e7e6a47d35e261dd876438cd144f97f1e` | ✅ [View](https://sepolia.etherscan.io/address/0x0f0e9e5e7e6a47d35e261dd876438cd144f97f1e) |
-| **ReputationManager** | `0x6ba429488cad3795af1ec65d80be760b70f58e4b` | ✅ [View](https://sepolia.etherscan.io/address/0x6ba429488cad3795af1ec65d80be760b70f58e4b) |
-| **PriceFeedManager** | `0x64fd5631ffe78e907da7b48542abfb402680891a` | ✅ [View](https://sepolia.etherscan.io/address/0x64fd5631ffe78e907da7b48542abfb402680891a) |
-| **ContractSigner** | `0x1917aac9c182454b3ab80aa8703734d2831adf08` | ✅ [View](https://sepolia.etherscan.io/address/0x1917aac9c182454b3ab80aa8703734d2831adf08) |
-| **VaultFactory** | `0x3933f0018fc7d21756b86557640d66b97f514bae` | ✅ [View](https://sepolia.etherscan.io/address/0x3933f0018fc7d21756b86557640d66b97f514bae) |
+| **Convexo_LPs** | `0x2a0d9da5a72dfe20b65b25e9fefc0e6e090ac194` | ✅ [View](https://sepolia.etherscan.io/address/0x2a0d9da5a72dfe20b65b25e9fefc0e6e090ac194) |
+| **Convexo_Vaults** | `0x744e39b3eb1be014cb8d14a585c31e22b7f4a9b8` | ✅ [View](https://sepolia.etherscan.io/address/0x744e39b3eb1be014cb8d14a585c31e22b7f4a9b8) |
+| **HookDeployer** | `0xb2785f4341b5bf26be07f7e2037550769ce830cd` | ✅ [View](https://sepolia.etherscan.io/address/0xb2785f4341b5bf26be07f7e2037550769ce830cd) |
+| **CompliantLPHook** | `0x3738d60fcb27d719fdd5113b855e1158b93a95b1` | ✅ [View](https://sepolia.etherscan.io/address/0x3738d60fcb27d719fdd5113b855e1158b93a95b1) |
+| **PoolRegistry** | `0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff` | ✅ [View](https://sepolia.etherscan.io/address/0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff) |
+| **ReputationManager** | `0xe4a58592171cd0770e6792600ea3098060a42d46` | ✅ [View](https://sepolia.etherscan.io/address/0xe4a58592171cd0770e6792600ea3098060a42d46) |
+| **PriceFeedManager** | `0xd7cf4aba5b9b4877419ab8af3979da637493afb1` | ✅ [View](https://sepolia.etherscan.io/address/0xd7cf4aba5b9b4877419ab8af3979da637493afb1) |
+| **ContractSigner** | `0x99e9880a08e14112a18c091bd49a2b1713133687` | ✅ [View](https://sepolia.etherscan.io/address/0x99e9880a08e14112a18c091bd49a2b1713133687) |
+| **VaultFactory** | `0xf54e26527bec4847f66afb5166a7a5c3d1fd6304` | ✅ [View](https://sepolia.etherscan.io/address/0xf54e26527bec4847f66afb5166a7a5c3d1fd6304) |
 
 ### Base Sepolia (Chain ID: 84532)
 
 | Contract | Address | Verified |
 |----------|---------|----------|
-| **Convexo_LPs** | `0xbABEe8acECC117c1295F8950f51Db59F7a881646` | ✅ [View](https://sepolia.basescan.org/address/0xbABEe8acECC117c1295F8950f51Db59F7a881646) |
-| **Convexo_Vaults** | `0xd189d95eE1a126A66fc5A84934372Aa0Fc0bb6d2` | ✅ [View](https://sepolia.basescan.org/address/0xd189d95eE1a126A66fc5A84934372Aa0Fc0bb6d2) |
-| **HookDeployer** | `0xE0c0d95701558eF10768A13A944F56311EAD4649` | ✅ [View](https://sepolia.basescan.org/address/0xE0c0d95701558eF10768A13A944F56311EAD4649) |
-| **CompliantLPHook** | `0xDd973cE09ba55260e217d10f9DeC6D7945D73E79` | ✅ [View](https://sepolia.basescan.org/address/0xDd973cE09ba55260e217d10f9DeC6D7945D73E79) |
-| **PoolRegistry** | `0x24d91b11B0Dd12d6520E58c72F8FCC9dC1C5b935` | ✅ [View](https://sepolia.basescan.org/address/0x24d91b11B0Dd12d6520E58c72F8FCC9dC1C5b935) |
-| **ReputationManager** | `0x3770Bb3BBEb0102a36f51aA253E69034058E4F84` | ✅ [View](https://sepolia.basescan.org/address/0x3770Bb3BBEb0102a36f51aA253E69034058E4F84) |
-| **PriceFeedManager** | `0x2Fa95f79Ce8C5c01581f6792ACc4181282aaEFB0` | ✅ [View](https://sepolia.basescan.org/address/0x2Fa95f79Ce8C5c01581f6792ACc4181282aaEFB0) |
-| **ContractSigner** | `0xf8dce148AB008f7ae47A26377252673438801712` | ✅ [View](https://sepolia.basescan.org/address/0xf8dce148AB008f7ae47A26377252673438801712) |
-| **VaultFactory** | `0x3D684Ac58f25a95c107565bCFfffb219B00557C7` | ✅ [View](https://sepolia.basescan.org/address/0x3D684Ac58f25a95c107565bCFfffb219B00557C7) |
+| **Convexo_LPs** | `0xd05df511dbe7d793d82b7344a955f15485ff0787` | ✅ [View](https://sepolia.basescan.org/address/0xd05df511dbe7d793d82b7344a955f15485ff0787) |
+| **Convexo_Vaults** | `0xfb965542aa0b58538a9b50fe020314dd687eb128` | ✅ [View](https://sepolia.basescan.org/address/0xfb965542aa0b58538a9b50fe020314dd687eb128) |
+| **HookDeployer** | `0x503f203ce6d6462f433cd04c7ad2b05d61b56548` | ✅ [View](https://sepolia.basescan.org/address/0x503f203ce6d6462f433cd04c7ad2b05d61b56548) |
+| **CompliantLPHook** | `0xab83ce760054c1d048d5a9de5194b05398a09d41` | ✅ [View](https://sepolia.basescan.org/address/0xab83ce760054c1d048d5a9de5194b05398a09d41) |
+| **PoolRegistry** | `0x18fb358bc74054b0c2530c48ef23f8a8d464cb18` | ✅ [View](https://sepolia.basescan.org/address/0x18fb358bc74054b0c2530c48ef23f8a8d464cb18) |
+| **ReputationManager** | `0x50ace0dce54df668477adee4e9d6a6c0df4fedee` | ✅ [View](https://sepolia.basescan.org/address/0x50ace0dce54df668477adee4e9d6a6c0df4fedee) |
+| **PriceFeedManager** | `0xa46629011e0b8561a45ea03b822d28c0b2432c3a` | ✅ [View](https://sepolia.basescan.org/address/0xa46629011e0b8561a45ea03b822d28c0b2432c3a) |
+| **ContractSigner** | `0x62227ff7ccbdb4d72c3511290b28c3424f1500ef` | ✅ [View](https://sepolia.basescan.org/address/0x62227ff7ccbdb4d72c3511290b28c3424f1500ef) |
+| **VaultFactory** | `0x8efc7e25c12a815329331da5f0e96affb4014472` | ✅ [View](https://sepolia.basescan.org/address/0x8efc7e25c12a815329331da5f0e96affb4014472) |
 
 ### Unichain Sepolia (Chain ID: 1301)
 
 | Contract | Address | Verified |
 |----------|---------|----------|
-| **Convexo_LPs** | `0xbb13194b2792e291109402369cb4fc0358aed132` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xbb13194b2792e291109402369cb4fc0358aed132) |
-| **Convexo_Vaults** | `0xec02a78f2e6db438eb9b75aa173ac0f0d1d3126a` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xec02a78f2e6db438eb9b75aa173ac0f0d1d3126a) |
-| **HookDeployer** | `0xc98bce4617f9708dd1363f21177be5ef21fb4993` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xc98bce4617f9708dd1363f21177be5ef21fb4993) |
-| **CompliantLPHook** | `0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7) |
-| **PoolRegistry** | `0x5a1f415986a189d79d19d65cb6e3d6dd7b807268` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x5a1f415986a189d79d19d65cb6e3d6dd7b807268) |
-| **ReputationManager** | `0x6b51adc34a503b23db99444048ac7c2dc735a12e` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x6b51adc34a503b23db99444048ac7c2dc735a12e) |
-| **PriceFeedManager** | `0x5d88bcf0d62f17846d41e161e92e497d4224764d` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x5d88bcf0d62f17846d41e161e92e497d4224764d) |
-| **ContractSigner** | `0x6a6357c387331e75d6eeb4d4abc0f0200cd32830` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x6a6357c387331e75d6eeb4d4abc0f0200cd32830) |
-| **VaultFactory** | `0xafb16cfaf1389713c59f7aee3c1a08d3cedc3ee3` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xafb16cfaf1389713c59f7aee3c1a08d3cedc3ee3) |
+| **Convexo_LPs** | `0x6ba429488cad3795af1ec65d80be760b70f58e4b` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x6ba429488cad3795af1ec65d80be760b70f58e4b) |
+| **Convexo_Vaults** | `0x64fd5631ffe78e907da7b48542abfb402680891a` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x64fd5631ffe78e907da7b48542abfb402680891a) |
+| **HookDeployer** | `0x1917aac9c182454b3ab80aa8703734d2831adf08` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x1917aac9c182454b3ab80aa8703734d2831adf08) |
+| **CompliantLPHook** | `0x3933f0018fc7d21756b86557640d66b97f514bae` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x3933f0018fc7d21756b86557640d66b97f514bae) |
+| **PoolRegistry** | `0x9fee07c87bcc09b07f76c728cce56e6c8fdffb02` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x9fee07c87bcc09b07f76c728cce56e6c8fdffb02) |
+| **ReputationManager** | `0x7c22db98a3f8da11f8c79d60a78d12df4a18516b` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x7c22db98a3f8da11f8c79d60a78d12df4a18516b) |
+| **PriceFeedManager** | `0x8b346a47413991077f6ad38bfa4bfd3693187e6e` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x8b346a47413991077f6ad38bfa4bfd3693187e6e) |
+| **ContractSigner** | `0x834dbab5c4bf2f9f2c80c9d7513ff986d3a835c8` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x834dbab5c4bf2f9f2c80c9d7513ff986d3a835c8) |
+| **VaultFactory** | `0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841) |
 
 > **📖 See [DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md) for complete deployment details**
 
@@ -592,13 +592,20 @@ function RepaymentInterface({ vaultAddress }: { vaultAddress: `0x${string}` }) {
 
 ### Flow 7: Independent Withdrawals
 
-**✨ New in v2.0**: Protocol collector and investors withdraw their portions independently.
+**✨ New in v2.2**: Protocol fees are now protected! Investors can only withdraw their portion.
 
 ```typescript
 function WithdrawalInterface({ vaultAddress }: { vaultAddress: `0x${string}` }) {
   const { address } = useAccount();
   const { chain } = useNetwork();
   const contracts = getContracts(chain?.id || 84532);
+  
+  // 🔒 NEW in v2.2: Get available funds for investors (excluding protocol fees)
+  const { data: availableForInvestors } = useContractRead({
+    address: vaultAddress,
+    abi: TokenizedBondVaultABI,
+    functionName: 'getAvailableForInvestors',
+  });
   
   // Check if user is protocol collector
   const isProtocolCollector = address?.toLowerCase() === contracts.PROTOCOL_FEE_COLLECTOR?.toLowerCase();
@@ -667,6 +674,140 @@ function WithdrawalInterface({ vaultAddress }: { vaultAddress: `0x${string}` }) 
 - ✅ Investors redeem shares for principal + 12% returns
 - ✅ Funds locked in vault until withdrawn
 - ✅ Proportional distribution based on repayments
+
+### Flow 8: Vault Timeline Display
+
+**✨ New in v2.1**: Track all vault milestones with timestamps for complete transparency.
+
+```typescript
+interface VaultTimeline {
+  createdAt: number;
+  fundedAt: number;
+  contractAttachedAt: number;
+  fundsWithdrawnAt: number;
+  actualDueDate: number;
+}
+
+function VaultTimelineDisplay({ vaultAddress }: { vaultAddress: `0x${string}` }) {
+  // Fetch all timestamps
+  const { data: createdAt } = useContractRead({
+    address: vaultAddress,
+    abi: TokenizedBondVaultABI,
+    functionName: 'getVaultCreatedAt',
+  });
+
+  const { data: fundedAt } = useContractRead({
+    address: vaultAddress,
+    abi: TokenizedBondVaultABI,
+    functionName: 'getVaultFundedAt',
+  });
+
+  const { data: contractAttachedAt } = useContractRead({
+    address: vaultAddress,
+    abi: TokenizedBondVaultABI,
+    functionName: 'getVaultContractAttachedAt',
+  });
+
+  const { data: fundsWithdrawnAt } = useContractRead({
+    address: vaultAddress,
+    abi: TokenizedBondVaultABI,
+    functionName: 'getVaultFundsWithdrawnAt',
+  });
+
+  const { data: actualDueDate } = useContractRead({
+    address: vaultAddress,
+    abi: TokenizedBondVaultABI,
+    functionName: 'getActualDueDate',
+  });
+
+  // Helper to format timestamp
+  const formatDate = (timestamp: bigint | undefined) => {
+    if (!timestamp || timestamp === 0n) return 'Pending';
+    return new Date(Number(timestamp) * 1000).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  // Calculate days remaining
+  const getDaysRemaining = () => {
+    if (!actualDueDate || actualDueDate === 0n) return null;
+    const now = Math.floor(Date.now() / 1000);
+    const secondsRemaining = Number(actualDueDate) - now;
+    return Math.floor(secondsRemaining / 86400);
+  };
+
+  const daysRemaining = getDaysRemaining();
+
+  return (
+    <div className="vault-timeline">
+      <h3>Vault Timeline</h3>
+      
+      <div className="timeline-events">
+        <div className="timeline-event completed">
+          <div className="event-icon">✅</div>
+          <div className="event-details">
+            <h4>Vault Created</h4>
+            <p>{formatDate(createdAt)}</p>
+          </div>
+        </div>
+
+        <div className={`timeline-event ${fundedAt && fundedAt > 0n ? 'completed' : 'pending'}`}>
+          <div className="event-icon">{fundedAt && fundedAt > 0n ? '✅' : '⏳'}</div>
+          <div className="event-details">
+            <h4>Fully Funded</h4>
+            <p>{formatDate(fundedAt)}</p>
+          </div>
+        </div>
+
+        <div className={`timeline-event ${contractAttachedAt && contractAttachedAt > 0n ? 'completed' : 'pending'}`}>
+          <div className="event-icon">{contractAttachedAt && contractAttachedAt > 0n ? '✅' : '⏳'}</div>
+          <div className="event-details">
+            <h4>Contract Signed</h4>
+            <p>{formatDate(contractAttachedAt)}</p>
+          </div>
+        </div>
+
+        <div className={`timeline-event ${fundsWithdrawnAt && fundsWithdrawnAt > 0n ? 'completed' : 'pending'}`}>
+          <div className="event-icon">{fundsWithdrawnAt && fundsWithdrawnAt > 0n ? '✅' : '⏳'}</div>
+          <div className="event-details">
+            <h4>Funds Withdrawn</h4>
+            <p>{formatDate(fundsWithdrawnAt)}</p>
+          </div>
+        </div>
+
+        <div className={`timeline-event ${daysRemaining !== null && daysRemaining <= 0 ? 'completed' : 'pending'}`}>
+          <div className="event-icon">{daysRemaining !== null && daysRemaining <= 0 ? '✅' : '📅'}</div>
+          <div className="event-details">
+            <h4>Due Date</h4>
+            <p>{formatDate(actualDueDate)}</p>
+            {daysRemaining !== null && daysRemaining > 0 && (
+              <p className="days-remaining">
+                {daysRemaining} days remaining
+              </p>
+            )}
+            {daysRemaining !== null && daysRemaining < 0 && (
+              <p className="overdue">
+                {Math.abs(daysRemaining)} days overdue
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+**Why This Matters:**
+- ✅ **Accurate Due Dates**: Due date calculated from withdrawal time, not creation time
+- ✅ **Complete Audit Trail**: Immutable timestamps for all major events
+- ✅ **Better UX**: Users see exactly when each milestone occurred
+- ✅ **Compliance**: Transparent timeline for all parties
+- ✅ **Progress Tracking**: Visual representation of vault lifecycle
 
 ---
 

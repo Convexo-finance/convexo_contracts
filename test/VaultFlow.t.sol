@@ -561,7 +561,8 @@ contract VaultFlowTest is Test {
         vault.makeRepayment(totalDue);
         vm.stopPrank();
 
-        assertEq(uint256(vault.getVaultState()), uint256(TokenizedBondVault.VaultState.Completed));
+        // State should still be Repaying until all funds are withdrawn
+        assertEq(uint256(vault.getVaultState()), uint256(TokenizedBondVault.VaultState.Repaying));
 
         // Verify vault has all the funds
         assertEq(usdc.balanceOf(vaultAddress), totalDue);
@@ -578,6 +579,9 @@ contract VaultFlowTest is Test {
         vm.prank(investor1);
         vault.redeemShares(30000 * 1e6);
         
+        // Still in Repaying state (not all funds withdrawn yet)
+        assertEq(uint256(vault.getVaultState()), uint256(TokenizedBondVault.VaultState.Repaying));
+        
         uint256 investor2BalanceBefore = usdc.balanceOf(investor2);
         vm.prank(investor2);
         vault.redeemShares(20000 * 1e6);
@@ -589,6 +593,12 @@ contract VaultFlowTest is Test {
         
         assertEq(usdc.balanceOf(investor1) - investor1BalanceBefore, investor1Expected);
         assertEq(usdc.balanceOf(investor2) - investor2BalanceBefore, investor2Expected);
+        
+        // NOW vault should be marked as Completed (all funds withdrawn, balance is dust)
+        assertEq(uint256(vault.getVaultState()), uint256(TokenizedBondVault.VaultState.Completed));
+        
+        // Vault balance should be 0 or dust
+        assertTrue(usdc.balanceOf(vaultAddress) < 100, "Vault should be empty or have only dust");
     }
 
     function testOnlyBorrowerCanWithdraw() public {
@@ -665,6 +675,138 @@ contract VaultFlowTest is Test {
             "Vault ABC",
             "VABC"
         );
+    }
+
+    function testProtocolFeesAreProtectedFromInvestorRedemption() public {
+        // Setup: Create vault, fund it, sign contract, withdraw funds
+        vm.prank(borrower);
+        (uint256 vaultId, address vaultAddress) = vaultFactory.createVault(
+            PRINCIPAL_AMOUNT,
+            INTEREST_RATE,
+            PROTOCOL_FEE_RATE,
+            block.timestamp + MATURITY_DATE,
+            "Vault ABC",
+            "VABC"
+        );
+
+        TokenizedBondVault vault = TokenizedBondVault(vaultAddress);
+
+        // Fund vault
+        vm.startPrank(investor1);
+        usdc.approve(vaultAddress, 30000 * 1e6);
+        vault.purchaseShares(30000 * 1e6);
+        vm.stopPrank();
+
+        vm.startPrank(investor2);
+        usdc.approve(vaultAddress, 20000 * 1e6);
+        vault.purchaseShares(20000 * 1e6);
+        vm.stopPrank();
+
+        // Create and sign contract
+        bytes32 documentHash = keccak256("test-contract");
+        address[] memory signers = new address[](3);
+        signers[0] = borrower;
+        signers[1] = investor1;
+        signers[2] = investor2;
+
+        vm.prank(admin);
+        contractSigner.createContract(
+            documentHash,
+            ContractSigner.AgreementType.Loan,
+            signers,
+            "ipfs://contract-pdf",
+            2,
+            30 days
+        );
+
+        vm.prank(borrower);
+        contractSigner.signContract(documentHash, createSignature(borrowerPK, documentHash));
+
+        vm.prank(investor1);
+        contractSigner.signContract(documentHash, createSignature(investor1PK, documentHash));
+
+        vm.prank(investor2);
+        contractSigner.signContract(documentHash, createSignature(investor2PK, documentHash));
+
+        vm.prank(admin);
+        contractSigner.executeContract(documentHash, vaultId);
+
+        vm.prank(borrower);
+        vault.attachContract(documentHash);
+
+        // Borrower withdraws funds
+        vm.prank(borrower);
+        vault.withdrawFunds();
+
+        // Borrower makes FULL repayment (principal + interest + protocol fee)
+        uint256 interestAmount = PRINCIPAL_AMOUNT * INTEREST_RATE / 10000;
+        uint256 protocolFee = PRINCIPAL_AMOUNT * PROTOCOL_FEE_RATE / 10000;
+        uint256 totalDue = PRINCIPAL_AMOUNT + interestAmount + protocolFee;
+        
+        usdc.mint(borrower, interestAmount + protocolFee);
+
+        vm.startPrank(borrower);
+        usdc.approve(vaultAddress, totalDue);
+        vault.makeRepayment(totalDue);
+        vm.stopPrank();
+
+        // Verify vault has all funds
+        assertEq(usdc.balanceOf(vaultAddress), totalDue);
+
+        // CRITICAL TEST: Protocol has NOT withdrawn yet
+        // Check available for investors (should exclude protocol fee)
+        uint256 availableForInvestors = vault.getAvailableForInvestors();
+        assertEq(availableForInvestors, PRINCIPAL_AMOUNT + interestAmount); // $56,000
+        assertEq(availableForInvestors, 56000 * 1e6);
+
+        // Investor 1 redeems ALL their shares
+        uint256 investor1Shares = vault.balanceOf(investor1);
+        uint256 investor1BalanceBefore = usdc.balanceOf(investor1);
+        
+        vm.prank(investor1);
+        vault.redeemShares(investor1Shares);
+
+        uint256 investor1Received = usdc.balanceOf(investor1) - investor1BalanceBefore;
+        
+        // Investor 1 should receive 60% of $56,000 = $33,600 (NOT 60% of $57,000)
+        uint256 expectedInvestor1 = (30000 * 1e6 * availableForInvestors) / PRINCIPAL_AMOUNT;
+        assertEq(investor1Received, expectedInvestor1);
+        assertEq(investor1Received, 33600 * 1e6);
+
+        // Investor 2 redeems ALL their shares
+        uint256 investor2Shares = vault.balanceOf(investor2);
+        uint256 investor2BalanceBefore = usdc.balanceOf(investor2);
+        
+        vm.prank(investor2);
+        vault.redeemShares(investor2Shares);
+
+        uint256 investor2Received = usdc.balanceOf(investor2) - investor2BalanceBefore;
+        
+        // Investor 2 should receive 40% of $56,000 = $22,400 (NOT 40% of $57,000)
+        uint256 expectedInvestor2 = (20000 * 1e6 * availableForInvestors) / PRINCIPAL_AMOUNT;
+        assertEq(investor2Received, expectedInvestor2);
+        assertEq(investor2Received, 22400 * 1e6);
+
+        // CRITICAL VERIFICATION: Protocol fee should still be in vault
+        uint256 vaultBalanceAfterInvestors = usdc.balanceOf(vaultAddress);
+        assertEq(vaultBalanceAfterInvestors, protocolFee); // $1,000 remaining
+        assertEq(vaultBalanceAfterInvestors, 1000 * 1e6);
+
+        // Protocol collector can still withdraw their fee
+        uint256 protocolBalanceBefore = usdc.balanceOf(protocolFeeCollector);
+        
+        vm.prank(protocolFeeCollector);
+        vault.withdrawProtocolFees();
+
+        uint256 protocolReceived = usdc.balanceOf(protocolFeeCollector) - protocolBalanceBefore;
+        assertEq(protocolReceived, protocolFee);
+        assertEq(protocolReceived, 1000 * 1e6);
+
+        // Vault should now be empty (or dust)
+        assertTrue(usdc.balanceOf(vaultAddress) < 100);
+        
+        // Vault should be marked as Completed
+        assertEq(uint256(vault.getVaultState()), uint256(TokenizedBondVault.VaultState.Completed));
     }
 }
 

@@ -12,13 +12,14 @@ echo "=================================="
 # Source environment variables
 source .env
 
-# Deploy all contracts
+# Deploy all contracts with Blockscout verification
 forge script script/DeployAll.s.sol:DeployAll \
     --rpc-url unichain_sepolia \
     --broadcast \
     --verify \
     --verifier blockscout \
     --verifier-url https://unichain-sepolia.blockscout.com/api \
+    --chain-id 1301 \
     -vvv
 
 echo ""
@@ -27,4 +28,7 @@ echo "Deployment Complete!"
 echo "=================================="
 echo ""
 echo "Check addresses in broadcast/DeployAll.s.sol/1301/run-latest.json"
+echo ""
+echo "All contracts should be verified on Blockscout:"
+echo "https://unichain-sepolia.blockscout.com"
 

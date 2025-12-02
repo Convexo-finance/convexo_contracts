@@ -35,6 +35,9 @@ contract TokenizedBondVault is ERC20, AccessControl {
         uint256 totalRaised;
         uint256 totalRepaid;
         uint256 createdAt;
+        uint256 fundedAt;        // Timestamp when vault was fully funded
+        uint256 contractAttachedAt; // Timestamp when contract was attached
+        uint256 fundsWithdrawnAt;   // Timestamp when borrower withdrew funds
     }
 
     /// @notice Array of investor addresses
@@ -108,7 +111,10 @@ contract TokenizedBondVault is ERC20, AccessControl {
             state: VaultState.Pending,
             totalRaised: 0,
             totalRepaid: 0,
-            createdAt: block.timestamp
+            createdAt: block.timestamp,
+            fundedAt: 0,
+            contractAttachedAt: 0,
+            fundsWithdrawnAt: 0
         });
 
         usdc = IERC20(_usdc);
@@ -145,6 +151,7 @@ contract TokenizedBondVault is ERC20, AccessControl {
         // If fully funded, change to Funded state (awaiting contract)
         if (vaultInfo.totalRaised == vaultInfo.principalAmount) {
             vaultInfo.state = VaultState.Funded;
+            vaultInfo.fundedAt = block.timestamp;
             emit VaultStateChanged(VaultState.Funded);
             emit VaultFullyFunded(vaultInfo.vaultId, block.timestamp);
         }
@@ -158,6 +165,7 @@ contract TokenizedBondVault is ERC20, AccessControl {
         require(_contractHash != bytes32(0), "Invalid contract hash");
 
         vaultInfo.contractHash = _contractHash;
+        vaultInfo.contractAttachedAt = block.timestamp;
         vaultInfo.state = VaultState.Active;
         emit ContractAttached(vaultInfo.vaultId, _contractHash);
         emit VaultStateChanged(VaultState.Active);
@@ -181,6 +189,7 @@ contract TokenizedBondVault is ERC20, AccessControl {
         require(usdc.transfer(vaultInfo.borrower, vaultInfo.principalAmount), "USDC transfer failed");
 
         vaultInfo.state = VaultState.Repaying;
+        vaultInfo.fundsWithdrawnAt = block.timestamp;
         emit FundsWithdrawn(vaultInfo.borrower, vaultInfo.principalAmount);
         emit VaultStateChanged(VaultState.Repaying);
     }
@@ -211,32 +220,26 @@ contract TokenizedBondVault is ERC20, AccessControl {
 
         emit RepaymentMade(amount, vaultInfo.totalRepaid);
 
-        // Calculate total due (principal + interest + protocol fee)
-        uint256 interestAmount = vaultInfo.principalAmount * vaultInfo.interestRate / 10000;
-        uint256 protocolFee = vaultInfo.principalAmount * vaultInfo.protocolFeeRate / 10000;
-        uint256 totalDue = vaultInfo.principalAmount + interestAmount + protocolFee;
-
-        // Check if fully repaid
-        if (vaultInfo.totalRepaid >= totalDue) {
-            vaultInfo.state = VaultState.Completed;
-            emit VaultStateChanged(VaultState.Completed);
-        }
+        // Note: Vault state changes to Completed only when all funds are withdrawn
+        // This is checked in _checkVaultCompletion() called by redeemShares() and withdrawProtocolFees()
     }
 
     /// @notice Redeem shares for USDC
     /// @param shares The number of shares to redeem
-    /// @dev Can redeem partially or fully at any time after repayments start
+    /// @dev Can redeem partially or fully at any time after borrower withdraws funds
     function redeemShares(uint256 shares) external {
         require(
             vaultInfo.state == VaultState.Repaying || vaultInfo.state == VaultState.Completed,
-            "No repayments yet"
+            "Funds not withdrawn by borrower yet"
         );
         require(shares > 0, "Shares must be greater than 0");
         require(balanceOf(msg.sender) >= shares, "Insufficient shares");
 
-        // Calculate how much investors can redeem based on repayments
-        // Investors get their proportional share of (repayments - protocol fees already withdrawn)
-        uint256 availableForInvestors = usdc.balanceOf(address(this));
+        // Get available funds for investors (excluding reserved protocol fees)
+        uint256 availableForInvestors = getAvailableForInvestors();
+        require(availableForInvestors > 0, "No funds available for redemption");
+        
+        // Calculate redemption amount proportional to shares
         uint256 redemptionAmount = (shares * availableForInvestors) / totalSupply();
 
         // Burn shares
@@ -246,6 +249,9 @@ contract TokenizedBondVault is ERC20, AccessControl {
         require(usdc.transfer(msg.sender, redemptionAmount), "USDC transfer failed");
 
         emit SharesRedeemed(msg.sender, shares, redemptionAmount);
+        
+        // Check if vault can be marked as completed (all funds distributed)
+        _checkVaultCompletion();
     }
 
     /// @notice Withdraw protocol fees (only callable by protocol fee collector)
@@ -279,6 +285,68 @@ contract TokenizedBondVault is ERC20, AccessControl {
         require(usdc.transfer(protocolFeeCollector, availableFees), "Protocol fee transfer failed");
         
         emit ProtocolFeesCollected(availableFees);
+        
+        // Check if vault can be marked as completed (all funds distributed)
+        _checkVaultCompletion();
+    }
+
+    /// @notice Calculate protocol fees that are earned but not yet withdrawn
+    /// @return The amount of USDC reserved for protocol fees
+    function _calculateReservedProtocolFees() internal view returns (uint256) {
+        // Calculate total due
+        uint256 interestAmount = vaultInfo.principalAmount * vaultInfo.interestRate / 10000;
+        uint256 totalProtocolFee = vaultInfo.principalAmount * vaultInfo.protocolFeeRate / 10000;
+        uint256 totalDue = vaultInfo.principalAmount + interestAmount + totalProtocolFee;
+        
+        // Calculate earned protocol fee based on repayments
+        uint256 earnedProtocolFee;
+        if (vaultInfo.totalRepaid >= totalDue) {
+            earnedProtocolFee = totalProtocolFee;
+        } else {
+            earnedProtocolFee = (vaultInfo.totalRepaid * totalProtocolFee) / totalDue;
+        }
+        
+        // Return reserved amount (earned but not withdrawn)
+        return earnedProtocolFee > protocolFeesWithdrawn 
+            ? earnedProtocolFee - protocolFeesWithdrawn 
+            : 0;
+    }
+
+    /// @notice Get available funds for investors (excluding reserved protocol fees)
+    /// @return The amount available for investor redemptions
+    function getAvailableForInvestors() public view returns (uint256) {
+        uint256 vaultBalance = usdc.balanceOf(address(this));
+        uint256 reservedProtocolFees = _calculateReservedProtocolFees();
+        
+        return vaultBalance > reservedProtocolFees 
+            ? vaultBalance - reservedProtocolFees 
+            : 0;
+    }
+
+    /// @notice Internal function to check if vault should be marked as completed
+    /// @dev Vault is completed when all debt is repaid AND all funds are withdrawn (balance is 0 or dust)
+    function _checkVaultCompletion() internal {
+        if (vaultInfo.state != VaultState.Repaying) {
+            return; // Only check when in Repaying state
+        }
+        
+        // Calculate total due (principal + interest + protocol fee)
+        uint256 interestAmount = vaultInfo.principalAmount * vaultInfo.interestRate / 10000;
+        uint256 protocolFee = vaultInfo.principalAmount * vaultInfo.protocolFeeRate / 10000;
+        uint256 totalDue = vaultInfo.principalAmount + interestAmount + protocolFee;
+        
+        // Check if all debt is repaid
+        bool debtFullyRepaid = vaultInfo.totalRepaid >= totalDue;
+        
+        // Check if all funds have been withdrawn (allowing for dust/rounding errors)
+        uint256 vaultBalance = usdc.balanceOf(address(this));
+        bool allFundsWithdrawn = vaultBalance < 100; // Less than 0.0001 USDC (dust)
+        
+        // Mark as completed only if debt is repaid AND all funds distributed
+        if (debtFullyRepaid && allFundsWithdrawn) {
+            vaultInfo.state = VaultState.Completed;
+            emit VaultStateChanged(VaultState.Completed);
+        }
     }
 
     /// @notice Mark vault as defaulted
@@ -483,5 +551,38 @@ contract TokenizedBondVault is ERC20, AccessControl {
     /// @return The contract hash
     function getVaultContractHash() external view returns (bytes32) {
         return vaultInfo.contractHash;
+    }
+
+    /// @notice Get vault creation timestamp
+    /// @return The timestamp when vault was created
+    function getVaultCreatedAt() external view returns (uint256) {
+        return vaultInfo.createdAt;
+    }
+
+    /// @notice Get vault funded timestamp
+    /// @return The timestamp when vault was fully funded (0 if not funded)
+    function getVaultFundedAt() external view returns (uint256) {
+        return vaultInfo.fundedAt;
+    }
+
+    /// @notice Get contract attached timestamp
+    /// @return The timestamp when contract was attached (0 if not attached)
+    function getVaultContractAttachedAt() external view returns (uint256) {
+        return vaultInfo.contractAttachedAt;
+    }
+
+    /// @notice Get funds withdrawn timestamp
+    /// @return The timestamp when borrower withdrew funds (0 if not withdrawn)
+    function getVaultFundsWithdrawnAt() external view returns (uint256) {
+        return vaultInfo.fundsWithdrawnAt;
+    }
+
+    /// @notice Calculate actual due date based on withdrawal timestamp
+    /// @return The actual due date (fundsWithdrawnAt + duration)
+    function getActualDueDate() external view returns (uint256) {
+        if (vaultInfo.fundsWithdrawnAt == 0) {
+            return 0; // Funds not withdrawn yet
+        }
+        return vaultInfo.fundsWithdrawnAt + (vaultInfo.maturityDate - vaultInfo.createdAt);
     }
 }
