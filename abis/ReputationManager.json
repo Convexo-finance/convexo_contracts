@@ -1,1 +1,263 @@
-{"abi":[{"type":"constructor","inputs":[{"name":"_convexoLPs","type":"address","internalType":"contract IConvexoLPs"},{"name":"_convexoVaults","type":"address","internalType":"contract IConvexoVaults"}],"stateMutability":"nonpayable"},{"type":"function","name":"checkReputationWithEvent","inputs":[{"name":"user","type":"address","internalType":"address"}],"outputs":[{"name":"tier","type":"uint8","internalType":"enum ReputationManager.ReputationTier"}],"stateMutability":"nonpayable"},{"type":"function","name":"convexoLPs","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract IConvexoLPs"}],"stateMutability":"view"},{"type":"function","name":"convexoVaults","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract IConvexoVaults"}],"stateMutability":"view"},{"type":"function","name":"getReputationDetails","inputs":[{"name":"user","type":"address","internalType":"address"}],"outputs":[{"name":"tier","type":"uint8","internalType":"enum ReputationManager.ReputationTier"},{"name":"lpsBalance","type":"uint256","internalType":"uint256"},{"name":"vaultsBalance","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"getReputationTier","inputs":[{"name":"user","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint8","internalType":"enum ReputationManager.ReputationTier"}],"stateMutability":"view"},{"type":"function","name":"getReputationTierNumeric","inputs":[{"name":"user","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"hasCompliantAccess","inputs":[{"name":"user","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"view"},{"type":"function","name":"hasCreditscoreAccess","inputs":[{"name":"user","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"view"},{"type":"function","name":"holdsConvexoLPs","inputs":[{"name":"user","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"view"},{"type":"function","name":"holdsConvexoVaults","inputs":[{"name":"user","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"view"},{"type":"function","name":"requireCompliantAccess","inputs":[{"name":"user","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"view"},{"type":"function","name":"requireCreditscoreAccess","inputs":[{"name":"user","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"view"},{"type":"event","name":"ReputationChecked","inputs":[{"name":"user","type":"address","indexed":true,"internalType":"address"},{"name":"tier","type":"uint8","indexed":false,"internalType":"enum ReputationManager.ReputationTier"},{"name":"lpsBalance","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"vaultsBalance","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false}],"bytecode":{"object":"0x60c0346100c357601f610a3a38819003918201601f19168301916001600160401b038311848410176100c75780849260409485528339810103126100c3578051906001600160a01b03821682036100c35760200151906001600160a01b03821682036100c35760805260a05260405161095e90816100dc823960805181818160b501528181610168015281816102cc01528181610534015261080c015260a0518181816101be015281816103860152818161058901528181610751015261085a0152f35b5f80fd5b634e487b7160e01b5f52604160045260245ffdfe6080806040526004361015610012575f80fd5b5f3560e01c908163044723231461073f5750806306fd1da6146106bb578063089f30641461067757806327a90f0a146104f25780632d451ca014610463578063329c4ad7146104225780633ed3f380146103c9578063483e67db146103435780634fbf3c47146102895780635e270a59146101265780636be2cefb146100e85763d5585f0b146100a0575f80fd5b346100e4575f3660031901126100e4576040517f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03168152602090f35b5f80fd5b346100e45760203660031901126100e4576004356001600160a01b03811681036100e4576101176020916107e0565b6101246040518092610780565bf35b346100e45760203660031901126100e4576004356001600160a01b0381168082036100e4576040516370a0823160e01b815260048101829052916020836024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa92831561024a575f93610255575b506040516370a0823160e01b815260048101929092526020826024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa91821561024a575f92610214575b50610203610210916107e0565b916040519384938461078d565b0390f35b9091506020813d602011610242575b81610230602093836107aa565b810103126100e45751906102036101f6565b3d9150610223565b6040513d5f823e3d90fd5b9092506020813d602011610281575b81610271602093836107aa565b810103126100e4575191836101a0565b3d9150610264565b346100e45760203660031901126100e4576004356001600160a01b038116908190036100e4576040516370a0823160e01b815260048101919091526020816024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa801561024a575f90610310575b6020906040519015158152f35b506020813d60201161033b575b8161032a602093836107aa565b810103126100e45760209051610303565b3d915061031d565b346100e45760203660031901126100e4576004356001600160a01b038116908190036100e4576040516370a0823160e01b815260048101919091526020816024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa801561024a575f90610310576020906040519015158152f35b346100e45760203660031901126100e4576004356001600160a01b03811681036100e4576103f6906107e0565b600381101561040e5760209060016040519110158152f35b634e487b7160e01b5f52602160045260245ffd5b346100e45760203660031901126100e4576004356001600160a01b03811681036100e45761044f906107e0565b600381101561040e57602090604051908152f35b346100e45760203660031901126100e4576004356001600160a01b03811681036100e457610490906107e0565b600381101561040e576001116104a257005b60405162461bcd60e51b815260206004820152602260248201527f4d757374206861766520436f6d706c69616e742074696572206f72206869676860448201526132b960f11b6064820152608490fd5b346100e45760203660031901126100e4576004356001600160a01b0381168082036100e4576040516370a0823160e01b815260048101829052906020826024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa91821561024a575f92610643575b506040516370a0823160e01b8152600481018290526020816024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa90811561024a575f91610610575b507fe73f91e07f5c136320f28eaa5b934cb995c9dd5e6d85ff798a791e3e3399eb60906105ef6020956107e0565b93610600604051928392878461078d565b0390a26101246040518092610780565b90506020813d60201161063b575b8161062b602093836107aa565b810103126100e4575160206105c1565b3d915061061e565b9091506020813d60201161066f575b8161065f602093836107aa565b810103126100e45751908361056c565b3d9150610652565b346100e45760203660031901126100e4576004356001600160a01b03811681036100e4576106a4906107e0565b600381101561040e57602090600260405191148152f35b346100e45760203660031901126100e4576004356001600160a01b03811681036100e4576106e8906107e0565b600381101561040e576002036106fa57005b60405162461bcd60e51b815260206004820152601a60248201527f4d75737420686176652043726564697473636f726520746965720000000000006044820152606490fd5b346100e4575f3660031901126100e4577f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03168152602090f35b90600382101561040e5752565b6040919493926107a1826060810197610780565b60208201520152565b90601f8019910116810190811067ffffffffffffffff8211176107cc57604052565b634e487b7160e01b5f52604160045260245ffd5b6040516370a0823160e01b81526001600160a01b039182166004820181905291602090829060249082907f0000000000000000000000000000000000000000000000000000000000000000165afa90811561024a575f916108f6575b506040516370a0823160e01b815260048101929092526020826024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa91821561024a575f926108c2575b501515809181926108b8575b50156108aa5750600290565b156108b457600190565b5f90565b905015155f61089e565b9091506020813d6020116108ee575b816108de602093836107aa565b810103126100e45751905f610892565b3d91506108d1565b90506020813d602011610920575b81610911602093836107aa565b810103126100e457515f61083c565b3d915061090456fea26469706673582212205a4c1661aedd21714d68a27a1e57ee182b54dc587b46cbbbf668eceb8b1dd8f764736f6c634300081e0033","sourceMap":"354:4757:57:-:0;;;;;;;;;;;;;-1:-1:-1;;354:4757:57;;;;-1:-1:-1;;;;;354:4757:57;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;354:4757:57;;;;;;;;;;-1:-1:-1;;;;;354:4757:57;;;;;;1191:24;;1225:30;;354:4757;;;;;;;;1191:24;354:4757;;;;;;;;;;;;;;;;;;;;;;;;;1225:30;354:4757;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;354:4757:57;;;;;;-1:-1:-1;354:4757:57;;;;;-1:-1:-1;354:4757:57","linkReferences":{}},"deployedBytecode":{"object":"0x6080806040526004361015610012575f80fd5b5f3560e01c908163044723231461073f5750806306fd1da6146106bb578063089f30641461067757806327a90f0a146104f25780632d451ca014610463578063329c4ad7146104225780633ed3f380146103c9578063483e67db146103435780634fbf3c47146102895780635e270a59146101265780636be2cefb146100e85763d5585f0b146100a0575f80fd5b346100e4575f3660031901126100e4576040517f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03168152602090f35b5f80fd5b346100e45760203660031901126100e4576004356001600160a01b03811681036100e4576101176020916107e0565b6101246040518092610780565bf35b346100e45760203660031901126100e4576004356001600160a01b0381168082036100e4576040516370a0823160e01b815260048101829052916020836024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa92831561024a575f93610255575b506040516370a0823160e01b815260048101929092526020826024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa91821561024a575f92610214575b50610203610210916107e0565b916040519384938461078d565b0390f35b9091506020813d602011610242575b81610230602093836107aa565b810103126100e45751906102036101f6565b3d9150610223565b6040513d5f823e3d90fd5b9092506020813d602011610281575b81610271602093836107aa565b810103126100e4575191836101a0565b3d9150610264565b346100e45760203660031901126100e4576004356001600160a01b038116908190036100e4576040516370a0823160e01b815260048101919091526020816024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa801561024a575f90610310575b6020906040519015158152f35b506020813d60201161033b575b8161032a602093836107aa565b810103126100e45760209051610303565b3d915061031d565b346100e45760203660031901126100e4576004356001600160a01b038116908190036100e4576040516370a0823160e01b815260048101919091526020816024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa801561024a575f90610310576020906040519015158152f35b346100e45760203660031901126100e4576004356001600160a01b03811681036100e4576103f6906107e0565b600381101561040e5760209060016040519110158152f35b634e487b7160e01b5f52602160045260245ffd5b346100e45760203660031901126100e4576004356001600160a01b03811681036100e45761044f906107e0565b600381101561040e57602090604051908152f35b346100e45760203660031901126100e4576004356001600160a01b03811681036100e457610490906107e0565b600381101561040e576001116104a257005b60405162461bcd60e51b815260206004820152602260248201527f4d757374206861766520436f6d706c69616e742074696572206f72206869676860448201526132b960f11b6064820152608490fd5b346100e45760203660031901126100e4576004356001600160a01b0381168082036100e4576040516370a0823160e01b815260048101829052906020826024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa91821561024a575f92610643575b506040516370a0823160e01b8152600481018290526020816024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa90811561024a575f91610610575b507fe73f91e07f5c136320f28eaa5b934cb995c9dd5e6d85ff798a791e3e3399eb60906105ef6020956107e0565b93610600604051928392878461078d565b0390a26101246040518092610780565b90506020813d60201161063b575b8161062b602093836107aa565b810103126100e4575160206105c1565b3d915061061e565b9091506020813d60201161066f575b8161065f602093836107aa565b810103126100e45751908361056c565b3d9150610652565b346100e45760203660031901126100e4576004356001600160a01b03811681036100e4576106a4906107e0565b600381101561040e57602090600260405191148152f35b346100e45760203660031901126100e4576004356001600160a01b03811681036100e4576106e8906107e0565b600381101561040e576002036106fa57005b60405162461bcd60e51b815260206004820152601a60248201527f4d75737420686176652043726564697473636f726520746965720000000000006044820152606490fd5b346100e4575f3660031901126100e4577f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03168152602090f35b90600382101561040e5752565b6040919493926107a1826060810197610780565b60208201520152565b90601f8019910116810190811067ffffffffffffffff8211176107cc57604052565b634e487b7160e01b5f52604160045260245ffd5b6040516370a0823160e01b81526001600160a01b039182166004820181905291602090829060249082907f0000000000000000000000000000000000000000000000000000000000000000165afa90811561024a575f916108f6575b506040516370a0823160e01b815260048101929092526020826024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa91821561024a575f926108c2575b501515809181926108b8575b50156108aa5750600290565b156108b457600190565b5f90565b905015155f61089e565b9091506020813d6020116108ee575b816108de602093836107aa565b810103126100e45751905f610892565b3d91506108d1565b90506020813d602011610920575b81610911602093836107aa565b810103126100e457515f61083c565b3d915061090456fea26469706673582212205a4c1661aedd21714d68a27a1e57ee182b54dc587b46cbbbf668eceb8b1dd8f764736f6c634300081e0033","sourceMap":"354:4757:57:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;354:4757:57;;;;;;786:39;-1:-1:-1;;;;;354:4757:57;;;;;;;;;;;;;;;;-1:-1:-1;;354:4757:57;;;;;;-1:-1:-1;;;;;354:4757:57;;;;;;;;;;:::i;:::-;;;;;;;:::i;:::-;;;;;;;;-1:-1:-1;;354:4757:57;;;;;;-1:-1:-1;;;;;354:4757:57;;;;;;;;;-1:-1:-1;;;3885:26:57;;354:4757;3885:26;;354:4757;;;;;;3885:26;354:4757;3885:10;-1:-1:-1;;;;;354:4757:57;3885:26;;;;;;;354:4757;3885:26;;;354:4757;-1:-1:-1;354:4757:57;;-1:-1:-1;;;3937:29:57;;354:4757;3937:29;;354:4757;;;;;;3885:26;354:4757;3937:13;-1:-1:-1;;;;;354:4757:57;3937:29;;;;;;;354:4757;3937:29;;;354:4757;3983:23;;354:4757;3983:23;;:::i;:::-;354:4757;;;;;;;;:::i;:::-;;;;3937:29;;;;354:4757;3937:29;;354:4757;3937:29;;;;;;354:4757;3937:29;;;:::i;:::-;;;354:4757;;;;;;3983:23;3937:29;;;;;-1:-1:-1;3937:29:57;;;354:4757;;;;;;;;;3885:26;;;;354:4757;3885:26;;354:4757;3885:26;;;;;;354:4757;3885:26;;;:::i;:::-;;;354:4757;;;;;3885:26;;;;;;;-1:-1:-1;3885:26:57;;354:4757;;;;;;-1:-1:-1;;354:4757:57;;;;;;-1:-1:-1;;;;;354:4757:57;;;;;;;;;;-1:-1:-1;;;3082:26:57;;354:4757;3082:26;;354:4757;;;;;;3082:26;354:4757;3082:10;-1:-1:-1;;;;;354:4757:57;3082:26;;;;;;354:4757;3082:26;;;354:4757;;;;;3082:30;;;354:4757;;;3082:26;;354:4757;3082:26;;354:4757;3082:26;;;;;;354:4757;3082:26;;;:::i;:::-;;;354:4757;;;;;;;3082:26;;;;;-1:-1:-1;3082:26:57;;354:4757;;;;;;-1:-1:-1;;354:4757:57;;;;;;-1:-1:-1;;;;;354:4757:57;;;;;;;;;;-1:-1:-1;;;3380:29:57;;354:4757;3380:29;;354:4757;;;;;;3380:29;354:4757;3380:13;-1:-1:-1;;;;;354:4757:57;3380:29;;;;;;354:4757;3380:29;;;354:4757;;;;3380:33;;;354:4757;;;;;;;;;-1:-1:-1;;354:4757:57;;;;;;-1:-1:-1;;;;;354:4757:57;;;;;;2473:23;;;:::i;:::-;354:4757;;;;;;;;2500:24;354:4757;;2473:51;;;354:4757;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;354:4757:57;;;;;;-1:-1:-1;;;;;354:4757:57;;;;;;2188:23;;;:::i;:::-;354:4757;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;354:4757:57;;;;;;-1:-1:-1;;;;;354:4757:57;;;;;;4737:23;;;:::i;:::-;354:4757;;;;;;4764:24;-1:-1:-1;354:4757:57;;;;;;-1:-1:-1;;;354:4757:57;;;;;;;;;;;;;;;;;-1:-1:-1;;;354:4757:57;;;;;;;;;;;;;-1:-1:-1;;354:4757:57;;;;;;-1:-1:-1;;;;;354:4757:57;;;;;;;;;-1:-1:-1;;;4318:26:57;;354:4757;4318:26;;354:4757;;;;;;4318:26;354:4757;4318:10;-1:-1:-1;;;;;354:4757:57;4318:26;;;;;;;354:4757;4318:26;;;354:4757;-1:-1:-1;354:4757:57;;-1:-1:-1;;;4378:29:57;;354:4757;4378:29;;354:4757;;;;;4318:26;354:4757;4378:13;-1:-1:-1;;;;;354:4757:57;4378:29;;;;;;;354:4757;4378:29;;;354:4757;4424:23;4463:56;4424:23;;354:4757;4424:23;;:::i;:::-;354:4757;4463:56;354:4757;;4463:56;;;;;;:::i;:::-;;;;354:4757;;;;;;:::i;4378:29::-;;;354:4757;4378:29;;354:4757;4378:29;;;;;;354:4757;4378:29;;;:::i;:::-;;;354:4757;;;;;;4378:29;;;;;-1:-1:-1;4378:29:57;;4318:26;;;;354:4757;4318:26;;354:4757;4318:26;;;;;;354:4757;4318:26;;;:::i;:::-;;;354:4757;;;;;4318:26;;;;;;;-1:-1:-1;4318:26:57;;354:4757;;;;;;-1:-1:-1;;354:4757:57;;;;;;-1:-1:-1;;;;;354:4757:57;;;;;;2770:23;;;:::i;:::-;354:4757;;;;;;;;2797:26;354:4757;;2770:53;;354:4757;;;;;;;;;-1:-1:-1;;354:4757:57;;;;;;-1:-1:-1;;;;;354:4757:57;;;;;;5018:23;;;:::i;:::-;354:4757;;;;;;5045:26;5018:53;354:4757;;;;;;-1:-1:-1;;;354:4757:57;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;354:4757:57;;;;894:45;-1:-1:-1;;;;;354:4757:57;;;;;;;;;;;;;;;:::o;:::-;;;;;;;;;;;;;:::i;:::-;;;;;;;:::o;:::-;;;;;;;;;;;;;;;;;;;;;:::o;:::-;;;;-1:-1:-1;354:4757:57;;;;;-1:-1:-1;354:4757:57;1396:535;354:4757;;-1:-1:-1;;;1505:26:57;;-1:-1:-1;;;;;354:4757:57;;;1505:26;;;354:4757;;;;;;;;1505:26;;354:4757;;1505:10;354:4757;1505:26;;;;;;;354:4757;1505:26;;;1396:535;-1:-1:-1;354:4757:57;;-1:-1:-1;;;1565:29:57;;1505:26;1565:29;;354:4757;;;;;;1505:26;354:4757;1565:13;-1:-1:-1;;;;;354:4757:57;1565:29;;;;;;;354:4757;1565:29;;;1396:535;1609:14;;;;;;:35;;;1396:535;-1:-1:-1;1605:320:57;;;1660:33;1667:26;1660:33;:::o;1605:320::-;1741:184;;;1782:24;1775:31;:::o;1741:184::-;354:4757;1869:26;:::o;1609:35::-;1627:17;;;;1609:35;;;1565:29;;;;354:4757;1565:29;;354:4757;1565:29;;;;;;354:4757;1565:29;;;:::i;:::-;;;354:4757;;;;;1565:29;;;;;;;-1:-1:-1;1565:29:57;;1505:26;;;354:4757;1505:26;;354:4757;1505:26;;;;;;354:4757;1505:26;;;:::i;:::-;;;354:4757;;;;;1505:26;;;;;;-1:-1:-1;1505:26:57;","linkReferences":{},"immutableReferences":{"46870":[{"start":181,"length":32},{"start":360,"length":32},{"start":716,"length":32},{"start":1332,"length":32},{"start":2060,"length":32}],"46874":[{"start":446,"length":32},{"start":902,"length":32},{"start":1417,"length":32},{"start":1873,"length":32},{"start":2138,"length":32}]}},"methodIdentifiers":{"checkReputationWithEvent(address)":"27a90f0a","convexoLPs()":"d5585f0b","convexoVaults()":"04472323","getReputationDetails(address)":"5e270a59","getReputationTier(address)":"6be2cefb","getReputationTierNumeric(address)":"329c4ad7","hasCompliantAccess(address)":"3ed3f380","hasCreditscoreAccess(address)":"089f3064","holdsConvexoLPs(address)":"4fbf3c47","holdsConvexoVaults(address)":"483e67db","requireCompliantAccess(address)":"2d451ca0","requireCreditscoreAccess(address)":"06fd1da6"},"rawMetadata":"{\"compiler\":{\"version\":\"0.8.30+commit.73712a01\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract IConvexoLPs\",\"name\":\"_convexoLPs\",\"type\":\"address\"},{\"internalType\":\"contract IConvexoVaults\",\"name\":\"_convexoVaults\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"enum ReputationManager.ReputationTier\",\"name\":\"tier\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"lpsBalance\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"vaultsBalance\",\"type\":\"uint256\"}],\"name\":\"ReputationChecked\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"checkReputationWithEvent\",\"outputs\":[{\"internalType\":\"enum ReputationManager.ReputationTier\",\"name\":\"tier\",\"type\":\"uint8\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"convexoLPs\",\"outputs\":[{\"internalType\":\"contract IConvexoLPs\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"convexoVaults\",\"outputs\":[{\"internalType\":\"contract IConvexoVaults\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"getReputationDetails\",\"outputs\":[{\"internalType\":\"enum ReputationManager.ReputationTier\",\"name\":\"tier\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"lpsBalance\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"vaultsBalance\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"getReputationTier\",\"outputs\":[{\"internalType\":\"enum ReputationManager.ReputationTier\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"getReputationTierNumeric\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"hasCompliantAccess\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"hasCreditscoreAccess\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"holdsConvexoLPs\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"holdsConvexoVaults\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"requireCompliantAccess\",\"outputs\":[],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"requireCreditscoreAccess\",\"outputs\":[],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Checks Convexo_LPs and Convexo_Vaults NFT ownership to calculate reputation\",\"kind\":\"dev\",\"methods\":{\"checkReputationWithEvent(address)\":{\"params\":{\"user\":\"The address to check\"},\"returns\":{\"tier\":\"The reputation tier\"}},\"getReputationDetails(address)\":{\"params\":{\"user\":\"The address to check\"},\"returns\":{\"lpsBalance\":\"The number of Convexo_LPs NFTs held\",\"tier\":\"The reputation tier\",\"vaultsBalance\":\"The number of Convexo_Vaults NFTs held\"}},\"getReputationTier(address)\":{\"params\":{\"user\":\"The address to check\"},\"returns\":{\"_0\":\"The reputation tier\"}},\"getReputationTierNumeric(address)\":{\"params\":{\"user\":\"The address to check\"},\"returns\":{\"_0\":\"The numeric reputation tier\"}},\"hasCompliantAccess(address)\":{\"params\":{\"user\":\"The address to check\"},\"returns\":{\"_0\":\"True if user has Tier 1 or higher\"}},\"hasCreditscoreAccess(address)\":{\"params\":{\"user\":\"The address to check\"},\"returns\":{\"_0\":\"True if user has Tier 2\"}},\"holdsConvexoLPs(address)\":{\"params\":{\"user\":\"The address to check\"},\"returns\":{\"_0\":\"True if user holds at least one Convexo_LPs NFT\"}},\"holdsConvexoVaults(address)\":{\"params\":{\"user\":\"The address to check\"},\"returns\":{\"_0\":\"True if user holds at least one Convexo_Vaults NFT\"}},\"requireCompliantAccess(address)\":{\"params\":{\"user\":\"The address to check\"}},\"requireCreditscoreAccess(address)\":{\"params\":{\"user\":\"The address to check\"}}},\"title\":\"ReputationManager\",\"version\":1},\"userdoc\":{\"events\":{\"ReputationChecked(address,uint8,uint256,uint256)\":{\"notice\":\"Emitted when reputation is checked\"}},\"kind\":\"user\",\"methods\":{\"checkReputationWithEvent(address)\":{\"notice\":\"Check reputation and emit event\"},\"convexoLPs()\":{\"notice\":\"The Convexo_LPs NFT contract (Compliant)\"},\"convexoVaults()\":{\"notice\":\"The Convexo_Vaults NFT contract (Creditscore)\"},\"getReputationDetails(address)\":{\"notice\":\"Get detailed reputation information for a user\"},\"getReputationTier(address)\":{\"notice\":\"Get the reputation tier for a user\"},\"getReputationTierNumeric(address)\":{\"notice\":\"Get the numeric reputation tier (0, 1, or 2)\"},\"hasCompliantAccess(address)\":{\"notice\":\"Check if a user has at least Compliant tier (Tier 1)\"},\"hasCreditscoreAccess(address)\":{\"notice\":\"Check if a user has Creditscore tier (Tier 2)\"},\"holdsConvexoLPs(address)\":{\"notice\":\"Check if a user holds a Convexo_LPs NFT\"},\"holdsConvexoVaults(address)\":{\"notice\":\"Check if a user holds a Convexo_Vaults NFT\"},\"requireCompliantAccess(address)\":{\"notice\":\"Require that a user has at least Compliant tier\"},\"requireCreditscoreAccess(address)\":{\"notice\":\"Require that a user has Creditscore tier\"}},\"notice\":\"Manages NFT-based reputation tiers for users\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/contracts/ReputationManager.sol\":\"ReputationManager\"},\"evmVersion\":\"prague\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@openzeppelin/=lib/openzeppelin-contracts/\",\":ds-test/=lib/openzeppelin-contracts/lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/\",\":forge-std/=lib/forge-std/src/\",\":openzeppelin-contracts/=lib/openzeppelin-contracts/\"],\"viaIR\":true},\"sources\":{\"src/contracts/ReputationManager.sol\":{\"keccak256\":\"0x750a71b00397f39c56441e7c01fd23cb52d9aedba6a5ead5448153e404cd8700\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0df751b05bea5086871f5ab06480b07470e45462b8a1b924dc4b1916c8ec4b38\",\"dweb:/ipfs/QmfXML4NgTSUPquToGE4BFvBhb7divZ9qpm7LxTp4cga3p\"]},\"src/interfaces/IConvexoLPs.sol\":{\"keccak256\":\"0xc944b254ed28b3cf78037664259459d0a787b11d2e1adad0ff0a8eab10f40c35\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://54cbb0498e91badcab338640e0afccd7faba323d8a88d79542519d60b5430f2e\",\"dweb:/ipfs/QmRKGG771tVPfdwrzeENYSEf2uw3sWccb6Hieuj8NhVtSx\"]},\"src/interfaces/IConvexoVaults.sol\":{\"keccak256\":\"0x70a71a9442b608f5b0dbc62681b23fdebddcfc7f88d87f677abb27dc4eaa0ecb\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://520427d3b68e760d21da5edaf63e096d9093a20179835aad2907af82a0bf9bac\",\"dweb:/ipfs/QmQsVhMJFywgpNe4g4TYeRB6vuenkM6i2iG3PpY4mamB45\"]}},\"version\":1}","metadata":{"compiler":{"version":"0.8.30+commit.73712a01"},"language":"Solidity","output":{"abi":[{"inputs":[{"internalType":"contract IConvexoLPs","name":"_convexoLPs","type":"address"},{"internalType":"contract IConvexoVaults","name":"_convexoVaults","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"address","name":"user","type":"address","indexed":true},{"internalType":"enum ReputationManager.ReputationTier","name":"tier","type":"uint8","indexed":false},{"internalType":"uint256","name":"lpsBalance","type":"uint256","indexed":false},{"internalType":"uint256","name":"vaultsBalance","type":"uint256","indexed":false}],"type":"event","name":"ReputationChecked","anonymous":false},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"stateMutability":"nonpayable","type":"function","name":"checkReputationWithEvent","outputs":[{"internalType":"enum ReputationManager.ReputationTier","name":"tier","type":"uint8"}]},{"inputs":[],"stateMutability":"view","type":"function","name":"convexoLPs","outputs":[{"internalType":"contract IConvexoLPs","name":"","type":"address"}]},{"inputs":[],"stateMutability":"view","type":"function","name":"convexoVaults","outputs":[{"internalType":"contract IConvexoVaults","name":"","type":"address"}]},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"stateMutability":"view","type":"function","name":"getReputationDetails","outputs":[{"internalType":"enum ReputationManager.ReputationTier","name":"tier","type":"uint8"},{"internalType":"uint256","name":"lpsBalance","type":"uint256"},{"internalType":"uint256","name":"vaultsBalance","type":"uint256"}]},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"stateMutability":"view","type":"function","name":"getReputationTier","outputs":[{"internalType":"enum ReputationManager.ReputationTier","name":"","type":"uint8"}]},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"stateMutability":"view","type":"function","name":"getReputationTierNumeric","outputs":[{"internalType":"uint256","name":"","type":"uint256"}]},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"stateMutability":"view","type":"function","name":"hasCompliantAccess","outputs":[{"internalType":"bool","name":"","type":"bool"}]},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"stateMutability":"view","type":"function","name":"hasCreditscoreAccess","outputs":[{"internalType":"bool","name":"","type":"bool"}]},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"stateMutability":"view","type":"function","name":"holdsConvexoLPs","outputs":[{"internalType":"bool","name":"","type":"bool"}]},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"stateMutability":"view","type":"function","name":"holdsConvexoVaults","outputs":[{"internalType":"bool","name":"","type":"bool"}]},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"stateMutability":"view","type":"function","name":"requireCompliantAccess"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"stateMutability":"view","type":"function","name":"requireCreditscoreAccess"}],"devdoc":{"kind":"dev","methods":{"checkReputationWithEvent(address)":{"params":{"user":"The address to check"},"returns":{"tier":"The reputation tier"}},"getReputationDetails(address)":{"params":{"user":"The address to check"},"returns":{"lpsBalance":"The number of Convexo_LPs NFTs held","tier":"The reputation tier","vaultsBalance":"The number of Convexo_Vaults NFTs held"}},"getReputationTier(address)":{"params":{"user":"The address to check"},"returns":{"_0":"The reputation tier"}},"getReputationTierNumeric(address)":{"params":{"user":"The address to check"},"returns":{"_0":"The numeric reputation tier"}},"hasCompliantAccess(address)":{"params":{"user":"The address to check"},"returns":{"_0":"True if user has Tier 1 or higher"}},"hasCreditscoreAccess(address)":{"params":{"user":"The address to check"},"returns":{"_0":"True if user has Tier 2"}},"holdsConvexoLPs(address)":{"params":{"user":"The address to check"},"returns":{"_0":"True if user holds at least one Convexo_LPs NFT"}},"holdsConvexoVaults(address)":{"params":{"user":"The address to check"},"returns":{"_0":"True if user holds at least one Convexo_Vaults NFT"}},"requireCompliantAccess(address)":{"params":{"user":"The address to check"}},"requireCreditscoreAccess(address)":{"params":{"user":"The address to check"}}},"version":1},"userdoc":{"kind":"user","methods":{"checkReputationWithEvent(address)":{"notice":"Check reputation and emit event"},"convexoLPs()":{"notice":"The Convexo_LPs NFT contract (Compliant)"},"convexoVaults()":{"notice":"The Convexo_Vaults NFT contract (Creditscore)"},"getReputationDetails(address)":{"notice":"Get detailed reputation information for a user"},"getReputationTier(address)":{"notice":"Get the reputation tier for a user"},"getReputationTierNumeric(address)":{"notice":"Get the numeric reputation tier (0, 1, or 2)"},"hasCompliantAccess(address)":{"notice":"Check if a user has at least Compliant tier (Tier 1)"},"hasCreditscoreAccess(address)":{"notice":"Check if a user has Creditscore tier (Tier 2)"},"holdsConvexoLPs(address)":{"notice":"Check if a user holds a Convexo_LPs NFT"},"holdsConvexoVaults(address)":{"notice":"Check if a user holds a Convexo_Vaults NFT"},"requireCompliantAccess(address)":{"notice":"Require that a user has at least Compliant tier"},"requireCreditscoreAccess(address)":{"notice":"Require that a user has Creditscore tier"}},"version":1}},"settings":{"remappings":["@openzeppelin/=lib/openzeppelin-contracts/","ds-test/=lib/openzeppelin-contracts/lib/forge-std/lib/ds-test/src/","erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/","forge-std/=lib/forge-std/src/","openzeppelin-contracts/=lib/openzeppelin-contracts/"],"optimizer":{"enabled":true,"runs":200},"metadata":{"bytecodeHash":"ipfs"},"compilationTarget":{"src/contracts/ReputationManager.sol":"ReputationManager"},"evmVersion":"prague","libraries":{},"viaIR":true},"sources":{"src/contracts/ReputationManager.sol":{"keccak256":"0x750a71b00397f39c56441e7c01fd23cb52d9aedba6a5ead5448153e404cd8700","urls":["bzz-raw://0df751b05bea5086871f5ab06480b07470e45462b8a1b924dc4b1916c8ec4b38","dweb:/ipfs/QmfXML4NgTSUPquToGE4BFvBhb7divZ9qpm7LxTp4cga3p"],"license":"MIT"},"src/interfaces/IConvexoLPs.sol":{"keccak256":"0xc944b254ed28b3cf78037664259459d0a787b11d2e1adad0ff0a8eab10f40c35","urls":["bzz-raw://54cbb0498e91badcab338640e0afccd7faba323d8a88d79542519d60b5430f2e","dweb:/ipfs/QmRKGG771tVPfdwrzeENYSEf2uw3sWccb6Hieuj8NhVtSx"],"license":"MIT"},"src/interfaces/IConvexoVaults.sol":{"keccak256":"0x70a71a9442b608f5b0dbc62681b23fdebddcfc7f88d87f677abb27dc4eaa0ecb","urls":["bzz-raw://520427d3b68e760d21da5edaf63e096d9093a20179835aad2907af82a0bf9bac","dweb:/ipfs/QmQsVhMJFywgpNe4g4TYeRB6vuenkM6i2iG3PpY4mamB45"],"license":"MIT"}},"version":1},"id":57}
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "_convexoLPs",
+        "type": "address",
+        "internalType": "contract IConvexoLPs"
+      },
+      {
+        "name": "_convexoVaults",
+        "type": "address",
+        "internalType": "contract IConvexoVaults"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "checkReputationWithEvent",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "tier",
+        "type": "uint8",
+        "internalType": "enum ReputationManager.ReputationTier"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "convexoLPs",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IConvexoLPs"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "convexoVaults",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IConvexoVaults"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getReputationDetails",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "tier",
+        "type": "uint8",
+        "internalType": "enum ReputationManager.ReputationTier"
+      },
+      {
+        "name": "lpsBalance",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "vaultsBalance",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getReputationTier",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum ReputationManager.ReputationTier"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getReputationTierNumeric",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hasCompliantAccess",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hasCreditscoreAccess",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "holdsConvexoLPs",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "holdsConvexoVaults",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "requireCompliantAccess",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "requireCreditscoreAccess",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "ReputationChecked",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "tier",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum ReputationManager.ReputationTier"
+      },
+      {
+        "name": "lpsBalance",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "vaultsBalance",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  }
+]
