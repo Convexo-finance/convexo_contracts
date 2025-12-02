@@ -3,7 +3,7 @@
 **Reducing the Gap funding for SMEs in Latin America using stablecoins, NFT-permissioned  liquidity pools and vaults.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/Tests-49%2F49%20Passing-brightgreen)](./test)
+[![Tests](https://img.shields.io/badge/Tests-14%2F14%20Passing-brightgreen)](./test)
 [![Deployed](https://img.shields.io/badge/Deployed-Base%20Sepolia-blue)](https://sepolia.basescan.org)
 
 ---
@@ -43,17 +43,13 @@ Convexo creates a compliant, efficient lending protocol using:
 - Investors earn 10-12% APY in USDC
 - Real-time tracking of investments and returns
 
-### 3. Two Product Lines
-
-#### Product 1: Invoice Factoring
-- SMEs sell unpaid invoices for immediate liquidity
-- Investors buy at discount, earn on maturity
-- **Requirement**: Tier 1 (Compliant NFT)
-
-#### Product 2: Tokenized Bond Credits
-- SMEs get loans backed by daily cash flow
-- Repay gradually with business revenue
-- **Requirement**: Tier 2 (Both NFTs: Compliant + Creditscore)
+### 3. Tokenized Bond Vaults
+- **Borrower-initiated**: SMEs with Tier 2 NFT create vaults for financing
+- **Flexible repayment**: Pay anytime, any amount before maturity
+- **Proportional withdrawals**: Each party withdraws independently
+  - Protocol collector: 2% fee (proportional to repayments)
+  - Investors: Principal + 12% returns (proportional to repayments)
+- **Transparent tracking**: Real-time on-chain state
 
 ---
 
@@ -78,31 +74,37 @@ Convexo creates a compliant, efficient lending protocol using:
 1. Submit financial statements & business model to AI
 2. AI analyzes creditworthiness
 3. If score > 70: Receive Convexo_Vaults NFT (Tier 2)
-4. Create vault to represent loan request
-5. Get funded by international investors
-6. Repay with business cash flow
+4. Create vault to request funding
+5. Investors fund the vault
+6. Sign contract with investors
+7. Withdraw funds and use for business
+8. Repay anytime (principal + 12% interest + 2% protocol fee)
+9. Each party withdraws independently
 ```
 
 **Flow:**
 ```
-Apply → AI Score → NFT (if > 70) → Create Vault → Get Funded → Repay → Complete
+Apply → AI Score → NFT (if > 70) → Create Vault → Get Funded → 
+Sign Contract → Withdraw → Repay → Protocol & Investors Withdraw
 ```
 
 ### For Investors (Lenders)
 
 ```
-1. Connect wallet to Base Sepolia
+1. Connect wallet to testnet
 2. Browse available vaults
-3. Review: APY, risk level, maturity date
-4. Invest USDC in vault
+3. Review: APY (12%), risk level, maturity date
+4. Invest USDC in vault (purchase shares)
 5. Track returns in real-time
-6. Redeem with profit at maturity
+6. Redeem shares anytime after borrower starts repaying
+7. Receive principal + 12% returns proportionally
 ```
 
 **Returns:**
-- 10-12% APY on USDC investments
+- 12% APY on USDC investments
+- Flexible withdrawal (anytime after repayments start)
 - Transparent, on-chain tracking
-- Automated distribution
+- Proportional to repayments made
 
 ---
 
@@ -113,8 +115,8 @@ Apply → AI Score → NFT (if > 70) → Create Vault → Get Funded → Repay �
 | Tier | NFTs Required | Access |
 |------|---------------|--------|
 | **Tier 0** | None | No access |
-| **Tier 1** | Convexo_LPs | Liquidity pools + Invoice factoring |
-| **Tier 2** | Convexo_LPs + Convexo_Vaults | Full access (Bonds + Credits) |
+| **Tier 1** | Convexo_LPs | Liquidity pools access |
+| **Tier 2** | Convexo_LPs + Convexo_Vaults | Full access (Create vaults) |
 
 ### Core Components
 
@@ -138,10 +140,10 @@ Apply → AI Score → NFT (if > 70) → Create Vault → Get Funded → Repay �
 └─────────────────────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────┐
-│                Vault & Products                      │
+│              Tokenized Bond Vaults                   │
 │  • VaultFactory: Create funding vaults              │
-│  • InvoiceFactoring: Sell unpaid invoices           │
-│  • TokenizedBondCredits: Cash flow-backed loans     │
+│  • TokenizedBondVault: ERC20 share-based vaults     │
+│  • Flexible repayment & independent withdrawals     │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -149,21 +151,13 @@ Apply → AI Score → NFT (if > 70) → Create Vault → Get Funded → Repay �
 
 ## 📋 Deployed Contracts
 
-### Base Sepolia (Chain ID: 84532)
+See [DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md) for complete contract addresses across all networks.
 
-| Contract | Address | Purpose |
-|----------|---------|---------|
-| **Convexo_LPs** | [`0x4ACB3B523889f437D9FfEe9F2A50BBBa9580198d`](https://sepolia.basescan.org/address/0x4ACB3B523889f437D9FfEe9F2A50BBBa9580198d) | Tier 1 NFT (Compliant) |
-| **Convexo_Vaults** | [`0xc056c0Ddf959b8b63fb6Bc73b5E79e85a6bFB9b5`](https://sepolia.basescan.org/address/0xc056c0Ddf959b8b63fb6Bc73b5E79e85a6bFB9b5) | Tier 2 NFT (Creditscore) |
-| **ReputationManager** | [`0x99612857Bb85b1de04d06385E44Fa53DC2aF79E1`](https://sepolia.basescan.org/address/0x99612857Bb85b1de04d06385E44Fa53DC2aF79E1) | Calculate user tier |
-| **VaultFactory** | [`0xDe8daB3182426234ACf68E4197A1eDF5172450dD`](https://sepolia.basescan.org/address/0xDe8daB3182426234ACf68E4197A1eDF5172450dD) | Create funding vaults |
-| **InvoiceFactoring** | [`0xbc4023284D789D7EB8512c1EDe245C77591a5D96`](https://sepolia.basescan.org/address/0xbc4023284D789D7EB8512c1EDe245C77591a5D96) | Invoice liquidation |
-| **TokenizedBondCredits** | [`0xC058588A8D82B2E2129119B209c80af8bF3d4961`](https://sepolia.basescan.org/address/0xC058588A8D82B2E2129119B209c80af8bF3d4961) | Bond credit loans |
-| **PoolRegistry** | [`0xC0561AB6dB7762Cf81a6b1E54394551e9124Df50`](https://sepolia.basescan.org/address/0xC0561AB6dB7762Cf81a6b1E54394551e9124Df50) | Track compliant pools |
-| **PriceFeedManager** | [`0x98E1F6d3Fd8b1EA91a24A43FD84f2F6B9f4EaEb2`](https://sepolia.basescan.org/address/0x98E1F6d3Fd8b1EA91a24A43FD84f2F6B9f4EaEb2) | Chainlink price feeds |
-| **ContractSigner** | [`0x87af0C8203C84192dBf07f4B6D934fD00eB3F723`](https://sepolia.basescan.org/address/0x87af0C8203C84192dBf07f4B6D934fD00eB3F723) | Multi-sig agreements |
+### Quick Links by Network
 
-**✅ All contracts verified on BaseScan**
+- **Ethereum Sepolia**: [View Deployment](./ETHEREUM_SEPOLIA_DEPLOYMENT.md)
+- **Base Sepolia**: [View Deployment](./BASE_SEPOLIA_DEPLOYMENT.md)
+- **Unichain Sepolia**: [View Deployment](./UNICHAIN_SEPOLIA_DEPLOYMENT.md)
 
 ---
 
@@ -182,7 +176,6 @@ forge --version
 ### Installation
 ```bash
 git clone https://github.com/convexo-finance/convexo-protocol.git
-cd convexo-protocol/Counter
 forge install
 ```
 
@@ -208,7 +201,35 @@ forge test --gas-report
 forge test -vvv
 ```
 
-**Test Results:** ✅ 49/49 tests passing
+**Test Results:** ✅ 14/14 tests passing (VaultFlow complete)
+
+---
+
+## 🌐 Deployment Status
+
+### ✅ All Networks Deployed & Verified
+
+| Network | Chain ID | Contracts | Status | Explorer |
+|---------|----------|-----------|--------|----------|
+| **Ethereum Sepolia** | 11155111 | 9/9 | ✅ Verified | [Etherscan](https://sepolia.etherscan.io) |
+| **Base Sepolia** | 84532 | 9/9 | ✅ Verified | [BaseScan](https://sepolia.basescan.org) |
+| **Unichain Sepolia** | 1301 | 9/9 | ✅ Verified | [Blockscout](https://unichain-sepolia.blockscout.com) |
+
+### 📦 Deployed Contracts (All Networks)
+
+1. ✅ **Convexo_LPs** - NFT for liquidity pool access (Tier 1)
+2. ✅ **Convexo_Vaults** - NFT for vault creation (Tier 2)
+3. ✅ **HookDeployer** - Helper for deploying hooks with correct addresses
+4. ✅ **CompliantLPHook** - Uniswap V4 hook for gated pool access
+5. ✅ **PoolRegistry** - Registry for compliant pools
+6. ✅ **ReputationManager** - User tier calculation system
+7. ✅ **PriceFeedManager** - Chainlink price feed integration
+8. ✅ **ContractSigner** - Multi-signature contract system
+9. ✅ **VaultFactory** - Factory for creating tokenized bond vaults
+
+**Total: 9 Smart Contracts | All Verified ✅**
+
+**See [DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md) for all contract addresses and links.**
 
 ---
 
@@ -219,14 +240,29 @@ forge test -vvv
 forge build
 ```
 
+### Test
+```bash
+forge test -vvv
+```
+
 ### Deploy
 ```bash
-# Deploy to Base Sepolia
-forge script script/DeployAll.s.sol \
-  --rpc-url base_sepolia \
-  --broadcast \
-  --verify \
-  --legacy
+# Ethereum Sepolia
+./scripts/deploy_ethereum_sepolia.sh
+
+# Base Sepolia
+./scripts/deploy_base_sepolia.sh
+
+# Unichain Sepolia
+./scripts/deploy_unichain_sepolia.sh
+```
+
+### Verify Contracts 
+```bash
+# Verify all contracts on a network
+./scripts/verify_all.sh sepolia
+./scripts/verify_all.sh base-sepolia
+./scripts/verify_all.sh unichain-sepolia
 ```
 
 ### Extract ABIs
@@ -240,12 +276,31 @@ ABIs saved to `abis/` directory for frontend integration.
 
 ## 📚 Documentation
 
+### 🚀 Deployment & Verification
+| Document | Description |
+|----------|-------------|
+| **[DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md)** | 🌟 **Executive summary** - All deployments at a glance |
+| **[ETHEREUM_SEPOLIA_DEPLOYMENT.md](./ETHEREUM_SEPOLIA_DEPLOYMENT.md)** | ✅ Ethereum Sepolia deployment (9/9 verified) |
+| **[BASE_SEPOLIA_DEPLOYMENT.md](./BASE_SEPOLIA_DEPLOYMENT.md)** | ✅ Base Sepolia deployment (9/9 verified) |
+| **[UNICHAIN_SEPOLIA_DEPLOYMENT.md](./UNICHAIN_SEPOLIA_DEPLOYMENT.md)** | ✅ Unichain Sepolia deployment (9/9 verified) |
+| **[scripts/README.md](./scripts/README.md)** | Deployment & verification scripts guide |
+
+### 📖 Contract Documentation
+| Document | Description |
+|----------|-------------|
+| **[CONTRACTS_REFERENCE.md](./CONTRACTS_REFERENCE.md)** | 🌟 **START HERE!** Detailed reference for all 9 contracts with functions and usage |
+
+### 🌐 Network Information
+| Document | Description |
+|----------|-------------|
+| **[NETWORK_ADDRESSES.md](./NETWORK_ADDRESSES.md)** | USDC, ECOP, and Uniswap V4 addresses for all networks |
+| **[addresses.json](./addresses.json)** | All deployed contract addresses in JSON format |
+
+### 💻 Frontend Integration
 | Document | Description |
 |----------|-------------|
 | **[FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md)** | Complete guide for frontend developers with code examples |
-| **[CONTRACTS_REFERENCE.md](./CONTRACTS_REFERENCE.md)** | Detailed reference for all contract functions |
-| **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** | Step-by-step deployment to any network |
-| **[addresses.json](./addresses.json)** | All deployed contract addresses |
+| **[abis/](./abis/)** | Contract ABIs ready for frontend use (10 ABIs including TokenizedBondVault) |
 
 ---
 
@@ -311,10 +366,31 @@ function useVaults() {
 ## 🌐 Networks
 
 ### Testnet (Current)
-- **Base Sepolia** (Chain ID: 84532)
+
+#### Ethereum Sepolia (Chain ID: 11155111)
+- RPC: https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
+- Explorer: https://sepolia.etherscan.io
+- Faucet: https://sepoliafaucet.com
+- **Uniswap V4:** ✅ Available
+- **USDC:** `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`
+- **ECOP:** `0x19ac2612e560b2bbedf88660a2566ef53c0a15a1`
+
+#### Base Sepolia (Chain ID: 84532)
 - RPC: https://sepolia.base.org
 - Explorer: https://sepolia.basescan.org
 - Faucet: https://www.coinbase.com/faucets/base-ethereum-goerli-faucet
+- **Uniswap V4:** ✅ Available
+- **USDC:** `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
+- **ECOP:** `0xb934dcb57fb0673b7bc0fca590c5508f1cde955d`
+
+#### Unichain Sepolia (Chain ID: 1301)
+- RPC: https://sepolia.unichain.org
+- Explorer: https://sepolia.uniscan.xyz
+- **Uniswap V4:** ✅ Available
+- **USDC:** `0x31d0220469e10c4E71834a79b1f276d740d3768F`
+- **ECOP:** `0xbb0d7c4141ee1fed53db766e1ffcb9c618df8260`
+
+> **📖 See [NETWORK_ADDRESSES.md](./NETWORK_ADDRESSES.md) for complete Uniswap V4 contract addresses**
 
 ### Mainnet (Future)
 - Base Mainnet
@@ -327,27 +403,24 @@ function useVaults() {
 
 ### 1. Currency Conversion
 ```
-SME receives $50,000 USDC from investors
-→ Swap USDC for ECOP in compliant pool
-→ Use local currency for operations
+SME receives $50,000 USDC from vault
+→ Swap USDC for ECOP in compliant pool (Uniswap V4)
+→ Use local currency (ECOP, ARS, MXN) for operations
+→ Only Tier 1+ users can access pools
 ```
 
-### 2. Invoice Factoring
-```
-SME has $100k invoice due in 60 days
-→ List on InvoiceFactoring
-→ Sell to investors for $95k immediately
-→ Investors earn $5k profit after 60 days
-```
-
-### 3. Working Capital Loan
+### 2. Working Capital Loan (Tokenized Bond Vault)
 ```
 SME needs $50k for inventory
-→ AI scores credit (>70)
+→ AI scores credit (>70) → Receives Tier 2 NFT
 → Creates vault via VaultFactory
-→ Investors fund vault
-→ SME repays gradually with revenue
-→ Investors earn 12% APY
+→ Investors fund vault (purchase shares)
+→ Contract created and signed by all parties
+→ SME withdraws $50k
+→ SME repays gradually: $50k + $6k (12%) + $1k (2% fee) = $57k total
+→ Protocol collector withdraws $1k fee (anytime)
+→ Investors redeem shares for $56k total (anytime after repayments start)
+→ Each party withdraws independently
 ```
 
 ---
@@ -356,12 +429,13 @@ SME needs $50k for inventory
 
 | Metric | Value |
 |--------|-------|
-| **Test Coverage** | 49/49 tests passing (100%) |
+| **Test Coverage** | 14/14 tests passing (100%) |
 | **Contracts Deployed** | 9 contracts |
-| **Networks Supported** | Base Sepolia (+ 2 others for NFTs) |
-| **Target APY** | 10-12% for investors |
+| **Networks Supported** | 3 testnets (Ethereum, Base, Unichain Sepolia) |
+| **Investor Returns** | 12% APY |
 | **Min Credit Score** | 70 (for vault creation) |
-| **Protocol Fee** | 2% |
+| **Protocol Fee** | 2% of principal |
+| **Repayment** | Flexible (anytime before maturity) |
 
 ---
 
@@ -468,11 +542,26 @@ MIT License - see [LICENSE](./LICENSE) file for details.
 
 ## 🎉 Status
 
-**✅ READY FOR FRONTEND DEVELOPMENT**
+**✅ FULLY DEPLOYED & VERIFIED ON ALL NETWORKS**
 
-All contracts are deployed, tested (49/49 passing), verified on BaseScan, and ready for integration.
+All 9 contracts successfully deployed and verified across 3 testnets with the new vault flow.
 
-**Start building**: Check [FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md) for complete code examples!
+**Deployment Complete:**
+- ✅ Ethereum Sepolia: 9/9 contracts verified
+- ✅ Base Sepolia: 9/9 contracts verified  
+- ✅ Unichain Sepolia: 9/9 contracts verified
+- ✅ All tests passing (14/14 VaultFlow tests)
+- ✅ ABIs extracted and ready for frontend
+
+**Version 2.0 Features:**
+- ✅ Borrower-initiated vault creation (requires Tier 2 NFT)
+- ✅ Flexible repayment system (pay anytime, any amount)
+- ✅ Independent withdrawals for all parties
+- ✅ Protocol fees locked in vault until withdrawn
+- ✅ Investors can redeem anytime after repayments start
+- ✅ Contract signing flow integrated
+
+**Ready for:** Frontend integration and user testing 🚀
 
 ---
 

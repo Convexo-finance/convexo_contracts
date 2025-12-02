@@ -11,8 +11,6 @@ import {ReputationManager} from "../src/contracts/ReputationManager.sol";
 import {PriceFeedManager} from "../src/contracts/PriceFeedManager.sol";
 import {ContractSigner} from "../src/contracts/ContractSigner.sol";
 import {VaultFactory} from "../src/contracts/VaultFactory.sol";
-import {InvoiceFactoring} from "../src/contracts/InvoiceFactoring.sol";
-import {TokenizedBondCredits} from "../src/contracts/TokenizedBondCredits.sol";
 import {IPoolManager} from "../src/interfaces/IPoolManager.sol";
 import {IConvexoLPs} from "../src/interfaces/IConvexoLPs.sol";
 import {IConvexoVaults} from "../src/interfaces/IConvexoVaults.sol";
@@ -33,16 +31,41 @@ contract DeployAll is Script {
     PriceFeedManager public priceFeedManager;
     ContractSigner public contractSigner;
     VaultFactory public vaultFactory;
-    InvoiceFactoring public invoiceFactoring;
-    TokenizedBondCredits public tokenizedBondCredits;
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address minter = vm.envAddress("MINTER_ADDRESS");
 
-        // Get environment variables (optional, with defaults for local testing)
-        address poolManager = vm.envOr("POOL_MANAGER_ADDRESS", address(0));
-        address usdc = vm.envOr("USDC_ADDRESS", address(0));
+        // Try to get network-specific variables first, fallback to generic ones
+        uint256 chainId = block.chainid;
+        address poolManager;
+        address usdc;
+        string memory networkName;
+        
+        if (chainId == 11155111) {
+            // Ethereum Sepolia
+            networkName = "Ethereum Sepolia";
+            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_ETHSEPOLIA", 0xE03A1074c86CFeDd5C142C4F04F1a1536e203543);
+            usdc = vm.envOr("USDC_ADDRESS_ETHSEPOLIA", 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238);
+        } else if (chainId == 84532) {
+            // Base Sepolia
+            networkName = "Base Sepolia";
+            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_BASESEPOLIA", 0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408);
+            usdc = vm.envOr("USDC_ADDRESS_BASESEPOLIA", 0x036CbD53842c5426634e7929541eC2318f3dCF7e);
+        } else if (chainId == 1301) {
+            // Unichain Sepolia
+            networkName = "Unichain Sepolia";
+            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_UNISEPOLIA", 0x00B036B58a818B1BC34d502D3fE730Db729e62AC);
+            usdc = vm.envOr("USDC_ADDRESS_UNISEPOLIA", 0x31d0220469e10c4E71834a79b1f276d740d3768F);
+        } else {
+            revert("Unsupported network");
+        }
+        
+        console.log("Deploying to:", networkName);
+        console.log("Chain ID:", chainId);
+        console.log("PoolManager:", poolManager);
+        console.log("USDC:", usdc);
+        
         address protocolFeeCollector = vm.envOr("PROTOCOL_FEE_COLLECTOR", ADMIN);
 
         vm.startBroadcast(deployerPrivateKey);
@@ -90,26 +113,20 @@ contract DeployAll is Script {
         console.log("PriceFeedManager deployed at:", address(priceFeedManager));
 
         // ============================================================
-        // Phase 4: Deploy Products & Vaults
+        // Phase 4: Deploy Vault System
         // ============================================================
-        console.log("\nPhase 4: Deploying Products & Vaults...");
+        console.log("\nPhase 4: Deploying Vault System...");
 
         contractSigner = new ContractSigner(ADMIN);
         console.log("ContractSigner deployed at:", address(contractSigner));
 
         // Only deploy VaultFactory if USDC is provided
         if (usdc != address(0)) {
-            vaultFactory = new VaultFactory(ADMIN, usdc, protocolFeeCollector, contractSigner);
+            vaultFactory = new VaultFactory(ADMIN, usdc, protocolFeeCollector, contractSigner, reputationManager);
             console.log("VaultFactory deployed at:", address(vaultFactory));
         } else {
             console.log("Skipping VaultFactory deployment (no USDC_ADDRESS set)");
         }
-
-        invoiceFactoring = new InvoiceFactoring(ADMIN, reputationManager);
-        console.log("InvoiceFactoring deployed at:", address(invoiceFactoring));
-
-        tokenizedBondCredits = new TokenizedBondCredits(ADMIN, reputationManager, priceFeedManager);
-        console.log("TokenizedBondCredits deployed at:", address(tokenizedBondCredits));
 
         vm.stopBroadcast();
 
@@ -131,13 +148,11 @@ contract DeployAll is Script {
         console.log("\nCore Infrastructure:");
         console.log("  ReputationManager:", address(reputationManager));
         console.log("  PriceFeedManager:", address(priceFeedManager));
-        console.log("\nProducts & Vaults:");
+        console.log("\nVault System:");
         console.log("  ContractSigner:", address(contractSigner));
         if (address(vaultFactory) != address(0)) {
             console.log("  VaultFactory:", address(vaultFactory));
         }
-        console.log("  InvoiceFactoring:", address(invoiceFactoring));
-        console.log("  TokenizedBondCredits:", address(tokenizedBondCredits));
         console.log("========================================\n");
     }
 }

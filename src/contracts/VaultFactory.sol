@@ -4,6 +4,7 @@ pragma solidity ^0.8.27;
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {TokenizedBondVault} from "./TokenizedBondVault.sol";
 import {ContractSigner} from "./ContractSigner.sol";
+import {ReputationManager} from "./ReputationManager.sol";
 
 /// @title VaultFactory
 /// @notice Factory contract for creating TokenizedBondVault instances
@@ -23,11 +24,11 @@ contract VaultFactory is AccessControl {
     /// @notice Contract signer reference
     ContractSigner public immutable contractSigner;
 
+    /// @notice Reputation manager reference
+    ReputationManager public immutable reputationManager;
+
     /// @notice Mapping from vault ID to vault address
     mapping(uint256 => address) public vaults;
-
-    /// @notice Mapping from contract hash to vault ID
-    mapping(bytes32 => uint256) public contractHashToVaultId;
 
     /// @notice Array of all vault addresses
     address[] public vaultAddresses;
@@ -44,17 +45,22 @@ contract VaultFactory is AccessControl {
     /// @notice Emitted when protocol fee collector is updated
     event ProtocolFeeCollectorUpdated(address indexed oldCollector, address indexed newCollector);
 
-    constructor(address admin, address _usdc, address _protocolFeeCollector, ContractSigner _contractSigner) {
+    constructor(
+        address admin,
+        address _usdc,
+        address _protocolFeeCollector,
+        ContractSigner _contractSigner,
+        ReputationManager _reputationManager
+    ) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(VAULT_CREATOR_ROLE, admin);
         usdc = _usdc;
         protocolFeeCollector = _protocolFeeCollector;
         contractSigner = _contractSigner;
+        reputationManager = _reputationManager;
     }
 
-    /// @notice Create a new vault after contract signing
-    /// @param borrower The address of the borrower
-    /// @param contractHash The hash of the signed contract
+    /// @notice Create a new vault (borrower must have Tier 2 NFT)
     /// @param principalAmount The principal amount in USDC
     /// @param interestRate The interest rate in basis points (e.g., 1200 = 12%)
     /// @param protocolFeeRate The protocol fee rate in basis points (e.g., 200 = 2%)
@@ -64,38 +70,37 @@ contract VaultFactory is AccessControl {
     /// @return vaultId The ID of the created vault
     /// @return vaultAddress The address of the created vault
     function createVault(
-        address borrower,
-        bytes32 contractHash,
         uint256 principalAmount,
         uint256 interestRate,
         uint256 protocolFeeRate,
         uint256 maturityDate,
         string memory name,
         string memory symbol
-    ) external onlyRole(VAULT_CREATOR_ROLE) returns (uint256 vaultId, address vaultAddress) {
-        require(borrower != address(0), "Invalid borrower address");
+    ) external returns (uint256 vaultId, address vaultAddress) {
+        // Verify borrower has Tier 2 NFT (Creditscore)
+        require(
+            reputationManager.getReputationTier(msg.sender) == ReputationManager.ReputationTier.Creditscore,
+            "Must have Tier 2 NFT (Convexo_Vaults)"
+        );
         require(principalAmount > 0, "Principal amount must be greater than 0");
         require(maturityDate > block.timestamp, "Maturity date must be in the future");
-        require(contractHashToVaultId[contractHash] == 0, "Vault already exists for this contract");
-
-        // Verify contract is fully signed and executed
-        ContractSigner.ContractDocument memory contractDoc = contractSigner.getContract(contractHash);
-        require(contractDoc.isExecuted, "Contract not executed");
-        require(!contractDoc.isCancelled, "Contract cancelled");
+        require(interestRate > 0 && interestRate <= 10000, "Invalid interest rate");
+        require(protocolFeeRate <= 1000, "Protocol fee too high");
 
         vaultId = _nextVaultId++;
 
-        // Deploy new vault
+        // Deploy new vault without contract hash (will be attached later)
         TokenizedBondVault vault = new TokenizedBondVault(
             vaultId,
-            borrower,
-            contractHash,
+            msg.sender, // Borrower is the caller
+            bytes32(0), // No contract hash yet
             principalAmount,
             interestRate,
             protocolFeeRate,
             maturityDate,
             usdc,
-            msg.sender, // Admin
+            address(contractSigner),
+            msg.sender, // Borrower gets admin role initially
             protocolFeeCollector,
             name,
             symbol
@@ -103,13 +108,9 @@ contract VaultFactory is AccessControl {
 
         vaultAddress = address(vault);
         vaults[vaultId] = vaultAddress;
-        contractHashToVaultId[contractHash] = vaultId;
         vaultAddresses.push(vaultAddress);
 
-        // Execute contract in ContractSigner
-        contractSigner.executeContract(contractHash, vaultId);
-
-        emit VaultCreated(vaultId, vaultAddress, borrower, contractHash, principalAmount);
+        emit VaultCreated(vaultId, vaultAddress, msg.sender, bytes32(0), principalAmount);
 
         return (vaultId, vaultAddress);
     }
@@ -131,15 +132,6 @@ contract VaultFactory is AccessControl {
         return vaults[vaultId];
     }
 
-    /// @notice Get vault address by contract hash
-    /// @param contractHash The contract hash
-    /// @return The vault address
-    function getVaultByContractHash(bytes32 contractHash) external view returns (address) {
-        uint256 vaultId = contractHashToVaultId[contractHash];
-        require(vaultId != 0 || contractHashToVaultId[contractHash] == 0, "Vault not found");
-        return vaults[vaultId];
-    }
-
     /// @notice Get total number of vaults
     /// @return The number of vaults
     function getVaultCount() external view returns (uint256) {
@@ -152,12 +144,5 @@ contract VaultFactory is AccessControl {
     function getVaultAddressAtIndex(uint256 index) external view returns (address) {
         require(index < vaultAddresses.length, "Index out of bounds");
         return vaultAddresses[index];
-    }
-
-    /// @notice Check if a vault exists for a contract hash
-    /// @param contractHash The contract hash
-    /// @return True if vault exists
-    function vaultExistsForContract(bytes32 contractHash) external view returns (bool) {
-        return contractHashToVaultId[contractHash] != 0;
     }
 }

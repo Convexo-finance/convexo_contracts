@@ -2,94 +2,59 @@
 
 ## Overview
 
-This guide explains **every function** in all Convexo contracts, with special focus on the **vault system** and **two product lines**.
+This comprehensive reference guide documents all 9 Convexo Protocol smart contracts deployed on Ethereum Sepolia, Base Sepolia, and Unichain Sepolia.
+
+### 📚 What's Inside
+
+This guide provides detailed documentation for:
+- **9 Smart Contracts** with complete function signatures
+- **NFT-Gated Access System** (Tier 1 & Tier 2)
+- **Vault System** for investor staking
+- **Uniswap V4 Integration** with compliant hooks
+- **Reputation & Price Feed Management**
+
+### 🎯 Quick Navigation
+
+| Contract Type | Contracts | Purpose |
+|---------------|-----------|---------|
+| **NFT System** | Convexo_LPs, Convexo_Vaults | Access control and compliance |
+| **Vault System** | VaultFactory, TokenizedBondVault | Tokenized bond vaults for SME financing |
+| **Hook System** | CompliantLPHook, HookDeployer, PoolRegistry | Uniswap V4 integration |
+| **Infrastructure** | ReputationManager, PriceFeedManager, ContractSigner | Core protocol services |
+
+### 🔑 Key Concepts
+
+**Tier System:**
+- **Tier 0**: No NFT - No access
+- **Tier 1**: Convexo_LPs NFT - Can use liquidity pools
+- **Tier 2**: Both NFTs - Can create vaults for financing
+
+**Vault States:**
+- **Pending**: Accepting investments from lenders
+- **Funded**: Fully funded, awaiting contract signatures
+- **Active**: Contract signed, borrower can withdraw funds
+- **Repaying**: Funds withdrawn, borrower making repayments
+- **Completed**: All repayments made, investors can redeem
+- **Defaulted**: Borrower failed to repay by maturity date
+
+**New Vault Flow:**
+1. **Borrower** creates vault (requires Tier 2 NFT)
+2. **Investors** fund the vault → State: `Funded`
+3. **Admin** creates contract with all parties as signers
+4. **All parties** sign the contract
+5. **Admin** executes contract
+6. **Borrower** attaches contract to vault → State: `Active`
+7. **Borrower** withdraws funds → State: `Repaying`
+8. **Borrower** makes repayments (can be partial or full)
+9. **Protocol Collector** withdraws fees (proportional to repayments)
+10. **Investors** redeem shares (proportional to available funds)
+11. When fully repaid → State: `Completed`
 
 ---
 
-## 🏦 THE TWO PRODUCT CONTRACTS
+## 📖 Contract Documentation
 
-### Product 1: Invoice Factoring (`InvoiceFactoring.sol`)
-
-**Purpose:** SME sells unpaid invoices to investors for immediate liquidity.
-
-**Flow:**
-1. SME has invoice worth $100k due in 60 days
-2. SME signs factoring agreement
-3. Invoice tokenized and sold to investors for $95k (discount)
-4. SME gets $95k immediately
-5. After 60 days, invoice paid → investors get $100k
-6. Investors profit: $5k
-
-**Requirements:**
-- SME must have **Tier 1 (Compliant)** reputation (Convexo_LPs NFT)
-
-**Key Functions:**
-```solidity
-// Create invoice after signing
-function createInvoice(
-    address issuer,
-    uint256 faceValue,      // $100,000 USDC
-    uint256 maturityDate,   // 60 days from now
-    bytes32 contractHash    // Link to signed contract
-) returns (uint256 invoiceId)
-
-// Mark invoice as paid
-function payOutInvoice(uint256 invoiceId)
-
-// Get invoice details
-function getInvoice(uint256 invoiceId) 
-    returns (Invoice memory)
-```
-
-### Product 2: Tokenized Bond Credits (`TokenizedBondCredits.sol`)
-
-**Purpose:** SME gets loan backed by daily cash flow, investors earn 12% APY.
-
-**Flow:**
-1. SME with good credit score (>70) applies
-2. Signs credit agreement
-3. Vault created, investors fund it with USDC
-4. SME withdraws loan in local currency (using Chainlink price feeds)
-5. SME repays gradually with daily cash flow
-6. Final payment: Principal + 12% interest
-7. Distribution: 12% to investors, 2% to protocol, 10% paid by SME
-
-**Requirements:**
-- SME must have **Tier 2 (Creditscore)** reputation (both Convexo_LPs AND Convexo_Vaults NFTs)
-- Credit score > 70
-
-**Key Functions:**
-```solidity
-// Create credit after signing
-function createCredit(
-    address borrower,
-    uint256 creditScore,     // Must be > 70
-    uint256 principalAmount, // $50,000 USDC
-    uint256 interestRate,    // 1200 = 12%
-    uint256 loanDuration,    // 180 days
-    bytes32 contractHash,
-    CurrencyPair currencyPair // USDC/COP for Colombian Pesos
-) returns (uint256 creditId)
-
-// Approve credit
-function approveCredit(uint256 creditId)
-
-// Disburse loan (after vault funded)
-function disburseLoan(uint256 creditId, uint256 vaultId)
-
-// Record daily cash flow
-function recordCashFlow(
-    uint256 creditId,
-    uint256 amount,
-    string description
-)
-
-// Make repayment
-function makeRepayment(uint256 creditId, uint256 amount)
-
-// Mark as defaulted (if overdue)
-function markAsDefaulted(uint256 creditId)
-```
+This guide explains **every function** in all Convexo contracts, with special focus on the **vault system** for SME financing.
 
 ---
 
@@ -268,24 +233,25 @@ function makeRepayment(uint256 amount) external
 **Example:**
 ```typescript
 // Borrower can repay anytime, any amount
+// Total Due = Principal + Interest + Protocol Fee
+// Example: 50,000 + 6,000 (12%) + 1,000 (2%) = 57,000 USDC
+
 await usdc.approve(vaultAddress, 5000e6);
 await vault.makeRepayment(5000e6);
 
-// Check how much left to pay
-const [totalDue, paid, remaining, fee] = 
-    await vault.getRepaymentStatus();
+// Check vault info
+const vaultInfo = await vault.vaultInfo();
+console.log(`Total Repaid: ${vaultInfo.totalRepaid / 1e6} USDC`);
+console.log(`State: ${vaultInfo.state}`); // 3 = Repaying
 
-console.log(`Total Due: ${totalDue / 1e6} USDC`);
-console.log(`Paid So Far: ${paid / 1e6} USDC`);
-console.log(`Remaining: ${remaining / 1e6} USDC`);
-console.log(`Protocol Fee: ${fee / 1e6} USDC`);
-
-// Output:
-// Total Due: 56,000 USDC (50k + 6k interest)
-// Paid So Far: 5,000 USDC
-// Remaining: 51,000 USDC
-// Protocol Fee: 1,000 USDC (2% of principal)
+// When fully repaid (57,000 USDC), state changes to Completed (4)
 ```
+
+**What Happens:**
+- Borrower can make partial or full payments anytime
+- Total Due = Principal + Interest (12%) + Protocol Fee (2%)
+- Funds stay in vault until withdrawn by each party
+- When fully repaid → State changes to `Completed`
 
 #### 3. Check Repayment Status
 ```solidity
@@ -541,13 +507,14 @@ function getContract(bytes32 documentHash)
 
 ### VaultFactory
 
-**Purpose:** Create vaults after contracts are signed.
+**Purpose:** Create vaults for borrowers with Tier 2 NFT (Convexo_Vaults).
 
+#### New Vault Flow (Borrower-Initiated)
+
+**Step 1: Borrower Creates Vault**
 ```solidity
-// Create vault (Admin)
+// Create vault (Borrower with Tier 2 NFT)
 function createVault(
-    address borrower,
-    bytes32 contractHash,
     uint256 principalAmount,
     uint256 interestRate,     // 1200 = 12%
     uint256 protocolFeeRate,  // 200 = 2%
@@ -555,6 +522,40 @@ function createVault(
     string name,
     string symbol
 ) returns (uint256 vaultId, address vaultAddress)
+```
+
+**Requirements:**
+- Caller must have Tier 2 NFT (Convexo_Vaults)
+- Principal amount > 0
+- Maturity date in the future
+- Interest rate between 0.01% and 100%
+- Protocol fee ≤ 10%
+
+**Step 2: Investors Fund Vault**
+- Vault state: `Pending`
+- Investors call `purchaseShares()` on the vault
+- When fully funded → State changes to `Funded`
+
+**Step 3: Create and Sign Contract**
+- Admin creates contract with borrower + all investors as signers
+- All parties sign the contract
+- Admin calls `attachContractToVault(vaultId, contractHash)`
+- Vault state changes to `Active`
+
+**Step 4: Borrower Withdraws Funds**
+- Borrower calls `withdrawFunds()` on vault
+- Vault verifies contract is fully signed
+- Funds transferred to borrower
+- Vault state changes to `Repaying`
+
+#### Additional Functions
+
+```solidity
+// Attach contract to funded vault (Admin)
+function attachContractToVault(
+    uint256 vaultId,
+    bytes32 contractHash
+) external
 
 // Get vault by ID
 function getVault(uint256 vaultId) 

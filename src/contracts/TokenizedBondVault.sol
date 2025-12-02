@@ -4,6 +4,7 @@ pragma solidity ^0.8.27;
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IContractSigner} from "../interfaces/IContractSigner.sol";
 
 /// @title TokenizedBondVault
 /// @notice Core vault contract for tokenized bonds with ERC20 share tokens
@@ -13,9 +14,10 @@ contract TokenizedBondVault is ERC20, AccessControl {
 
     /// @notice Vault state enum
     enum VaultState {
-        Pending,
-        Active,
-        Repaying,
+        Pending,           // Accepting investments
+        Funded,            // Fully funded, awaiting contract signatures
+        Active,            // Contract signed, can withdraw
+        Repaying,          // Funds withdrawn, making repayments
         Completed,
         Defaulted
     }
@@ -35,17 +37,26 @@ contract TokenizedBondVault is ERC20, AccessControl {
         uint256 createdAt;
     }
 
+    /// @notice Array of investor addresses
+    address[] private investors;
+
+    /// @notice Mapping to track if an address is already an investor
+    mapping(address => bool) private isInvestor;
+
     /// @notice The vault information
     VaultInfo public vaultInfo;
 
     /// @notice The USDC token
     IERC20 public immutable usdc;
 
+    /// @notice Contract signer reference for verification
+    address public immutable contractSigner;
+
     /// @notice Protocol fee collector address
     address public protocolFeeCollector;
 
-    /// @notice Total protocol fees collected
-    uint256 public protocolFeesCollected;
+    /// @notice Total protocol fees withdrawn by collector
+    uint256 public protocolFeesWithdrawn;
 
     /// @notice Emitted when shares are purchased
     event SharesPurchased(address indexed investor, uint256 amount, uint256 shares);
@@ -62,6 +73,15 @@ contract TokenizedBondVault is ERC20, AccessControl {
     /// @notice Emitted when protocol fees are collected
     event ProtocolFeesCollected(uint256 amount);
 
+    /// @notice Emitted when vault is fully funded
+    event VaultFullyFunded(uint256 indexed vaultId, uint256 timestamp);
+
+    /// @notice Emitted when contract is attached to vault
+    event ContractAttached(uint256 indexed vaultId, bytes32 contractHash);
+
+    /// @notice Emitted when borrower withdraws funds
+    event FundsWithdrawn(address indexed borrower, uint256 amount);
+
     constructor(
         uint256 _vaultId,
         address _borrower,
@@ -71,6 +91,7 @@ contract TokenizedBondVault is ERC20, AccessControl {
         uint256 _protocolFeeRate,
         uint256 _maturityDate,
         address _usdc,
+        address _contractSigner,
         address _admin,
         address _protocolFeeCollector,
         string memory _name,
@@ -91,6 +112,7 @@ contract TokenizedBondVault is ERC20, AccessControl {
         });
 
         usdc = IERC20(_usdc);
+        contractSigner = _contractSigner;
         protocolFeeCollector = _protocolFeeCollector;
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
@@ -100,12 +122,15 @@ contract TokenizedBondVault is ERC20, AccessControl {
     /// @notice Purchase vault shares by depositing USDC
     /// @param amount The amount of USDC to deposit
     function purchaseShares(uint256 amount) external {
-        require(
-            vaultInfo.state == VaultState.Pending || vaultInfo.state == VaultState.Active,
-            "Vault not accepting deposits"
-        );
+        require(vaultInfo.state == VaultState.Pending, "Vault not accepting deposits");
         require(amount > 0, "Amount must be greater than 0");
         require(vaultInfo.totalRaised + amount <= vaultInfo.principalAmount, "Exceeds principal amount");
+
+        // Track investor if not already tracked
+        if (!isInvestor[msg.sender]) {
+            investors.push(msg.sender);
+            isInvestor[msg.sender] = true;
+        }
 
         // Transfer USDC from investor
         require(usdc.transferFrom(msg.sender, address(this), amount), "USDC transfer failed");
@@ -117,14 +142,51 @@ contract TokenizedBondVault is ERC20, AccessControl {
 
         emit SharesPurchased(msg.sender, amount, amount);
 
-        // If fully funded, activate vault
+        // If fully funded, change to Funded state (awaiting contract)
         if (vaultInfo.totalRaised == vaultInfo.principalAmount) {
-            vaultInfo.state = VaultState.Active;
-            emit VaultStateChanged(VaultState.Active);
+            vaultInfo.state = VaultState.Funded;
+            emit VaultStateChanged(VaultState.Funded);
+            emit VaultFullyFunded(vaultInfo.vaultId, block.timestamp);
         }
     }
 
-    /// @notice Disburse loan to borrower
+    /// @notice Attach contract hash to vault after contract is created and signed
+    /// @param _contractHash The hash of the signed contract
+    function attachContract(bytes32 _contractHash) external onlyRole(VAULT_MANAGER_ROLE) {
+        require(vaultInfo.state == VaultState.Funded, "Vault not funded");
+        require(vaultInfo.contractHash == bytes32(0), "Contract already attached");
+        require(_contractHash != bytes32(0), "Invalid contract hash");
+
+        vaultInfo.contractHash = _contractHash;
+        vaultInfo.state = VaultState.Active;
+        emit ContractAttached(vaultInfo.vaultId, _contractHash);
+        emit VaultStateChanged(VaultState.Active);
+    }
+
+    /// @notice Borrower withdraws funds after contract is fully signed
+    function withdrawFunds() external {
+        require(msg.sender == vaultInfo.borrower, "Only borrower");
+        require(vaultInfo.state == VaultState.Active, "Vault not active");
+        require(vaultInfo.contractHash != bytes32(0), "No contract attached");
+        require(vaultInfo.totalRaised == vaultInfo.principalAmount, "Vault not fully funded");
+
+        // Verify contract is fully signed
+        IContractSigner.ContractDocument memory doc = IContractSigner(contractSigner).getContract(
+            vaultInfo.contractHash
+        );
+        require(doc.isExecuted, "Contract not fully signed");
+        require(!doc.isCancelled, "Contract cancelled");
+
+        // Transfer principal to borrower
+        require(usdc.transfer(vaultInfo.borrower, vaultInfo.principalAmount), "USDC transfer failed");
+
+        vaultInfo.state = VaultState.Repaying;
+        emit FundsWithdrawn(vaultInfo.borrower, vaultInfo.principalAmount);
+        emit VaultStateChanged(VaultState.Repaying);
+    }
+
+    /// @notice Disburse loan to borrower (DEPRECATED - use withdrawFunds instead)
+    /// @dev Kept for backward compatibility but should not be used
     function disburseLoan() external onlyRole(VAULT_MANAGER_ROLE) {
         require(vaultInfo.state == VaultState.Active, "Vault not active");
         require(vaultInfo.totalRaised == vaultInfo.principalAmount, "Vault not fully funded");
@@ -149,35 +211,33 @@ contract TokenizedBondVault is ERC20, AccessControl {
 
         emit RepaymentMade(amount, vaultInfo.totalRepaid);
 
-        // Calculate total due (principal + interest)
-        uint256 totalDue = vaultInfo.principalAmount + (vaultInfo.principalAmount * vaultInfo.interestRate / 10000);
+        // Calculate total due (principal + interest + protocol fee)
+        uint256 interestAmount = vaultInfo.principalAmount * vaultInfo.interestRate / 10000;
+        uint256 protocolFee = vaultInfo.principalAmount * vaultInfo.protocolFeeRate / 10000;
+        uint256 totalDue = vaultInfo.principalAmount + interestAmount + protocolFee;
 
         // Check if fully repaid
         if (vaultInfo.totalRepaid >= totalDue) {
             vaultInfo.state = VaultState.Completed;
             emit VaultStateChanged(VaultState.Completed);
-
-            // Collect protocol fees
-            uint256 protocolFee = (vaultInfo.principalAmount * vaultInfo.protocolFeeRate / 10000);
-            if (protocolFee > 0) {
-                require(usdc.transfer(protocolFeeCollector, protocolFee), "Protocol fee transfer failed");
-                protocolFeesCollected += protocolFee;
-                emit ProtocolFeesCollected(protocolFee);
-            }
         }
     }
 
     /// @notice Redeem shares for USDC
     /// @param shares The number of shares to redeem
+    /// @dev Can redeem partially or fully at any time after repayments start
     function redeemShares(uint256 shares) external {
-        require(vaultInfo.state == VaultState.Completed, "Vault not completed");
+        require(
+            vaultInfo.state == VaultState.Repaying || vaultInfo.state == VaultState.Completed,
+            "No repayments yet"
+        );
         require(shares > 0, "Shares must be greater than 0");
         require(balanceOf(msg.sender) >= shares, "Insufficient shares");
 
-        // Calculate redemption amount
-        // After protocol fees, LPs get their principal + 12% returns
-        uint256 totalAvailable = vaultInfo.totalRepaid - protocolFeesCollected;
-        uint256 redemptionAmount = (shares * totalAvailable) / totalSupply();
+        // Calculate how much investors can redeem based on repayments
+        // Investors get their proportional share of (repayments - protocol fees already withdrawn)
+        uint256 availableForInvestors = usdc.balanceOf(address(this));
+        uint256 redemptionAmount = (shares * availableForInvestors) / totalSupply();
 
         // Burn shares
         _burn(msg.sender, shares);
@@ -186,6 +246,39 @@ contract TokenizedBondVault is ERC20, AccessControl {
         require(usdc.transfer(msg.sender, redemptionAmount), "USDC transfer failed");
 
         emit SharesRedeemed(msg.sender, shares, redemptionAmount);
+    }
+
+    /// @notice Withdraw protocol fees (only callable by protocol fee collector)
+    /// @dev Can be called at any time after repayments start, withdraws proportional fees
+    function withdrawProtocolFees() external {
+        require(msg.sender == protocolFeeCollector, "Only protocol fee collector");
+        require(vaultInfo.state == VaultState.Repaying || vaultInfo.state == VaultState.Completed, "No repayments yet");
+        
+        // Calculate how much protocol fee is available based on repayments made
+        uint256 interestAmount = vaultInfo.principalAmount * vaultInfo.interestRate / 10000;
+        uint256 totalProtocolFee = vaultInfo.principalAmount * vaultInfo.protocolFeeRate / 10000;
+        uint256 totalDue = vaultInfo.principalAmount + interestAmount + totalProtocolFee;
+        
+        // Calculate proportional protocol fee based on repayments
+        // If fully repaid, all protocol fees are available
+        uint256 earnedProtocolFee;
+        if (vaultInfo.totalRepaid >= totalDue) {
+            earnedProtocolFee = totalProtocolFee;
+        } else {
+            earnedProtocolFee = (vaultInfo.totalRepaid * totalProtocolFee) / totalDue;
+        }
+        
+        uint256 availableFees = earnedProtocolFee > protocolFeesWithdrawn 
+            ? earnedProtocolFee - protocolFeesWithdrawn 
+            : 0;
+        
+        require(availableFees > 0, "No fees to collect");
+
+        protocolFeesWithdrawn += availableFees;
+
+        require(usdc.transfer(protocolFeeCollector, availableFees), "Protocol fee transfer failed");
+        
+        emit ProtocolFeesCollected(availableFees);
     }
 
     /// @notice Mark vault as defaulted
@@ -347,5 +440,48 @@ contract TokenizedBondVault is ERC20, AccessControl {
         protocolFee = (vaultInfo.principalAmount * vaultInfo.protocolFeeRate / 10000);
 
         return (totalDue, totalPaid, remaining, protocolFee);
+    }
+
+    /// @notice Get list of all investors in this vault
+    /// @return Array of investor addresses
+    function getInvestors() external view returns (address[] memory) {
+        return investors;
+    }
+
+    /// @notice Check if an address is an investor
+    /// @param account The address to check
+    /// @return True if the address is an investor
+    function isInvestorAddress(address account) external view returns (bool) {
+        return isInvestor[account];
+    }
+
+    /// @notice Get vault state
+    /// @return The current state of the vault
+    function getVaultState() external view returns (VaultState) {
+        return vaultInfo.state;
+    }
+
+    /// @notice Get vault borrower
+    /// @return The borrower address
+    function getVaultBorrower() external view returns (address) {
+        return vaultInfo.borrower;
+    }
+
+    /// @notice Get vault principal amount
+    /// @return The principal amount
+    function getVaultPrincipalAmount() external view returns (uint256) {
+        return vaultInfo.principalAmount;
+    }
+
+    /// @notice Get vault total raised
+    /// @return The total amount raised
+    function getVaultTotalRaised() external view returns (uint256) {
+        return vaultInfo.totalRaised;
+    }
+
+    /// @notice Get vault contract hash
+    /// @return The contract hash
+    function getVaultContractHash() external view returns (bytes32) {
+        return vaultInfo.contractHash;
     }
 }
