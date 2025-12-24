@@ -3,13 +3,14 @@ pragma solidity ^0.8.27;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IContractSigner} from "../interfaces/IContractSigner.sol";
 
 /// @title TokenizedBondVault
 /// @notice Core vault contract for tokenized bonds with ERC20 share tokens
 /// @dev Implements 12% returns for LPs, 2% protocol fee, and 10% interest paid by SME
-contract TokenizedBondVault is ERC20, AccessControl {
+contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
     bytes32 public constant VAULT_MANAGER_ROLE = keccak256("VAULT_MANAGER_ROLE");
 
     /// @notice Vault state enum
@@ -127,7 +128,7 @@ contract TokenizedBondVault is ERC20, AccessControl {
 
     /// @notice Purchase vault shares by depositing USDC
     /// @param amount The amount of USDC to deposit
-    function purchaseShares(uint256 amount) external {
+    function purchaseShares(uint256 amount) external nonReentrant {
         require(vaultInfo.state == VaultState.Pending, "Vault not accepting deposits");
         require(amount > 0, "Amount must be greater than 0");
         require(vaultInfo.totalRaised + amount <= vaultInfo.principalAmount, "Exceeds principal amount");
@@ -172,7 +173,7 @@ contract TokenizedBondVault is ERC20, AccessControl {
     }
 
     /// @notice Borrower withdraws funds after contract is fully signed
-    function withdrawFunds() external {
+    function withdrawFunds() external nonReentrant {
         require(msg.sender == vaultInfo.borrower, "Only borrower");
         require(vaultInfo.state == VaultState.Active, "Vault not active");
         require(vaultInfo.contractHash != bytes32(0), "No contract attached");
@@ -209,7 +210,7 @@ contract TokenizedBondVault is ERC20, AccessControl {
 
     /// @notice Make a repayment
     /// @param amount The amount to repay in USDC
-    function makeRepayment(uint256 amount) external {
+    function makeRepayment(uint256 amount) external nonReentrant {
         require(vaultInfo.state == VaultState.Repaying, "Vault not in repaying state");
         require(amount > 0, "Amount must be greater than 0");
 
@@ -227,13 +228,71 @@ contract TokenizedBondVault is ERC20, AccessControl {
     /// @notice Redeem shares for USDC
     /// @param shares The number of shares to redeem
     /// @dev Can redeem partially or fully at any time after borrower withdraws funds
-    function redeemShares(uint256 shares) external {
+    function redeemShares(uint256 shares) external nonReentrant {
         require(
-            vaultInfo.state == VaultState.Repaying || vaultInfo.state == VaultState.Completed,
-            "Funds not withdrawn by borrower yet"
+            vaultInfo.state == VaultState.Repaying || vaultInfo.state == VaultState.Completed || vaultInfo.state == VaultState.Funded || vaultInfo.state == VaultState.Active,
+            "Invalid state for redemption"
         );
         require(shares > 0, "Shares must be greater than 0");
         require(balanceOf(msg.sender) >= shares, "Insufficient shares");
+
+        // Allow withdrawal if contract is not yet fully signed/executed (Funded/Active state)
+        // This enables investors to withdraw if deal falls through before borrower withdrawal
+        if (vaultInfo.state == VaultState.Funded || vaultInfo.state == VaultState.Active) {
+            // Check if contract is signed/executed to be safe, though state check handles most cases
+            // If active, contract is attached but funds not withdrawn. Investor can exit.
+            // If funded, contract might not even be attached. Investor can exit.
+            
+            // Calculate 1:1 redemption (since no interest/fees generated yet)
+            // Principal only
+            uint256 redemptionAmount = shares; // 1 share = 1 USDC initially
+            
+            require(usdc.balanceOf(address(this)) >= redemptionAmount, "Insufficient vault balance");
+
+            // Burn shares
+            _burn(msg.sender, shares);
+
+            // Transfer USDC
+            require(usdc.transfer(msg.sender, redemptionAmount), "USDC transfer failed");
+            
+            vaultInfo.totalRaised -= redemptionAmount;
+            
+            // If total raised drops below principal, go back to Pending
+            if (vaultInfo.totalRaised < vaultInfo.principalAmount) {
+                vaultInfo.state = VaultState.Pending;
+                // Reset timestamps if we go back to pending
+                vaultInfo.fundedAt = 0;
+                vaultInfo.contractAttachedAt = 0; 
+                vaultInfo.contractHash = bytes32(0); // Detach contract if any
+            }
+
+            emit SharesRedeemed(msg.sender, shares, redemptionAmount);
+            emit VaultStateChanged(vaultInfo.state);
+            return;
+        }
+
+        // --- Standard Redemption Logic (Repaying/Completed) ---
+
+        // SECURITY UPGRADE: Prevent full redemption until debt is fully repaid
+        // This prevents the "last man standing" issue where early exiters leave dust for others
+        // if the borrower hasn't fully repaid yet.
+        
+        // Calculate total due (principal + interest + protocol fee)
+        uint256 interestAmount = vaultInfo.principalAmount * vaultInfo.interestRate / 10000;
+        uint256 protocolFee = vaultInfo.principalAmount * vaultInfo.protocolFeeRate / 10000;
+        uint256 totalDue = vaultInfo.principalAmount + interestAmount + protocolFee;
+        
+        bool isFullyRepaid = vaultInfo.totalRepaid >= totalDue;
+
+        // If not fully repaid, allow redemption ONLY proportional to what has been repaid
+        // Actually, the request said: "enabling only redem when repayment is done totally"
+        // But preventing ANY redemption until 100% repayment is very strict and hurts liquidity.
+        // However, the prompt says: "We wil use the prevent by enabling only redem when repayment is done totally."
+        // So I will implement strict check as requested.
+        
+        if (vaultInfo.state == VaultState.Repaying) {
+             require(isFullyRepaid, "Cannot redeem until full repayment");
+        }
 
         // Get available funds for investors (excluding reserved protocol fees)
         uint256 availableForInvestors = getAvailableForInvestors();
@@ -256,7 +315,7 @@ contract TokenizedBondVault is ERC20, AccessControl {
 
     /// @notice Withdraw protocol fees (only callable by protocol fee collector)
     /// @dev Can be called at any time after repayments start, withdraws proportional fees
-    function withdrawProtocolFees() external {
+    function withdrawProtocolFees() external nonReentrant {
         require(msg.sender == protocolFeeCollector, "Only protocol fee collector");
         require(vaultInfo.state == VaultState.Repaying || vaultInfo.state == VaultState.Completed, "No repayments yet");
         

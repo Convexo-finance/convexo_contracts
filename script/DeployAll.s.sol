@@ -57,6 +57,21 @@ contract DeployAll is Script {
             networkName = "Unichain Sepolia";
             poolManager = vm.envOr("POOL_MANAGER_ADDRESS_UNISEPOLIA", 0x00B036B58a818B1BC34d502D3fE730Db729e62AC);
             usdc = vm.envOr("USDC_ADDRESS_UNISEPOLIA", 0x31d0220469e10c4E71834a79b1f276d740d3768F);
+        } else if (chainId == 1) {
+            // Ethereum Mainnet
+            networkName = "Ethereum Mainnet";
+            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_ETHMAINNET", 0x8C4BcBE6b9eF47855f97E675296FA3F6fafa5F1A);
+            usdc = vm.envOr("USDC_ADDRESS_ETHMAINNET", 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+        } else if (chainId == 8453) {
+            // Base Mainnet
+            networkName = "Base Mainnet";
+            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_BASEMAINNET", 0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829);
+            usdc = vm.envOr("USDC_ADDRESS_BASEMAINNET", 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913);
+        } else if (chainId == 130) {
+            // Unichain Mainnet
+            networkName = "Unichain Mainnet";
+            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_UNIMAINNET", address(0)); // TBD
+            usdc = vm.envOr("USDC_ADDRESS_UNIMAINNET", address(0)); // TBD
         } else {
             revert("Unsupported network");
         }

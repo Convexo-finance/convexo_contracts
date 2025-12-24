@@ -190,6 +190,136 @@
       "pool_manager": "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
       "deployment_status": "Complete - All 9 contracts deployed and verified ✅ (v2.2)"
     }
+  },
+  "8453": {
+    "name": "Base Mainnet",
+    "version": "2.2",
+    "convexo_lps": {
+      "address": "0xc056c0Ddf959b8b63fb6Bc73b5E79e85a6bFB9b5",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "basescan": "https://basescan.org/address/0xc056c0Ddf959b8b63fb6Bc73b5E79e85a6bFB9b5"
+    },
+    "convexo_vaults": {
+      "address": "0xC0561AB6dB7762Cf81a6b1E54394551e9124Df50",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "basescan": "https://basescan.org/address/0xC0561AB6dB7762Cf81a6b1E54394551e9124Df50"
+    },
+    "hook_deployer": {
+      "address": "0x98E1F6d3Fd8b1EA91a24A43FD84f2F6B9f4EaEb2",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "basescan": "https://basescan.org/address/0x98E1F6d3Fd8b1EA91a24A43FD84f2F6B9f4EaEb2"
+    },
+    "compliant_lp_hook": {
+      "address": "0x87af0C8203C84192dBf07f4B6D934fD00eB3F723",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "basescan": "https://basescan.org/address/0x87af0C8203C84192dBf07f4B6D934fD00eB3F723"
+    },
+    "pool_registry": {
+      "address": "0x99612857Bb85b1de04d06385E44Fa53DC2aF79E1",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "basescan": "https://basescan.org/address/0x99612857Bb85b1de04d06385E44Fa53DC2aF79E1"
+    },
+    "reputation_manager": {
+      "address": "0xDe8daB3182426234ACf68E4197A1eDF5172450dD",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "basescan": "https://basescan.org/address/0xDe8daB3182426234ACf68E4197A1eDF5172450dD"
+    },
+    "price_feed_manager": {
+      "address": "0xbc4023284D789D7EB8512c1EDe245C77591a5D96",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "basescan": "https://basescan.org/address/0xbc4023284D789D7EB8512c1EDe245C77591a5D96"
+    },
+    "contract_signer": {
+      "address": "0xC058588A8D82B2E2129119B209c80af8bF3d4961",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "basescan": "https://basescan.org/address/0xC058588A8D82B2E2129119B209c80af8bF3d4961"
+    },
+    "vault_factory": {
+      "address": "0x7356bf8000dE3CA7518a363b954D67cc54F7c84d",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "basescan": "https://basescan.org/address/0x7356bf8000dE3CA7518a363b954D67cc54F7c84d"
+    },
+    "notes": {
+      "usdc_address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "pool_manager": "0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829",
+      "deployment_status": "Complete - All 9 contracts deployed and verified ✅ (v2.2)",
+      "block": "39887479-39887480",
+      "total_gas_paid": "0.000011372772322454 ETH"
+    }
+  },
+  "130": {
+    "name": "Unichain Mainnet",
+    "version": "2.2",
+    "convexo_lps": {
+      "address": "0xbc4023284D789D7EB8512c1EDe245C77591a5D96",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "blockscout": "https://unichain.blockscout.com/address/0xbc4023284D789D7EB8512c1EDe245C77591a5D96"
+    },
+    "convexo_vaults": {
+      "address": "0xC058588A8D82B2E2129119B209c80af8bF3d4961",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "blockscout": "https://unichain.blockscout.com/address/0xC058588A8D82B2E2129119B209c80af8bF3d4961"
+    },
+    "hook_deployer": {
+      "address": "0x7356bf8000dE3CA7518a363b954D67cc54F7c84d",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "blockscout": "https://unichain.blockscout.com/address/0x7356bf8000dE3CA7518a363b954D67cc54F7c84d"
+    },
+    "compliant_lp_hook": {
+      "address": "0x282a52f7607Ef04415c6567d18f1BF9acD043f42",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "blockscout": "https://unichain.blockscout.com/address/0x282a52f7607Ef04415c6567d18f1BF9acD043f42"
+    },
+    "pool_registry": {
+      "address": "0x292EF88A7199916899fC296Ff6b522306FA2B19a",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "blockscout": "https://unichain.blockscout.com/address/0x292EF88A7199916899fC296Ff6b522306FA2B19a"
+    },
+    "reputation_manager": {
+      "address": "0x4DbCCff8730398a35D517ab8A1E8413A45d686C4",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "blockscout": "https://unichain.blockscout.com/address/0x4DbCCff8730398a35D517ab8A1E8413A45d686C4"
+    },
+    "price_feed_manager": {
+      "address": "0xbB13194B2792E291109402369cb4Fc0358aed132",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "blockscout": "https://unichain.blockscout.com/address/0xbB13194B2792E291109402369cb4Fc0358aed132"
+    },
+    "contract_signer": {
+      "address": "0xec02A78F2e6Db438EB9b75aA173AC0F0D1D3126A",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "blockscout": "https://unichain.blockscout.com/address/0xec02A78F2e6Db438EB9b75aA173AC0F0D1D3126A"
+    },
+    "vault_factory": {
+      "address": "0xC98BCE4617f9708dD1363F21177Be5Ef21fB4993",
+      "deployed_at": "2024-12-24T00:00:00Z",
+      "verified": true,
+      "blockscout": "https://unichain.blockscout.com/address/0xC98BCE4617f9708dD1363F21177Be5Ef21fB4993"
+    },
+    "notes": {
+      "usdc_address": "0x078D782b760474a361dDA0AF3839290b0EF57AD6",
+      "pool_manager": "0x1F98400000000000000000000000000000000004",
+      "deployment_status": "Complete - All 9 contracts deployed and verified ✅ (v2.2)",
+      "block": "35816776-35816778",
+      "total_gas_paid": "0.000000046931112488 ETH"
+    }
   }
 }
 
