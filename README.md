@@ -4,7 +4,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/Tests-14%2F14%20Passing-brightgreen)](./test)
-[![Deployed](https://img.shields.io/badge/Deployed-Base%20Sepolia-blue)](https://sepolia.basescan.org)
+[![Deployed](https://img.shields.io/badge/Deployed-Base%20Mainnet-blue)](https://basescan.org)
+[![Deployed](https://img.shields.io/badge/Deployed-Unichain%20Mainnet-success)](https://unichain.blockscout.com)
 
 ---
 
@@ -151,13 +152,11 @@ Sign Contract → Withdraw → Repay → Protocol & Investors Withdraw
 
 ## 📋 Deployed Contracts
 
-See [DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md) for complete contract addresses across all networks.
+View contract addresses and verification links by network:
 
-### Quick Links by Network
-
-- **Ethereum Sepolia**: [View Deployment](./ETHEREUM_SEPOLIA_DEPLOYMENT.md)
-- **Base Sepolia**: [View Deployment](./BASE_SEPOLIA_DEPLOYMENT.md)
-- **Unichain Sepolia**: [View Deployment](./UNICHAIN_SEPOLIA_DEPLOYMENT.md)
+- **⟠ Ethereum**: [Ethereum Deployments](./ETHEREUM_DEPLOYMENTS.md) (Mainnet + Sepolia)
+- **🔵 Base**: [Base Deployments](./BASE_DEPLOYMENTS.md) (Mainnet + Sepolia)
+- **🦄 Unichain**: [Unichain Deployments](./UNICHAIN_DEPLOYMENTS.md) (Mainnet + Sepolia)
 
 ---
 
@@ -207,7 +206,15 @@ forge test -vvv
 
 ## 🌐 Deployment Status
 
-### ✅ All Networks Deployed & Verified
+### 🚀 Mainnet Deployments
+
+| Network | Chain ID | Contracts | Status | Explorer |
+|---------|----------|-----------|--------|----------|
+| **Base Mainnet** | 8453 | 9/9 | ✅ Complete | [BaseScan](https://basescan.org) |
+| **Unichain Mainnet** | 130 | 9/9 | ✅ Complete | [Blockscout](https://unichain.blockscout.com) |
+| **Ethereum Mainnet** | 1 | 0/9 | ⏳ Pending | [Etherscan](https://etherscan.io) |
+
+### 🧪 Testnet Deployments
 
 | Network | Chain ID | Contracts | Status | Explorer |
 |---------|----------|-----------|--------|----------|
@@ -228,8 +235,6 @@ forge test -vvv
 9. ✅ **VaultFactory** - Factory for creating tokenized bond vaults
 
 **Total: 9 Smart Contracts | All Verified ✅**
-
-**See [DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md) for all contract addresses and links.**
 
 ---
 
@@ -276,31 +281,23 @@ ABIs saved to `abis/` directory for frontend integration.
 
 ## 📚 Documentation
 
-### 🚀 Deployment & Verification
+### Core Documentation
 | Document | Description |
 |----------|-------------|
-| **[DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md)** | 🌟 **Executive summary** - All deployments at a glance |
-| **[ETHEREUM_SEPOLIA_DEPLOYMENT.md](./ETHEREUM_SEPOLIA_DEPLOYMENT.md)** | ✅ Ethereum Sepolia deployment (9/9 verified) |
-| **[BASE_SEPOLIA_DEPLOYMENT.md](./BASE_SEPOLIA_DEPLOYMENT.md)** | ✅ Base Sepolia deployment (9/9 verified) |
-| **[UNICHAIN_SEPOLIA_DEPLOYMENT.md](./UNICHAIN_SEPOLIA_DEPLOYMENT.md)** | ✅ Unichain Sepolia deployment (9/9 verified) |
-| **[scripts/README.md](./scripts/README.md)** | Deployment & verification scripts guide |
+| **[CONTRACTS_REFERENCE.md](./CONTRACTS_REFERENCE.md)** | 📖 Complete contract reference with all functions and usage |
+| **[FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md)** | 💻 Frontend integration guide with code examples |
+| **[SECURITY_AUDIT.md](./SECURITY_AUDIT.md)** | 🔐 Security features and audit information |
 
-### 📖 Contract Documentation
-| Document | Description |
-|----------|-------------|
-| **[CONTRACTS_REFERENCE.md](./CONTRACTS_REFERENCE.md)** | 🌟 **START HERE!** Detailed reference for all 9 contracts with functions and usage |
+### Deployment Documentation by Chain
+| Network | Documentation |
+|---------|---------------|
+| **⟠ Ethereum** | [ETHEREUM_DEPLOYMENTS.md](./ETHEREUM_DEPLOYMENTS.md) |
+| **🔵 Base** | [BASE_DEPLOYMENTS.md](./BASE_DEPLOYMENTS.md) |
+| **🦄 Unichain** | [UNICHAIN_DEPLOYMENTS.md](./UNICHAIN_DEPLOYMENTS.md) |
 
-### 🌐 Network Information
-| Document | Description |
-|----------|-------------|
-| **[NETWORK_ADDRESSES.md](./NETWORK_ADDRESSES.md)** | USDC, ECOP, and Uniswap V4 addresses for all networks |
-| **[addresses.json](./addresses.json)** | All deployed contract addresses in JSON format |
-
-### 💻 Frontend Integration
-| Document | Description |
-|----------|-------------|
-| **[FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md)** | Complete guide for frontend developers with code examples |
-| **[abis/](./abis/)** | Contract ABIs ready for frontend use (10 ABIs including TokenizedBondVault) |
+### Contract Resources
+- **[addresses.json](./addresses.json)** - All deployed contract addresses in JSON format
+- **[abis/](./abis/)** - Contract ABIs for frontend integration (10 ABIs)
 
 ---
 
@@ -390,8 +387,6 @@ function useVaults() {
 - **USDC:** `0x31d0220469e10c4E71834a79b1f276d740d3768F`
 - **ECOP:** `0xbb0d7c4141ee1fed53db766e1ffcb9c618df8260`
 
-> **📖 See [NETWORK_ADDRESSES.md](./NETWORK_ADDRESSES.md) for complete Uniswap V4 contract addresses**
-
 ### Mainnet (Future)
 - Base Mainnet
 - Optimism
@@ -459,10 +454,10 @@ SME needs $50k for inventory
 
 | Metric | Value |
 |--------|-------|
-| **Version** | 2.2 (Protocol Fee Protection) |
+| **Version** | 2.2 (Security Enhanced) |
 | **Test Coverage** | 15/15 tests passing (100%) |
-| **Contracts Deployed** | 9 contracts |
-| **Networks Supported** | 3 testnets (Ethereum, Base, Unichain Sepolia) |
+| **Contracts Deployed** | 9 contracts per network |
+| **Networks Supported** | 2 mainnets, 3 testnets (Base, Unichain, Ethereum/Base/Unichain Sepolia) |
 | **Investor Returns** | 12% APY |
 | **Min Credit Score** | 70 (for vault creation) |
 | **Protocol Fee** | 2% of principal (protected) |
@@ -566,8 +561,9 @@ MIT License - see [LICENSE](./LICENSE) file for details.
 ## 📞 Support
 
 - **Technical Issues**: Open an issue on GitHub
+- **Contract Reference**: See [CONTRACTS_REFERENCE.md](./CONTRACTS_REFERENCE.md)
 - **Frontend Integration**: See [FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md)
-- **Deployment Help**: See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
+- **Security**: See [SECURITY_AUDIT.md](./SECURITY_AUDIT.md)
 - **General Questions**: Join our Discord
 
 ---
@@ -578,7 +574,14 @@ MIT License - see [LICENSE](./LICENSE) file for details.
 
 All 9 contracts successfully deployed and verified across 3 testnets with the new vault flow.
 
-**Deployment Complete:**
+**Deployment Status:**
+
+**Mainnets:**
+- 🚀 Base Mainnet: 9/9 contracts verified ✅
+- 🚀 Unichain Mainnet: 9/9 contracts verified ✅
+- ⏳ Ethereum Mainnet: Ready to deploy (pending funding)
+
+**Testnets:**
 - ✅ Ethereum Sepolia: 9/9 contracts verified
 - ✅ Base Sepolia: 9/9 contracts verified  
 - ✅ Unichain Sepolia: 9/9 contracts verified

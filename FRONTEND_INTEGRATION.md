@@ -55,7 +55,7 @@ All 9 contracts are deployed, tested, and verified on **3 testnets**:
 | **ContractSigner** | `0x834dbab5c4bf2f9f2c80c9d7513ff986d3a835c8` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x834dbab5c4bf2f9f2c80c9d7513ff986d3a835c8) |
 | **VaultFactory** | `0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841) |
 
-> **📖 See [DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md) for complete deployment details**
+> **📖 See chain-specific deployment docs: [Ethereum](./ETHEREUM_DEPLOYMENTS.md) | [Base](./BASE_DEPLOYMENTS.md) | [Unichain](./UNICHAIN_DEPLOYMENTS.md)**
 
 ---
 
@@ -931,11 +931,10 @@ Base Sepolia USDC: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
 ## 📞 Support & Resources
 
 ### Documentation
-- **Contract Reference**: [CONTRACTS_REFERENCE.md](./CONTRACTS_REFERENCE.md) - Detailed contract docs
-- **Deployment Summary**: [DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md) - All deployments at a glance
-- **Ethereum Sepolia**: [ETHEREUM_SEPOLIA_DEPLOYMENT.md](./ETHEREUM_SEPOLIA_DEPLOYMENT.md)
-- **Base Sepolia**: [BASE_SEPOLIA_DEPLOYMENT.md](./BASE_SEPOLIA_DEPLOYMENT.md)
-- **Unichain Sepolia**: [UNICHAIN_SEPOLIA_DEPLOYMENT.md](./UNICHAIN_SEPOLIA_DEPLOYMENT.md)
+- **Contract Reference**: [CONTRACTS_REFERENCE.md](./CONTRACTS_REFERENCE.md) - Complete contract documentation
+- **Ethereum**: [ETHEREUM_DEPLOYMENTS.md](./ETHEREUM_DEPLOYMENTS.md) - All Ethereum deployments
+- **Base**: [BASE_DEPLOYMENTS.md](./BASE_DEPLOYMENTS.md) - All Base deployments
+- **Unichain**: [UNICHAIN_DEPLOYMENTS.md](./UNICHAIN_DEPLOYMENTS.md) - All Unichain deployments
 
 ### Explorers
 - **Ethereum Sepolia**: https://sepolia.etherscan.io

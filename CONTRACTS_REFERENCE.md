@@ -778,5 +778,34 @@ for (let i = 0; i < count; i++) {
 
 ---
 
-**This reference covers all core functions. For deployment details, see `DEPLOYMENT_GUIDE.md`.**
+## 🆔 ZKPassport Registry
 
+### ZKPassportRegistry
+
+**Purpose:** Verify and store user identities using ZKPassport proofs (Wallet + ID).
+**Verifier Address:** `0x1D000001000EFD9a6371f4d90bB8920D5431c0D8` (Base/Ethereum Mainnet)
+
+```solidity
+// Register user with proof
+function register(
+    bytes memory proof,
+    bytes32[] memory publicInputs,
+    bytes32 identityHash
+) external
+
+// Check if verified
+function isVerified(address user) external view returns (bool)
+
+// Revoke verification (Admin)
+function revoke(address user) external
+```
+
+**Usage Flow:**
+1. Frontend generates ZK proof using ZKPassport SDK.
+2. User calls `register(proof, publicInputs, idHash)`.
+3. Contract calls `ZKPassportVerifier.verify()`.
+4. If valid, user is marked as verified.
+
+---
+
+**This reference covers all core functions. For deployment addresses, see [Ethereum](./ETHEREUM_DEPLOYMENTS.md), [Base](./BASE_DEPLOYMENTS.md), or [Unichain](./UNICHAIN_DEPLOYMENTS.md) deployment docs.**
