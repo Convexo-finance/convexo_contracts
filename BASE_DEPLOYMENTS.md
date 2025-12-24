@@ -34,27 +34,27 @@ Complete deployment guide for all Base networks (Mainnet & Sepolia Testnet).
 ### NFT Contracts
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **Convexo_LPs** | `0xc056c0Ddf959b8b63fb6Bc73b5E79e85a6bFB9b5` | [View on Basescan](https://basescan.org/address/0xc056c0Ddf959b8b63fb6Bc73b5E79e85a6bFB9b5) |
-| **Convexo_Vaults** | `0xC0561AB6dB7762Cf81a6b1E54394551e9124Df50` | [View on Basescan](https://basescan.org/address/0xC0561AB6dB7762Cf81a6b1E54394551e9124Df50) |
+| **Convexo_LPs** | `0x282a52f7607ef04415c6567d18f1bf9acd043f42` | [View on Basescan](https://basescan.org/address/0x282a52f7607ef04415c6567d18f1bf9acd043f42) |
+| **Convexo_Vaults** | `0x292ef88a7199916899fc296ff6b522306fa2b19a` | [View on Basescan](https://basescan.org/address/0x292ef88a7199916899fc296ff6b522306fa2b19a) |
 
 ### Hook System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **HookDeployer** | `0x98E1F6d3Fd8b1EA91a24A43FD84f2F6B9f4EaEb2` | [View on Basescan](https://basescan.org/address/0x98E1F6d3Fd8b1EA91a24A43FD84f2F6B9f4EaEb2) |
-| **CompliantLPHook** | `0x87af0C8203C84192dBf07f4B6D934fD00eB3F723` | [View on Basescan](https://basescan.org/address/0x87af0C8203C84192dBf07f4B6D934fD00eB3F723) |
-| **PoolRegistry** | `0x99612857Bb85b1de04d06385E44Fa53DC2aF79E1` | [View on Basescan](https://basescan.org/address/0x99612857Bb85b1de04d06385E44Fa53DC2aF79E1) |
+| **HookDeployer** | `0x4dbccff8730398a35d517ab8a1e8413a45d686c4` | [View on Basescan](https://basescan.org/address/0x4dbccff8730398a35d517ab8a1e8413a45d686c4) |
+| **CompliantLPHook** | `0xbb13194b2792e291109402369cb4fc0358aed132` | [View on Basescan](https://basescan.org/address/0xbb13194b2792e291109402369cb4fc0358aed132) |
+| **PoolRegistry** | `0xec02a78f2e6db438eb9b75aa173ac0f0d1d3126a` | [View on Basescan](https://basescan.org/address/0xec02a78f2e6db438eb9b75aa173ac0f0d1d3126a) |
 
 ### Core Infrastructure
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ReputationManager** | `0xDe8daB3182426234ACf68E4197A1eDF5172450dD` | [View on Basescan](https://basescan.org/address/0xDe8daB3182426234ACf68E4197A1eDF5172450dD) |
-| **PriceFeedManager** | `0xbc4023284D789D7EB8512c1EDe245C77591a5D96` | [View on Basescan](https://basescan.org/address/0xbc4023284D789D7EB8512c1EDe245C77591a5D96) |
+| **ReputationManager** | `0xc98bce4617f9708dd1363f21177be5ef21fb4993` | [View on Basescan](https://basescan.org/address/0xc98bce4617f9708dd1363f21177be5ef21fb4993) |
+| **PriceFeedManager** | `0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7` | [View on Basescan](https://basescan.org/address/0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7) |
 
 ### Vault System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ContractSigner** | `0xC058588A8D82B2E2129119B209c80af8bF3d4961` | [View on Basescan](https://basescan.org/address/0xC058588A8D82B2E2129119B209c80af8bF3d4961) |
-| **VaultFactory** | `0x7356bf8000dE3CA7518a363b954D67cc54F7c84d` | [View on Basescan](https://basescan.org/address/0x7356bf8000dE3CA7518a363b954D67cc54F7c84d) |
+| **ContractSigner** | `0x5a1f415986a189d79d19d65cb6e3d6dd7b807268` | [View on Basescan](https://basescan.org/address/0x5a1f415986a189d79d19d65cb6e3d6dd7b807268) |
+| **VaultFactory** | `0x6b51adc34a503b23db99444048ac7c2dc735a12e` | [View on Basescan](https://basescan.org/address/0x6b51adc34a503b23db99444048ac7c2dc735a12e) |
 
 ## Network Dependencies
 
@@ -100,15 +100,15 @@ const BASE_MAINNET_CONFIG = {
   chainId: 8453,
   name: "Base Mainnet",
   contracts: {
-    convexoLPs: "0xc056c0Ddf959b8b63fb6Bc73b5E79e85a6bFB9b5",
-    convexoVaults: "0xC0561AB6dB7762Cf81a6b1E54394551e9124Df50",
-    hookDeployer: "0x98E1F6d3Fd8b1EA91a24A43FD84f2F6B9f4EaEb2",
-    compliantLPHook: "0x87af0C8203C84192dBf07f4B6D934fD00eB3F723",
-    poolRegistry: "0x99612857Bb85b1de04d06385E44Fa53DC2aF79E1",
-    reputationManager: "0xDe8daB3182426234ACf68E4197A1eDF5172450dD",
-    priceFeedManager: "0xbc4023284D789D7EB8512c1EDe245C77591a5D96",
-    contractSigner: "0xC058588A8D82B2E2129119B209c80af8bF3d4961",
-    vaultFactory: "0x7356bf8000dE3CA7518a363b954D67cc54F7c84d"
+    convexoLPs: "0x282a52f7607ef04415c6567d18f1bf9acd043f42",
+    convexoVaults: "0x292ef88a7199916899fc296ff6b522306fa2b19a",
+    hookDeployer: "0x4dbccff8730398a35d517ab8a1e8413a45d686c4",
+    compliantLPHook: "0xbb13194b2792e291109402369cb4fc0358aed132",
+    poolRegistry: "0xec02a78f2e6db438eb9b75aa173ac0f0d1d3126a",
+    reputationManager: "0xc98bce4617f9708dd1363f21177be5ef21fb4993",
+    priceFeedManager: "0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7",
+    contractSigner: "0x5a1f415986a189d79d19d65cb6e3d6dd7b807268",
+    vaultFactory: "0x6b51adc34a503b23db99444048ac7c2dc735a12e"
   },
   usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   poolManager: "0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829"
@@ -128,7 +128,7 @@ const BASE_MAINNET_CONFIG = {
 
 ## Deployment Summary
 **Status**: ✅ Complete - All 9 contracts deployed and verified  
-**Date**: December 2, 2025  
+**Date**: December 24, 2024  
 **Version**: 2.2
 
 ## Deployed Contracts
@@ -136,27 +136,27 @@ const BASE_MAINNET_CONFIG = {
 ### NFT Contracts
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **Convexo_LPs** | `0xd05df511dbe7d793d82b7344a955f15485ff0787` | [View](https://sepolia.basescan.org/address/0xd05df511dbe7d793d82b7344a955f15485ff0787) |
-| **Convexo_Vaults** | `0xfb965542aa0b58538a9b50fe020314dd687eb128` | [View](https://sepolia.basescan.org/address/0xfb965542aa0b58538a9b50fe020314dd687eb128) |
+| **Convexo_LPs** | `0x4c90cfcb7e83c57bde40f4079c1baae812772bb5` | [View](https://sepolia.basescan.org/address/0x4c90cfcb7e83c57bde40f4079c1baae812772bb5) |
+| **Convexo_Vaults** | `0x964475c4dea04d5f464c14a64243063cd80c1e0a` | [View](https://sepolia.basescan.org/address/0x964475c4dea04d5f464c14a64243063cd80c1e0a) |
 
 ### Hook System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **HookDeployer** | `0x503f203ce6d6462f433cd04c7ad2b05d61b56548` | [View](https://sepolia.basescan.org/address/0x503f203ce6d6462f433cd04c7ad2b05d61b56548) |
-| **CompliantLPHook** | `0xab83ce760054c1d048d5a9de5194b05398a09d41` | [View](https://sepolia.basescan.org/address/0xab83ce760054c1d048d5a9de5194b05398a09d41) |
-| **PoolRegistry** | `0x18fb358bc74054b0c2530c48ef23f8a8d464cb18` | [View](https://sepolia.basescan.org/address/0x18fb358bc74054b0c2530c48ef23f8a8d464cb18) |
+| **HookDeployer** | `0xfa5d75fe8193f8a5533b4be8f4615fef00ba0a86` | [View](https://sepolia.basescan.org/address/0xfa5d75fe8193f8a5533b4be8f4615fef00ba0a86) |
+| **CompliantLPHook** | `0x6f09787124a3e1a30ca3b41e1550d093b5bf1f26` | [View](https://sepolia.basescan.org/address/0x6f09787124a3e1a30ca3b41e1550d093b5bf1f26) |
+| **PoolRegistry** | `0x406f11a81873cc496d1376e773195fd203679530` | [View](https://sepolia.basescan.org/address/0x406f11a81873cc496d1376e773195fd203679530) |
 
 ### Core Infrastructure
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ReputationManager** | `0x50ace0dce54df668477adee4e9d6a6c0df4fedee` | [View](https://sepolia.basescan.org/address/0x50ace0dce54df668477adee4e9d6a6c0df4fedee) |
-| **PriceFeedManager** | `0xa46629011e0b8561a45ea03b822d28c0b2432c3a` | [View](https://sepolia.basescan.org/address/0xa46629011e0b8561a45ea03b822d28c0b2432c3a) |
+| **ReputationManager** | `0xa3b71158f4ddb8c0117bf9e4bff7b0922233c95b` | [View](https://sepolia.basescan.org/address/0xa3b71158f4ddb8c0117bf9e4bff7b0922233c95b) |
+| **PriceFeedManager** | `0xa045d9ce0b8a5367c447759babcafd8778d0777e` | [View](https://sepolia.basescan.org/address/0xa045d9ce0b8a5367c447759babcafd8778d0777e) |
 
 ### Vault System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ContractSigner** | `0x62227ff7ccbdb4d72c3511290b28c3424f1500ef` | [View](https://sepolia.basescan.org/address/0x62227ff7ccbdb4d72c3511290b28c3424f1500ef) |
-| **VaultFactory** | `0x8efc7e25c12a815329331da5f0e96affb4014472` | [View](https://sepolia.basescan.org/address/0x8efc7e25c12a815329331da5f0e96affb4014472) |
+| **ContractSigner** | `0x5c999003291235dce835500b183049a3b28fe783` | [View](https://sepolia.basescan.org/address/0x5c999003291235dce835500b183049a3b28fe783) |
+| **VaultFactory** | `0xd75edf919d744e9dfcad68939674d8c9fada5c97` | [View](https://sepolia.basescan.org/address/0xd75edf919d744e9dfcad68939674d8c9fada5c97) |
 
 ## Network Dependencies (Sepolia)
 
@@ -171,15 +171,15 @@ const BASE_SEPOLIA_CONFIG = {
   chainId: 84532,
   name: "Base Sepolia",
   contracts: {
-    convexoLPs: "0xd05df511dbe7d793d82b7344a955f15485ff0787",
-    convexoVaults: "0xfb965542aa0b58538a9b50fe020314dd687eb128",
-    hookDeployer: "0x503f203ce6d6462f433cd04c7ad2b05d61b56548",
-    compliantLPHook: "0xab83ce760054c1d048d5a9de5194b05398a09d41",
-    poolRegistry: "0x18fb358bc74054b0c2530c48ef23f8a8d464cb18",
-    reputationManager: "0x50ace0dce54df668477adee4e9d6a6c0df4fedee",
-    priceFeedManager: "0xa46629011e0b8561a45ea03b822d28c0b2432c3a",
-    contractSigner: "0x62227ff7ccbdb4d72c3511290b28c3424f1500ef",
-    vaultFactory: "0x8efc7e25c12a815329331da5f0e96affb4014472"
+    convexoLPs: "0x4c90cfcb7e83c57bde40f4079c1baae812772bb5",
+    convexoVaults: "0x964475c4dea04d5f464c14a64243063cd80c1e0a",
+    hookDeployer: "0xfa5d75fe8193f8a5533b4be8f4615fef00ba0a86",
+    compliantLPHook: "0x6f09787124a3e1a30ca3b41e1550d093b5bf1f26",
+    poolRegistry: "0x406f11a81873cc496d1376e773195fd203679530",
+    reputationManager: "0xa3b71158f4ddb8c0117bf9e4bff7b0922233c95b",
+    priceFeedManager: "0xa045d9ce0b8a5367c447759babcafd8778d0777e",
+    contractSigner: "0x5c999003291235dce835500b183049a3b28fe783",
+    vaultFactory: "0xd75edf919d744e9dfcad68939674d8c9fada5c97"
   },
   usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
   ecop: "0xb934dcb57fb0673b7bc0fca590c5508f1cde955d",

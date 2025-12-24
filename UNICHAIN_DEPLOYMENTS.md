@@ -34,27 +34,27 @@ Complete deployment guide for all Unichain networks (Mainnet & Sepolia Testnet).
 ### NFT Contracts
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **Convexo_LPs** | `0xbc4023284D789D7EB8512c1EDe245C77591a5D96` | [View](https://unichain.blockscout.com/address/0xbc4023284D789D7EB8512c1EDe245C77591a5D96) |
-| **Convexo_Vaults** | `0xC058588A8D82B2E2129119B209c80af8bF3d4961` | [View](https://unichain.blockscout.com/address/0xC058588A8D82B2E2129119B209c80af8bF3d4961) |
+| **Convexo_LPs** | `0xbabee8acecc117c1295f8950f51db59f7a881646` | [View](https://unichain.blockscout.com/address/0xbabee8acecc117c1295f8950f51db59f7a881646) |
+| **Convexo_Vaults** | `0xd189d95ee1a126a66fc5a84934372aa0fc0bb6d2` | [View](https://unichain.blockscout.com/address/0xd189d95ee1a126a66fc5a84934372aa0fc0bb6d2) |
 
 ### Hook System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **HookDeployer** | `0x7356bf8000dE3CA7518a363b954D67cc54F7c84d` | [View](https://unichain.blockscout.com/address/0x7356bf8000dE3CA7518a363b954D67cc54F7c84d) |
-| **CompliantLPHook** | `0x282a52f7607Ef04415c6567d18f1BF9acD043f42` | [View](https://unichain.blockscout.com/address/0x282a52f7607Ef04415c6567d18f1BF9acD043f42) |
-| **PoolRegistry** | `0x292EF88A7199916899fC296Ff6b522306FA2B19a` | [View](https://unichain.blockscout.com/address/0x292EF88A7199916899fC296Ff6b522306FA2B19a) |
+| **HookDeployer** | `0xe0c0d95701558ef10768a13a944f56311ead4649` | [View](https://unichain.blockscout.com/address/0xe0c0d95701558ef10768a13a944f56311ead4649) |
+| **CompliantLPHook** | `0xdd973ce09ba55260e217d10f9dec6d7945d73e79` | [View](https://unichain.blockscout.com/address/0xdd973ce09ba55260e217d10f9dec6d7945d73e79) |
+| **PoolRegistry** | `0x24d91b11b0dd12d6520e58c72f8fcc9dc1c5b935` | [View](https://unichain.blockscout.com/address/0x24d91b11b0dd12d6520e58c72f8fcc9dc1c5b935) |
 
 ### Core Infrastructure
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ReputationManager** | `0x4DbCCff8730398a35D517ab8A1E8413A45d686C4` | [View](https://unichain.blockscout.com/address/0x4DbCCff8730398a35D517ab8A1E8413A45d686C4) |
-| **PriceFeedManager** | `0xbB13194B2792E291109402369cb4Fc0358aed132` | [View](https://unichain.blockscout.com/address/0xbB13194B2792E291109402369cb4Fc0358aed132) |
+| **ReputationManager** | `0x3770bb3bbeb0102a36f51aa253e69034058e4f84` | [View](https://unichain.blockscout.com/address/0x3770bb3bbeb0102a36f51aa253e69034058e4f84) |
+| **PriceFeedManager** | `0x2fa95f79ce8c5c01581f6792acc4181282aaefb0` | [View](https://unichain.blockscout.com/address/0x2fa95f79ce8c5c01581f6792acc4181282aaefb0) |
 
 ### Vault System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ContractSigner** | `0xec02A78F2e6Db438EB9b75aA173AC0F0D1D3126A` | [View](https://unichain.blockscout.com/address/0xec02A78F2e6Db438EB9b75aA173AC0F0D1D3126A) |
-| **VaultFactory** | `0xC98BCE4617f9708dD1363F21177Be5Ef21fB4993` | [View](https://unichain.blockscout.com/address/0xC98BCE4617f9708dD1363F21177Be5Ef21fB4993) |
+| **ContractSigner** | `0xf8dce148ab008f7ae47a26377252673438801712` | [View](https://unichain.blockscout.com/address/0xf8dce148ab008f7ae47a26377252673438801712) |
+| **VaultFactory** | `0x3d684ac58f25a95c107565bcffffb219b00557c7` | [View](https://unichain.blockscout.com/address/0x3d684ac58f25a95c107565bcffffb219b00557c7) |
 
 ## Network Dependencies
 
@@ -73,15 +73,15 @@ const UNICHAIN_MAINNET_CONFIG = {
   chainId: 130,
   name: "Unichain Mainnet",
   contracts: {
-    convexoLPs: "0xbc4023284D789D7EB8512c1EDe245C77591a5D96",
-    convexoVaults: "0xC058588A8D82B2E2129119B209c80af8bF3d4961",
-    hookDeployer: "0x7356bf8000dE3CA7518a363b954D67cc54F7c84d",
-    compliantLPHook: "0x282a52f7607Ef04415c6567d18f1BF9acD043f42",
-    poolRegistry: "0x292EF88A7199916899fC296Ff6b522306FA2B19a",
-    reputationManager: "0x4DbCCff8730398a35D517ab8A1E8413A45d686C4",
-    priceFeedManager: "0xbB13194B2792E291109402369cb4Fc0358aed132",
-    contractSigner: "0xec02A78F2e6Db438EB9b75aA173AC0F0D1D3126A",
-    vaultFactory: "0xC98BCE4617f9708dD1363F21177Be5Ef21fB4993"
+    convexoLPs: "0xbabee8acecc117c1295f8950f51db59f7a881646",
+    convexoVaults: "0xd189d95ee1a126a66fc5a84934372aa0fc0bb6d2",
+    hookDeployer: "0xe0c0d95701558ef10768a13a944f56311ead4649",
+    compliantLPHook: "0xdd973ce09ba55260e217d10f9dec6d7945d73e79",
+    poolRegistry: "0x24d91b11b0dd12d6520e58c72f8fcc9dc1c5b935",
+    reputationManager: "0x3770bb3bbeb0102a36f51aa253e69034058e4f84",
+    priceFeedManager: "0x2fa95f79ce8c5c01581f6792acc4181282aaefb0",
+    contractSigner: "0xf8dce148ab008f7ae47a26377252673438801712",
+    vaultFactory: "0x3d684ac58f25a95c107565bcffffb219b00557c7"
   },
   usdc: "0x078D782b760474a361dDA0AF3839290b0EF57AD6",
   poolManager: "0x1F98400000000000000000000000000000000004"
@@ -100,7 +100,7 @@ const UNICHAIN_MAINNET_CONFIG = {
 
 ## Deployment Summary
 **Status**: ✅ Complete - All 9 contracts deployed and verified  
-**Date**: December 2, 2025  
+**Date**: December 24, 2024  
 **Version**: 2.2
 
 ## Deployed Contracts
@@ -108,27 +108,27 @@ const UNICHAIN_MAINNET_CONFIG = {
 ### NFT Contracts
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x6ba429488cad3795af1ec65d80be760b70f58e4b` | [View](https://unichain-sepolia.blockscout.com/address/0x6ba429488cad3795af1ec65d80be760b70f58e4b) |
-| **Convexo_Vaults** | `0x64fd5631ffe78e907da7b48542abfb402680891a` | [View](https://unichain-sepolia.blockscout.com/address/0x64fd5631ffe78e907da7b48542abfb402680891a) |
+| **Convexo_LPs** | `0xe4a58592171cd0770e6792600ea3098060a42d46` | [View](https://unichain-sepolia.blockscout.com/address/0xe4a58592171cd0770e6792600ea3098060a42d46) |
+| **Convexo_Vaults** | `0xd7cf4aba5b9b4877419ab8af3979da637493afb1` | [View](https://unichain-sepolia.blockscout.com/address/0xd7cf4aba5b9b4877419ab8af3979da637493afb1) |
 
 ### Hook System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **HookDeployer** | `0x1917aac9c182454b3ab80aa8703734d2831adf08` | [View](https://unichain-sepolia.blockscout.com/address/0x1917aac9c182454b3ab80aa8703734d2831adf08) |
-| **CompliantLPHook** | `0x3933f0018fc7d21756b86557640d66b97f514bae` | [View](https://unichain-sepolia.blockscout.com/address/0x3933f0018fc7d21756b86557640d66b97f514bae) |
-| **PoolRegistry** | `0x9fee07c87bcc09b07f76c728cce56e6c8fdffb02` | [View](https://unichain-sepolia.blockscout.com/address/0x9fee07c87bcc09b07f76c728cce56e6c8fdffb02) |
+| **HookDeployer** | `0x99e9880a08e14112a18c091bd49a2b1713133687` | [View](https://unichain-sepolia.blockscout.com/address/0x99e9880a08e14112a18c091bd49a2b1713133687) |
+| **CompliantLPHook** | `0xf54e26527bec4847f66afb5166a7a5c3d1fd6304` | [View](https://unichain-sepolia.blockscout.com/address/0xf54e26527bec4847f66afb5166a7a5c3d1fd6304) |
+| **PoolRegistry** | `0x54141c25535c851d0dba00a1bad6f788dbdd0397` | [View](https://unichain-sepolia.blockscout.com/address/0x54141c25535c851d0dba00a1bad6f788dbdd0397) |
 
 ### Core Infrastructure
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ReputationManager** | `0x7c22db98a3f8da11f8c79d60a78d12df4a18516b` | [View](https://unichain-sepolia.blockscout.com/address/0x7c22db98a3f8da11f8c79d60a78d12df4a18516b) |
-| **PriceFeedManager** | `0x8b346a47413991077f6ad38bfa4bfd3693187e6e` | [View](https://unichain-sepolia.blockscout.com/address/0x8b346a47413991077f6ad38bfa4bfd3693187e6e) |
+| **ReputationManager** | `0x4c43d9c8388f2055e0b1185724e77036065a9b18` | [View](https://unichain-sepolia.blockscout.com/address/0x4c43d9c8388f2055e0b1185724e77036065a9b18) |
+| **PriceFeedManager** | `0x7ebda99a0dea755b2ae85e966e74a247aca0384a` | [View](https://unichain-sepolia.blockscout.com/address/0x7ebda99a0dea755b2ae85e966e74a247aca0384a) |
 
 ### Vault System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ContractSigner** | `0x834dbab5c4bf2f9f2c80c9d7513ff986d3a835c8` | [View](https://unichain-sepolia.blockscout.com/address/0x834dbab5c4bf2f9f2c80c9d7513ff986d3a835c8) |
-| **VaultFactory** | `0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841` | [View](https://unichain-sepolia.blockscout.com/address/0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841) |
+| **ContractSigner** | `0xd1680b5859d28a0440a00e4dcb7545949c54602a` | [View](https://unichain-sepolia.blockscout.com/address/0xd1680b5859d28a0440a00e4dcb7545949c54602a) |
+| **VaultFactory** | `0x984a6bd48d8a91758e3ac967ef5c804ba03935ad` | [View](https://unichain-sepolia.blockscout.com/address/0x984a6bd48d8a91758e3ac967ef5c804ba03935ad) |
 
 ## Network Dependencies (Sepolia)
 
@@ -143,15 +143,15 @@ const UNICHAIN_SEPOLIA_CONFIG = {
   chainId: 1301,
   name: "Unichain Sepolia",
   contracts: {
-    convexoLPs: "0x6ba429488cad3795af1ec65d80be760b70f58e4b",
-    convexoVaults: "0x64fd5631ffe78e907da7b48542abfb402680891a",
-    hookDeployer: "0x1917aac9c182454b3ab80aa8703734d2831adf08",
-    compliantLPHook: "0x3933f0018fc7d21756b86557640d66b97f514bae",
-    poolRegistry: "0x9fee07c87bcc09b07f76c728cce56e6c8fdffb02",
-    reputationManager: "0x7c22db98a3f8da11f8c79d60a78d12df4a18516b",
-    priceFeedManager: "0x8b346a47413991077f6ad38bfa4bfd3693187e6e",
-    contractSigner: "0x834dbab5c4bf2f9f2c80c9d7513ff986d3a835c8",
-    vaultFactory: "0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841"
+    convexoLPs: "0xe4a58592171cd0770e6792600ea3098060a42d46",
+    convexoVaults: "0xd7cf4aba5b9b4877419ab8af3979da637493afb1",
+    hookDeployer: "0x99e9880a08e14112a18c091bd49a2b1713133687",
+    compliantLPHook: "0xf54e26527bec4847f66afb5166a7a5c3d1fd6304",
+    poolRegistry: "0x54141c25535c851d0dba00a1bad6f788dbdd0397",
+    reputationManager: "0x4c43d9c8388f2055e0b1185724e77036065a9b18",
+    priceFeedManager: "0x7ebda99a0dea755b2ae85e966e74a247aca0384a",
+    contractSigner: "0xd1680b5859d28a0440a00e4dcb7545949c54602a",
+    vaultFactory: "0x984a6bd48d8a91758e3ac967ef5c804ba03935ad"
   },
   usdc: "0x31d0220469e10c4E71834a79b1f276d740d3768F",
   ecop: "0xbb0d7c4141ee1fed53db766e1ffcb9c618df8260",

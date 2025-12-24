@@ -131,58 +131,58 @@
     "name": "Ethereum Sepolia",
     "version": "2.2",
     "convexo_lps": {
-      "address": "0x2a0d9da5a72dfe20b65b25e9fefc0e6e090ac194",
-      "deployed_at": "2025-12-02T14:00:00Z",
+      "address": "0x1c391574c6a3f0a044fa972583442c7c00d2f727",
+      "deployed_at": "2024-12-24T00:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0x2a0d9da5a72dfe20b65b25e9fefc0e6e090ac194"
+      "etherscan": "https://sepolia.etherscan.io/address/0x1c391574c6a3f0a044fa972583442c7c00d2f727"
     },
     "convexo_vaults": {
-      "address": "0x744e39b3eb1be014cb8d14a585c31e22b7f4a9b8",
-      "deployed_at": "2025-12-02T14:00:00Z",
+      "address": "0xa9a98fdccbf164fbca6b0688a634775cd59177a6",
+      "deployed_at": "2024-12-24T00:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0x744e39b3eb1be014cb8d14a585c31e22b7f4a9b8"
+      "etherscan": "https://sepolia.etherscan.io/address/0xa9a98fdccbf164fbca6b0688a634775cd59177a6"
     },
     "hook_deployer": {
-      "address": "0xb2785f4341b5bf26be07f7e2037550769ce830cd",
-      "deployed_at": "2025-12-02T14:00:00Z",
+      "address": "0x76da1b31497bbd1093f9226dcad505518cf62ca1",
+      "deployed_at": "2024-12-24T00:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0xb2785f4341b5bf26be07f7e2037550769ce830cd"
+      "etherscan": "https://sepolia.etherscan.io/address/0x76da1b31497bbd1093f9226dcad505518cf62ca1"
     },
     "compliant_lp_hook": {
-      "address": "0x3738d60fcb27d719fdd5113b855e1158b93a95b1",
-      "deployed_at": "2025-12-02T14:00:00Z",
+      "address": "0xe542857f76dba4a53ef7d244cadc227b454b1502",
+      "deployed_at": "2024-12-24T00:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0x3738d60fcb27d719fdd5113b855e1158b93a95b1"
+      "etherscan": "https://sepolia.etherscan.io/address/0xe542857f76dba4a53ef7d244cadc227b454b1502"
     },
     "pool_registry": {
-      "address": "0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff",
-      "deployed_at": "2025-12-02T14:00:00Z",
+      "address": "0xb612db1fe343c4b5ffa9e8c3f4dde37769f7c5b6",
+      "deployed_at": "2024-12-24T00:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff"
+      "etherscan": "https://sepolia.etherscan.io/address/0xb612db1fe343c4b5ffa9e8c3f4dde37769f7c5b6"
     },
     "reputation_manager": {
-      "address": "0xe4a58592171cd0770e6792600ea3098060a42d46",
-      "deployed_at": "2025-12-02T14:00:00Z",
+      "address": "0xbfba31d3f7b36a78abd7c7905dacdecbe6bb97ad",
+      "deployed_at": "2024-12-24T00:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0xe4a58592171cd0770e6792600ea3098060a42d46"
+      "etherscan": "https://sepolia.etherscan.io/address/0xbfba31d3f7b36a78abd7c7905dacdecbe6bb97ad"
     },
     "price_feed_manager": {
-      "address": "0xd7cf4aba5b9b4877419ab8af3979da637493afb1",
-      "deployed_at": "2025-12-02T14:00:00Z",
+      "address": "0x2b09a55380e9023b85886005dc53b600cf6e3f17",
+      "deployed_at": "2024-12-24T00:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0xd7cf4aba5b9b4877419ab8af3979da637493afb1"
+      "etherscan": "https://sepolia.etherscan.io/address/0x2b09a55380e9023b85886005dc53b600cf6e3f17"
     },
     "contract_signer": {
-      "address": "0x99e9880a08e14112a18c091bd49a2b1713133687",
-      "deployed_at": "2025-12-02T14:00:00Z",
+      "address": "0xf75af6f9d586f9c16c5789b2c310dd7a98df97ae",
+      "deployed_at": "2024-12-24T00:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0x99e9880a08e14112a18c091bd49a2b1713133687"
+      "etherscan": "https://sepolia.etherscan.io/address/0xf75af6f9d586f9c16c5789b2c310dd7a98df97ae"
     },
     "vault_factory": {
-      "address": "0xf54e26527bec4847f66afb5166a7a5c3d1fd6304",
-      "deployed_at": "2025-12-02T14:00:00Z",
+      "address": "0xb286824b6f5789ba6a6710a5e9fe487a4cb21f06",
+      "deployed_at": "2024-12-24T00:00:00Z",
       "verified": true,
-      "etherscan": "https://sepolia.etherscan.io/address/0xf54e26527bec4847f66afb5166a7a5c3d1fd6304"
+      "etherscan": "https://sepolia.etherscan.io/address/0xb286824b6f5789ba6a6710a5e9fe487a4cb21f06"
     },
     "notes": {
       "usdc_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",

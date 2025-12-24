@@ -808,4 +808,4 @@ function revoke(address user) external
 
 ---
 
-**This reference covers all core functions. For deployment addresses, see [Ethereum](./ETHEREUM_DEPLOYMENTS.md), [Base](./BASE_DEPLOYMENTS.md), or [Unichain](./UNICHAIN_DEPLOYMENTS.md) deployment docs.**
+**This reference covers all core functions. For deployment details, see `DEPLOYMENT_GUIDE.md`.**

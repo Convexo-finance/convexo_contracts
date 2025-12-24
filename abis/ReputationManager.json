@@ -11,6 +11,11 @@
         "name": "_convexoVaults",
         "type": "address",
         "internalType": "contract IConvexoVaults"
+      },
+      {
+        "name": "_convexoPassport",
+        "type": "address",
+        "internalType": "contract IConvexoPassport"
       }
     ],
     "stateMutability": "nonpayable"
@@ -43,6 +48,19 @@
         "name": "",
         "type": "address",
         "internalType": "contract IConvexoLPs"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "convexoPassport",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IConvexoPassport"
       }
     ],
     "stateMutability": "view"
@@ -83,6 +101,11 @@
       },
       {
         "name": "vaultsBalance",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "passportBalance",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -167,7 +190,45 @@
   },
   {
     "type": "function",
+    "name": "hasPassportAccess",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "holdsConvexoLPs",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "holdsConvexoPassport",
     "inputs": [
       {
         "name": "user",
@@ -253,6 +314,12 @@
       },
       {
         "name": "vaultsBalance",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "passportBalance",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"

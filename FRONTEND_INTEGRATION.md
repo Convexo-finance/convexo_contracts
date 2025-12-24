@@ -17,15 +17,15 @@ All 9 contracts are deployed, tested, and verified on **3 testnets**:
 
 | Contract | Address | Verified |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x2a0d9da5a72dfe20b65b25e9fefc0e6e090ac194` | ✅ [View](https://sepolia.etherscan.io/address/0x2a0d9da5a72dfe20b65b25e9fefc0e6e090ac194) |
-| **Convexo_Vaults** | `0x744e39b3eb1be014cb8d14a585c31e22b7f4a9b8` | ✅ [View](https://sepolia.etherscan.io/address/0x744e39b3eb1be014cb8d14a585c31e22b7f4a9b8) |
-| **HookDeployer** | `0xb2785f4341b5bf26be07f7e2037550769ce830cd` | ✅ [View](https://sepolia.etherscan.io/address/0xb2785f4341b5bf26be07f7e2037550769ce830cd) |
-| **CompliantLPHook** | `0x3738d60fcb27d719fdd5113b855e1158b93a95b1` | ✅ [View](https://sepolia.etherscan.io/address/0x3738d60fcb27d719fdd5113b855e1158b93a95b1) |
-| **PoolRegistry** | `0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff` | ✅ [View](https://sepolia.etherscan.io/address/0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff) |
-| **ReputationManager** | `0xe4a58592171cd0770e6792600ea3098060a42d46` | ✅ [View](https://sepolia.etherscan.io/address/0xe4a58592171cd0770e6792600ea3098060a42d46) |
-| **PriceFeedManager** | `0xd7cf4aba5b9b4877419ab8af3979da637493afb1` | ✅ [View](https://sepolia.etherscan.io/address/0xd7cf4aba5b9b4877419ab8af3979da637493afb1) |
-| **ContractSigner** | `0x99e9880a08e14112a18c091bd49a2b1713133687` | ✅ [View](https://sepolia.etherscan.io/address/0x99e9880a08e14112a18c091bd49a2b1713133687) |
-| **VaultFactory** | `0xf54e26527bec4847f66afb5166a7a5c3d1fd6304` | ✅ [View](https://sepolia.etherscan.io/address/0xf54e26527bec4847f66afb5166a7a5c3d1fd6304) |
+| **Convexo_LPs** | `0x1c391574c6a3f0a044fa972583442c7c00d2f727` | ✅ [View](https://sepolia.etherscan.io/address/0x1c391574c6a3f0a044fa972583442c7c00d2f727) |
+| **Convexo_Vaults** | `0xa9a98fdccbf164fbca6b0688a634775cd59177a6` | ✅ [View](https://sepolia.etherscan.io/address/0xa9a98fdccbf164fbca6b0688a634775cd59177a6) |
+| **HookDeployer** | `0x76da1b31497bbd1093f9226dcad505518cf62ca1` | ✅ [View](https://sepolia.etherscan.io/address/0x76da1b31497bbd1093f9226dcad505518cf62ca1) |
+| **CompliantLPHook** | `0xe542857f76dba4a53ef7d244cadc227b454b1502` | ✅ [View](https://sepolia.etherscan.io/address/0xe542857f76dba4a53ef7d244cadc227b454b1502) |
+| **PoolRegistry** | `0xb612db1fe343c4b5ffa9e8c3f4dde37769f7c5b6` | ✅ [View](https://sepolia.etherscan.io/address/0xb612db1fe343c4b5ffa9e8c3f4dde37769f7c5b6) |
+| **ReputationManager** | `0xbfba31d3f7b36a78abd7c7905dacdecbe6bb97ad` | ✅ [View](https://sepolia.etherscan.io/address/0xbfba31d3f7b36a78abd7c7905dacdecbe6bb97ad) |
+| **PriceFeedManager** | `0x2b09a55380e9023b85886005dc53b600cf6e3f17` | ✅ [View](https://sepolia.etherscan.io/address/0x2b09a55380e9023b85886005dc53b600cf6e3f17) |
+| **ContractSigner** | `0xf75af6f9d586f9c16c5789b2c310dd7a98df97ae` | ✅ [View](https://sepolia.etherscan.io/address/0xf75af6f9d586f9c16c5789b2c310dd7a98df97ae) |
+| **VaultFactory** | `0xb286824b6f5789ba6a6710a5e9fe487a4cb21f06` | ✅ [View](https://sepolia.etherscan.io/address/0xb286824b6f5789ba6a6710a5e9fe487a4cb21f06) |
 
 ### Base Sepolia (Chain ID: 84532)
 
