@@ -39,6 +39,11 @@ interface IConvexoPassport {
         bool isIDCard
     ) external returns (uint256 tokenId);
 
+    /// @notice Self-mint a passport using unique identifier from ZKPassport (simplified)
+    /// @param uniqueIdentifier The unique identifier from ZKPassport verification
+    /// @return tokenId The minted token ID
+    function safeMintWithIdentifier(bytes32 uniqueIdentifier) external returns (uint256 tokenId);
+
     /// @notice Admin mint a passport (for testing or special cases)
     /// @param to The address to mint to
     /// @param uri The token URI

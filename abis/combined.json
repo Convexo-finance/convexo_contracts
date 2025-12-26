@@ -2023,6 +2023,25 @@
     },
     {
       "type": "function",
+      "name": "safeMintWithIdentifier",
+      "inputs": [
+        {
+          "name": "uniqueIdentifier",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "tokenId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
       "name": "safeMintWithZKPassport",
       "inputs": [
         {

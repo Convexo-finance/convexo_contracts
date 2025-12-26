@@ -41,6 +41,7 @@ echo ""
 echo "Extracting NFT Contracts..."
 extract_abi "Convexo_LPs" "convexolps.sol"
 extract_abi "Convexo_Vaults" "convexovaults.sol"
+extract_abi "Convexo_Passport" "Convexo_Passport.sol"
 
 echo ""
 echo "Extracting Core Contracts..."
@@ -62,17 +63,19 @@ echo "📋 Creating combined ABI file..."
 jq -s '{
     "Convexo_LPs": .[0],
     "Convexo_Vaults": .[1],
-    "VaultFactory": .[2],
-    "TokenizedBondVault": .[3],
-    "ContractSigner": .[4],
-    "ReputationManager": .[5],
-    "PriceFeedManager": .[6],
-    "PoolRegistry": .[7],
-    "HookDeployer": .[8],
-    "CompliantLPHook": .[9]
+    "Convexo_Passport": .[2],
+    "VaultFactory": .[3],
+    "TokenizedBondVault": .[4],
+    "ContractSigner": .[5],
+    "ReputationManager": .[6],
+    "PriceFeedManager": .[7],
+    "PoolRegistry": .[8],
+    "HookDeployer": .[9],
+    "CompliantLPHook": .[10]
 }' \
     "$ABI_OUTPUT_DIR/Convexo_LPs.json" \
     "$ABI_OUTPUT_DIR/Convexo_Vaults.json" \
+    "$ABI_OUTPUT_DIR/Convexo_Passport.json" \
     "$ABI_OUTPUT_DIR/VaultFactory.json" \
     "$ABI_OUTPUT_DIR/TokenizedBondVault.json" \
     "$ABI_OUTPUT_DIR/ContractSigner.json" \
@@ -91,6 +94,7 @@ echo ""
 echo "Files created:"
 echo "  - abis/Convexo_LPs.json"
 echo "  - abis/Convexo_Vaults.json"
+echo "  - abis/Convexo_Passport.json"
 echo "  - abis/VaultFactory.json"
 echo "  - abis/TokenizedBondVault.json"
 echo "  - abis/ContractSigner.json"
@@ -101,5 +105,5 @@ echo "  - abis/HookDeployer.json"
 echo "  - abis/CompliantLPHook.json"
 echo "  - abis/combined.json"
 echo ""
-echo "🎯 Total: 11 ABI files ready for frontend integration!"
+echo "🎯 Total: 12 ABI files ready for frontend integration!"
 

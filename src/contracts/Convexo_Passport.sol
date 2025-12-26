@@ -122,6 +122,44 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         emit PassportMinted(msg.sender, tokenId, uniqueIdentifier, disclosedData.nationality);
     }
 
+    /// @notice Self-mint a passport using unique identifier from ZKPassport (simplified approach)
+    /// @param uniqueIdentifier The unique identifier from ZKPassport verification (off-chain)
+    /// @return tokenId The minted token ID
+    /// @dev This function allows users to mint after off-chain ZKPassport verification
+    ///      The unique identifier ensures: 1 wallet = 1 unique identifier
+    function safeMintWithIdentifier(bytes32 uniqueIdentifier) external returns (uint256 tokenId) {
+        // Check if user already has a passport
+        if (balanceOf(msg.sender) > 0) {
+            revert AlreadyHasPassport();
+        }
+
+        // Check if identifier has been used (prevents duplicate passports)
+        if (passportIdentifierToAddress[uniqueIdentifier] != address(0)) {
+            revert IdentifierAlreadyUsed();
+        }
+
+        // Mint the passport NFT
+        tokenId = _nextTokenId++;
+        _safeMint(msg.sender, tokenId);
+        _setTokenURI(tokenId, string(abi.encodePacked(_baseTokenURI, "/", _toString(tokenId))));
+
+        // Store verified identity (nationality from off-chain verification)
+        verifiedUsers[msg.sender] = VerifiedIdentity({
+            uniqueIdentifier: uniqueIdentifier,
+            verifiedAt: block.timestamp,
+            isActive: true,
+            nationality: "VERIFIED" // Set from off-chain verification
+        });
+
+        // Map identifier to address (1 wallet = 1 unique identifier)
+        passportIdentifierToAddress[uniqueIdentifier] = msg.sender;
+
+        // Increment active passport count
+        activePassportCount++;
+
+        emit PassportMinted(msg.sender, tokenId, uniqueIdentifier, "VERIFIED");
+    }
+
     /// @inheritdoc IConvexoPassport
     function safeMint(address to, string memory uri) external onlyRole(MINTER_ROLE) returns (uint256 tokenId) {
         require(to != address(0), "Cannot mint to zero address");

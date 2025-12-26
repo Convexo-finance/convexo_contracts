@@ -32,6 +32,10 @@ contract MockConvexoPassport is IConvexoPassport {
         revert("Not implemented in mock");
     }
     
+    function safeMintWithIdentifier(bytes32) external pure returns (uint256) {
+        revert("Not implemented in mock");
+    }
+    
     function safeMint(address, string memory) external pure returns (uint256) {
         revert("Not implemented in mock");
     }
