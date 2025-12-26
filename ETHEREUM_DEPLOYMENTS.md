@@ -8,8 +8,8 @@ Complete deployment guide for all Ethereum networks (Mainnet & Sepolia Testnet).
 
 | Network | Chain ID | Status | Contracts | Explorer |
 |---------|----------|--------|-----------|----------|
-| **Ethereum Mainnet** | 1 | ⏳ Pending | 0/9 | [Etherscan](https://etherscan.io) |
-| **Ethereum Sepolia** | 11155111 | ✅ Complete | 9/9 | [Etherscan](https://sepolia.etherscan.io) |
+| **Ethereum Mainnet** | 1 | ⏳ Pending | 0/10 | [Etherscan](https://etherscan.io) |
+| **Ethereum Sepolia** | 11155111 | ✅ Complete | 10/10 (v2.0) | [Etherscan](https://sepolia.etherscan.io) |
 
 ---
 
@@ -29,11 +29,12 @@ Complete deployment guide for all Ethereum networks (Mainnet & Sepolia Testnet).
 
 ## Planned Contracts
 
-All 9 contracts will be deployed once funded:
+All 10 contracts will be deployed once funded (v2.0 with ZKPassport):
 
 ### NFT Contracts
 - Convexo_LPs
 - Convexo_Vaults
+- Convexo_Passport (ZKPassport integration)
 
 ### Hook System
 - HookDeployer
@@ -80,6 +81,7 @@ const ETHEREUM_MAINNET_CONFIG = {
   contracts: {
     convexoLPs: "TBD",
     convexoVaults: "TBD",
+    convexoPassport: "TBD",
     hookDeployer: "TBD",
     compliantLPHook: "TBD",
     poolRegistry: "TBD",
@@ -89,7 +91,8 @@ const ETHEREUM_MAINNET_CONFIG = {
     vaultFactory: "TBD"
   },
   usdc: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-  poolManager: "0x8C4BcBE6b9eF47855f97E675296FA3F6fafa5F1A"
+  poolManager: "0x8C4BcBE6b9eF47855f97E675296FA3F6fafa5F1A",
+  zkpassportVerifier: "0x1D000001000EFD9a6371f4d90bB8920D5431c0D8"
 };
 ```
 
@@ -105,36 +108,37 @@ const ETHEREUM_MAINNET_CONFIG = {
 - **Currency**: ETH (Testnet)
 
 ## Deployment Summary
-**Status**: ✅ Complete - All 9 contracts deployed and verified  
-**Date**: December 24, 2024  
-**Version**: 2.2
+**Status**: ✅ Complete - All 10 contracts deployed and verified  
+**Date**: December 26, 2024  
+**Version**: 2.0 (with ZKPassport)
 
 ## Deployed Contracts
 
 ### NFT Contracts
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x1c391574c6a3f0a044fa972583442c7c00d2f727` | [View](https://sepolia.etherscan.io/address/0x1c391574c6a3f0a044fa972583442c7c00d2f727) |
-| **Convexo_Vaults** | `0xa9a98fdccbf164fbca6b0688a634775cd59177a6` | [View](https://sepolia.etherscan.io/address/0xa9a98fdccbf164fbca6b0688a634775cd59177a6) |
+| **Convexo_LPs** | `0x8EFC7e25C12A815329331DA5f0e96AFfB4014472` | [View](https://sepolia.etherscan.io/address/0x8EFC7e25C12A815329331DA5f0e96AFfB4014472) |
+| **Convexo_Vaults** | `0xa932e3EAa0a5e5e65f0567405207603266937618` | [View](https://sepolia.etherscan.io/address/0xa932e3EAa0a5e5e65f0567405207603266937618) |
+| **Convexo_Passport** | `0x2cfa02372782cf20ef8342B0193fd69E4c5B04A8` | [View](https://sepolia.etherscan.io/address/0x2cfa02372782cf20ef8342B0193fd69E4c5B04A8) |
 
 ### Hook System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **HookDeployer** | `0x76da1b31497bbd1093f9226dcad505518cf62ca1` | [View](https://sepolia.etherscan.io/address/0x76da1b31497bbd1093f9226dcad505518cf62ca1) |
-| **CompliantLPHook** | `0xe542857f76dba4a53ef7d244cadc227b454b1502` | [View](https://sepolia.etherscan.io/address/0xe542857f76dba4a53ef7d244cadc227b454b1502) |
-| **PoolRegistry** | `0xb612db1fe343c4b5ffa9e8c3f4dde37769f7c5b6` | [View](https://sepolia.etherscan.io/address/0xb612db1fe343c4b5ffa9e8c3f4dde37769f7c5b6) |
+| **HookDeployer** | `0xecDE45FefB5C2EF6E5CC615291DE9be9A99B46A6` | [View](https://sepolia.etherscan.io/address/0xecDE45FefB5C2EF6E5CC615291DE9be9A99B46A6) |
+| **CompliantLPHook** | `0xe99A49BD81bbe61cDf7F6b7D247f76cACc2e5776` | [View](https://sepolia.etherscan.io/address/0xe99A49BD81bbe61cDf7F6b7D247f76cACc2e5776) |
+| **PoolRegistry** | `0x83Df102F62c4640ac8BE584c2B4E20c8c373dC2E` | [View](https://sepolia.etherscan.io/address/0x83Df102F62c4640ac8BE584c2B4E20c8c373dC2E) |
 
 ### Core Infrastructure
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ReputationManager** | `0xbfba31d3f7b36a78abd7c7905dacdecbe6bb97ad` | [View](https://sepolia.etherscan.io/address/0xbfba31d3f7b36a78abd7c7905dacdecbe6bb97ad) |
-| **PriceFeedManager** | `0x2b09a55380e9023b85886005dc53b600cf6e3f17` | [View](https://sepolia.etherscan.io/address/0x2b09a55380e9023b85886005dc53b600cf6e3f17) |
+| **ReputationManager** | `0x60aFA63fDf17a75534e8218BaAc1D64E7FD93b4a` | [View](https://sepolia.etherscan.io/address/0x60aFA63fDf17a75534e8218BaAc1D64E7FD93b4a) |
+| **PriceFeedManager** | `0x6A9af3B1da3fC07C78c37c380368773b1E830Fac` | [View](https://sepolia.etherscan.io/address/0x6A9af3B1da3fC07C78c37c380368773b1E830Fac) |
 
 ### Vault System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ContractSigner** | `0xf75af6f9d586f9c16c5789b2c310dd7a98df97ae` | [View](https://sepolia.etherscan.io/address/0xf75af6f9d586f9c16c5789b2c310dd7a98df97ae) |
-| **VaultFactory** | `0xb286824b6f5789ba6a6710a5e9fe487a4cb21f06` | [View](https://sepolia.etherscan.io/address/0xb286824b6f5789ba6a6710a5e9fe487a4cb21f06) |
+| **ContractSigner** | `0xE6b658c4D1e00a675DF046cA0bAeb86bef7da985` | [View](https://sepolia.etherscan.io/address/0xE6b658c4D1e00a675DF046cA0bAeb86bef7da985) |
+| **VaultFactory** | `0x8c2D66210A43201bae2a7BF924ecA0f53364967f` | [View](https://sepolia.etherscan.io/address/0x8c2D66210A43201bae2a7BF924ecA0f53364967f) |
 
 ## Network Dependencies (Sepolia)
 
@@ -149,19 +153,21 @@ const ETHEREUM_SEPOLIA_CONFIG = {
   chainId: 11155111,
   name: "Ethereum Sepolia",
   contracts: {
-    convexoLPs: "0x1c391574c6a3f0a044fa972583442c7c00d2f727",
-    convexoVaults: "0xa9a98fdccbf164fbca6b0688a634775cd59177a6",
-    hookDeployer: "0x76da1b31497bbd1093f9226dcad505518cf62ca1",
-    compliantLPHook: "0xe542857f76dba4a53ef7d244cadc227b454b1502",
-    poolRegistry: "0xb612db1fe343c4b5ffa9e8c3f4dde37769f7c5b6",
-    reputationManager: "0xbfba31d3f7b36a78abd7c7905dacdecbe6bb97ad",
-    priceFeedManager: "0x2b09a55380e9023b85886005dc53b600cf6e3f17",
-    contractSigner: "0xf75af6f9d586f9c16c5789b2c310dd7a98df97ae",
-    vaultFactory: "0xb286824b6f5789ba6a6710a5e9fe487a4cb21f06"
+    convexoLPs: "0x8EFC7e25C12A815329331DA5f0e96AFfB4014472",
+    convexoVaults: "0xa932e3EAa0a5e5e65f0567405207603266937618",
+    convexoPassport: "0x2cfa02372782cf20ef8342B0193fd69E4c5B04A8",
+    hookDeployer: "0xecDE45FefB5C2EF6E5CC615291DE9be9A99B46A6",
+    compliantLPHook: "0xe99A49BD81bbe61cDf7F6b7D247f76cACc2e5776",
+    poolRegistry: "0x83Df102F62c4640ac8BE584c2B4E20c8c373dC2E",
+    reputationManager: "0x60aFA63fDf17a75534e8218BaAc1D64E7FD93b4a",
+    priceFeedManager: "0x6A9af3B1da3fC07C78c37c380368773b1E830Fac",
+    contractSigner: "0xE6b658c4D1e00a675DF046cA0bAeb86bef7da985",
+    vaultFactory: "0x8c2D66210A43201bae2a7BF924ecA0f53364967f"
   },
   usdc: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
   ecop: "0x19ac2612e560b2bbedf88660a2566ef53c0a15a1",
-  poolManager: "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543"
+  poolManager: "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
+  zkpassportVerifier: "0x1D000001000EFD9a6371f4d90bB8920D5431c0D8"
 };
 ```
 
@@ -250,15 +256,15 @@ ECOP_ADDRESS_ETHSEPOLIA=0x19ac2612e560b2bbedf88660a2566ef53c0a15a1
 - Via IR: Enabled
 
 ### Verification Status
-- **Mainnet**: Pending deployment
-- **Sepolia**: ✅ All contracts verified on Etherscan
+- **Mainnet**: Pending deployment (v2.0 with ZKPassport)
+- **Sepolia**: ✅ All 10 contracts verified on Etherscan (v2.0)
 
 ### Mainnet Deployment Status
 
 **Ready to deploy once wallet is funded!**
 
 The deployment will:
-1. ✅ Deploy all 9 contracts in correct order
+1. ✅ Deploy all 10 contracts in correct order (including Convexo_Passport)
 2. ✅ Handle all dependencies automatically
 3. ✅ Verify all contracts on Etherscan
 4. ✅ Save addresses to `addresses.json`
@@ -288,5 +294,5 @@ Once ready:
 
 ---
 
-*Last updated: December 24, 2025*
+*Last updated: December 26, 2024*
 

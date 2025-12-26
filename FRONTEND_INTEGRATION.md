@@ -11,49 +11,52 @@ All 9 contracts are deployed, tested, and verified on **3 testnets**:
 
 ---
 
-## 📝 Deployed Contract Addresses (v2.2)
+## 📝 Deployed Contract Addresses (v2.0)
 
 ### Ethereum Sepolia (Chain ID: 11155111)
 
 | Contract | Address | Verified |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x1c391574c6a3f0a044fa972583442c7c00d2f727` | ✅ [View](https://sepolia.etherscan.io/address/0x1c391574c6a3f0a044fa972583442c7c00d2f727) |
-| **Convexo_Vaults** | `0xa9a98fdccbf164fbca6b0688a634775cd59177a6` | ✅ [View](https://sepolia.etherscan.io/address/0xa9a98fdccbf164fbca6b0688a634775cd59177a6) |
-| **HookDeployer** | `0x76da1b31497bbd1093f9226dcad505518cf62ca1` | ✅ [View](https://sepolia.etherscan.io/address/0x76da1b31497bbd1093f9226dcad505518cf62ca1) |
-| **CompliantLPHook** | `0xe542857f76dba4a53ef7d244cadc227b454b1502` | ✅ [View](https://sepolia.etherscan.io/address/0xe542857f76dba4a53ef7d244cadc227b454b1502) |
-| **PoolRegistry** | `0xb612db1fe343c4b5ffa9e8c3f4dde37769f7c5b6` | ✅ [View](https://sepolia.etherscan.io/address/0xb612db1fe343c4b5ffa9e8c3f4dde37769f7c5b6) |
-| **ReputationManager** | `0xbfba31d3f7b36a78abd7c7905dacdecbe6bb97ad` | ✅ [View](https://sepolia.etherscan.io/address/0xbfba31d3f7b36a78abd7c7905dacdecbe6bb97ad) |
-| **PriceFeedManager** | `0x2b09a55380e9023b85886005dc53b600cf6e3f17` | ✅ [View](https://sepolia.etherscan.io/address/0x2b09a55380e9023b85886005dc53b600cf6e3f17) |
-| **ContractSigner** | `0xf75af6f9d586f9c16c5789b2c310dd7a98df97ae` | ✅ [View](https://sepolia.etherscan.io/address/0xf75af6f9d586f9c16c5789b2c310dd7a98df97ae) |
-| **VaultFactory** | `0xb286824b6f5789ba6a6710a5e9fe487a4cb21f06` | ✅ [View](https://sepolia.etherscan.io/address/0xb286824b6f5789ba6a6710a5e9fe487a4cb21f06) |
+| **Convexo_LPs** | `0x8EFC7e25C12A815329331DA5f0e96AFfB4014472` | ✅ [View](https://sepolia.etherscan.io/address/0x8EFC7e25C12A815329331DA5f0e96AFfB4014472) |
+| **Convexo_Vaults** | `0xa932e3EAa0a5e5e65f0567405207603266937618` | ✅ [View](https://sepolia.etherscan.io/address/0xa932e3EAa0a5e5e65f0567405207603266937618) |
+| **Convexo_Passport** | `0x2cfa02372782cf20ef8342B0193fd69E4c5B04A8` | ✅ [View](https://sepolia.etherscan.io/address/0x2cfa02372782cf20ef8342B0193fd69E4c5B04A8) |
+| **HookDeployer** | `0xecDE45FefB5C2EF6E5CC615291DE9be9A99B46A6` | ✅ [View](https://sepolia.etherscan.io/address/0xecDE45FefB5C2EF6E5CC615291DE9be9A99B46A6) |
+| **CompliantLPHook** | `0xe99A49BD81bbe61cDf7F6b7D247f76cACc2e5776` | ✅ [View](https://sepolia.etherscan.io/address/0xe99A49BD81bbe61cDf7F6b7D247f76cACc2e5776) |
+| **PoolRegistry** | `0x83Df102F62c4640ac8BE584c2B4E20c8c373dC2E` | ✅ [View](https://sepolia.etherscan.io/address/0x83Df102F62c4640ac8BE584c2B4E20c8c373dC2E) |
+| **ReputationManager** | `0x60aFA63fDf17a75534e8218BaAc1D64E7FD93b4a` | ✅ [View](https://sepolia.etherscan.io/address/0x60aFA63fDf17a75534e8218BaAc1D64E7FD93b4a) |
+| **PriceFeedManager** | `0x6A9af3B1da3fC07C78c37c380368773b1E830Fac` | ✅ [View](https://sepolia.etherscan.io/address/0x6A9af3B1da3fC07C78c37c380368773b1E830Fac) |
+| **ContractSigner** | `0xE6b658c4D1e00a675DF046cA0bAeb86bef7da985` | ✅ [View](https://sepolia.etherscan.io/address/0xE6b658c4D1e00a675DF046cA0bAeb86bef7da985) |
+| **VaultFactory** | `0x8c2D66210A43201bae2a7BF924ecA0f53364967f` | ✅ [View](https://sepolia.etherscan.io/address/0x8c2D66210A43201bae2a7BF924ecA0f53364967f) |
 
 ### Base Sepolia (Chain ID: 84532)
 
 | Contract | Address | Verified |
 |----------|---------|----------|
-| **Convexo_LPs** | `0xd05df511dbe7d793d82b7344a955f15485ff0787` | ✅ [View](https://sepolia.basescan.org/address/0xd05df511dbe7d793d82b7344a955f15485ff0787) |
-| **Convexo_Vaults** | `0xfb965542aa0b58538a9b50fe020314dd687eb128` | ✅ [View](https://sepolia.basescan.org/address/0xfb965542aa0b58538a9b50fe020314dd687eb128) |
-| **HookDeployer** | `0x503f203ce6d6462f433cd04c7ad2b05d61b56548` | ✅ [View](https://sepolia.basescan.org/address/0x503f203ce6d6462f433cd04c7ad2b05d61b56548) |
-| **CompliantLPHook** | `0xab83ce760054c1d048d5a9de5194b05398a09d41` | ✅ [View](https://sepolia.basescan.org/address/0xab83ce760054c1d048d5a9de5194b05398a09d41) |
-| **PoolRegistry** | `0x18fb358bc74054b0c2530c48ef23f8a8d464cb18` | ✅ [View](https://sepolia.basescan.org/address/0x18fb358bc74054b0c2530c48ef23f8a8d464cb18) |
-| **ReputationManager** | `0x50ace0dce54df668477adee4e9d6a6c0df4fedee` | ✅ [View](https://sepolia.basescan.org/address/0x50ace0dce54df668477adee4e9d6a6c0df4fedee) |
-| **PriceFeedManager** | `0xa46629011e0b8561a45ea03b822d28c0b2432c3a` | ✅ [View](https://sepolia.basescan.org/address/0xa46629011e0b8561a45ea03b822d28c0b2432c3a) |
-| **ContractSigner** | `0x62227ff7ccbdb4d72c3511290b28c3424f1500ef` | ✅ [View](https://sepolia.basescan.org/address/0x62227ff7ccbdb4d72c3511290b28c3424f1500ef) |
-| **VaultFactory** | `0x8efc7e25c12a815329331da5f0e96affb4014472` | ✅ [View](https://sepolia.basescan.org/address/0x8efc7e25c12a815329331da5f0e96affb4014472) |
+| **Convexo_LPs** | `0x90caec19973DB5c39373d1f3072a7ED096aBAD84` | ✅ [View](https://sepolia.basescan.org/address/0x90caec19973DB5c39373d1f3072a7ED096aBAD84) |
+| **Convexo_Vaults** | `0xD0ECa5Dae7Ba021C75f2Fc69bDe756dd33C26adE` | ✅ [View](https://sepolia.basescan.org/address/0xD0ECa5Dae7Ba021C75f2Fc69bDe756dd33C26adE) |
+| **Convexo_Passport** | `0x4A164470586B7e80eEf2734d24f5F784e4f88ad0` | ✅ [View](https://sepolia.basescan.org/address/0x4A164470586B7e80eEf2734d24f5F784e4f88ad0) |
+| **HookDeployer** | `0xA0b9E51B51656A6DCaFDEfc7C83167358Be425AB` | ✅ [View](https://sepolia.basescan.org/address/0xA0b9E51B51656A6DCaFDEfc7C83167358Be425AB) |
+| **CompliantLPHook** | `0x331C35ba44FE83183eEd913D647F4f18E9BCf785` | ✅ [View](https://sepolia.basescan.org/address/0x331C35ba44FE83183eEd913D647F4f18E9BCf785) |
+| **PoolRegistry** | `0xA59C12e996C7224B925A98C35c6dd82464CA1e0d` | ✅ [View](https://sepolia.basescan.org/address/0xA59C12e996C7224B925A98C35c6dd82464CA1e0d) |
+| **ReputationManager** | `0x340Fd03C88297A5B0caFD5877FC1faecEffaf159` | ✅ [View](https://sepolia.basescan.org/address/0x340Fd03C88297A5B0caFD5877FC1faecEffaf159) |
+| **PriceFeedManager** | `0xD6cfde6525703b625ba1acB5645e2584eb7a702f` | ✅ [View](https://sepolia.basescan.org/address/0xD6cfde6525703b625ba1acB5645e2584eb7a702f) |
+| **ContractSigner** | `0xBA579E561aF128d801f1a1A5416Ee73e2094C3A5` | ✅ [View](https://sepolia.basescan.org/address/0xBA579E561aF128d801f1a1A5416Ee73e2094C3A5) |
+| **VaultFactory** | `0xE8C890871DE3c0D2fd90ad560ABBa3a25CD5e139` | ✅ [View](https://sepolia.basescan.org/address/0xE8C890871DE3c0D2fd90ad560ABBa3a25CD5e139) |
 
 ### Unichain Sepolia (Chain ID: 1301)
 
 | Contract | Address | Verified |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x6ba429488cad3795af1ec65d80be760b70f58e4b` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x6ba429488cad3795af1ec65d80be760b70f58e4b) |
-| **Convexo_Vaults** | `0x64fd5631ffe78e907da7b48542abfb402680891a` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x64fd5631ffe78e907da7b48542abfb402680891a) |
-| **HookDeployer** | `0x1917aac9c182454b3ab80aa8703734d2831adf08` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x1917aac9c182454b3ab80aa8703734d2831adf08) |
-| **CompliantLPHook** | `0x3933f0018fc7d21756b86557640d66b97f514bae` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x3933f0018fc7d21756b86557640d66b97f514bae) |
-| **PoolRegistry** | `0x9fee07c87bcc09b07f76c728cce56e6c8fdffb02` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x9fee07c87bcc09b07f76c728cce56e6c8fdffb02) |
-| **ReputationManager** | `0x7c22db98a3f8da11f8c79d60a78d12df4a18516b` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x7c22db98a3f8da11f8c79d60a78d12df4a18516b) |
-| **PriceFeedManager** | `0x8b346a47413991077f6ad38bfa4bfd3693187e6e` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x8b346a47413991077f6ad38bfa4bfd3693187e6e) |
-| **ContractSigner** | `0x834dbab5c4bf2f9f2c80c9d7513ff986d3a835c8` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x834dbab5c4bf2f9f2c80c9d7513ff986d3a835c8) |
-| **VaultFactory** | `0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841) |
+| **Convexo_LPs** | `0x76dA1B31497bbD1093F9226Dcad505518CF62ca1` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x76dA1B31497bbD1093F9226Dcad505518CF62ca1) |
+| **Convexo_Vaults** | `0xe542857F76dBA4A53eF7D244cAdC227B454b1502` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xe542857F76dBA4A53eF7D244cAdC227B454b1502) |
+| **Convexo_Passport** | `0xB612dB1FE343C4B5FFa9e8C3f4dde37769F7C5B6` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xB612dB1FE343C4B5FFa9e8C3f4dde37769F7C5B6) |
+| **HookDeployer** | `0xbfba31D3f7B36A78AbD7C7905DAcdECBe6BB97AD` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xbfba31D3f7B36A78AbD7C7905DAcdECBe6BB97AD) |
+| **CompliantLPHook** | `0x2B09a55380E9023B85886005Dc53B600cF6e3f17` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x2B09a55380E9023B85886005Dc53B600cF6e3f17) |
+| **PoolRegistry** | `0xf75AF6F9D586f9c16C5789B2C310Dd7a98dF97Ae` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xf75AF6F9D586f9c16C5789B2C310Dd7a98dF97Ae) |
+| **ReputationManager** | `0xB286824B6F5789BA6a6710A5e9FE487A4CB21F06` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xB286824B6F5789BA6a6710A5e9FE487A4CB21F06) |
+| **PriceFeedManager** | `0x9C60e348dfbb8Bba62F8408cB7Fa85dc88BD9957` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x9C60e348dfbb8Bba62F8408cB7Fa85dc88BD9957) |
+| **ContractSigner** | `0x71E7AAB4d65383fb75Eea51eC58b5d5B999E0aEC` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x71E7AAB4d65383fb75Eea51eC58b5d5B999E0aEC) |
+| **VaultFactory** | `0x0bb2e0Ce69aa107E3f3b7a5dd3D8192C212Ff0D5` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x0bb2e0Ce69aa107E3f3b7a5dd3D8192C212Ff0D5) |
 
 > **📖 See chain-specific deployment docs: [Ethereum](./ETHEREUM_DEPLOYMENTS.md) | [Base](./BASE_DEPLOYMENTS.md) | [Unichain](./UNICHAIN_DEPLOYMENTS.md)**
 
@@ -67,6 +70,7 @@ All contract ABIs are available in the `abis/` directory:
 abis/
 ├── Convexo_LPs.json          # Tier 1 NFT
 ├── Convexo_Vaults.json        # Tier 2 NFT
+├── Convexo_Passport.json      # Tier 3 NFT (ZKPassport)
 ├── HookDeployer.json          # Hook deployment helper
 ├── CompliantLPHook.json       # Uniswap V4 hook
 ├── PoolRegistry.json          # Pool tracking
@@ -77,7 +81,7 @@ abis/
 └── TokenizedBondVault.json    # Individual vault (ERC20 shares)
 ```
 
-**Total: 10 ABIs** - All contracts ready for frontend integration
+**Total: 12 ABIs** - All contracts ready for frontend integration
 
 ---
 
@@ -98,39 +102,42 @@ yarn add viem wagmi @rainbow-me/rainbowkit
 export const CONTRACTS = {
   ETHEREUM_SEPOLIA: {
     CHAIN_ID: 11155111,
-    CONVEXO_LPS: '0x7fd91438eacffe828f61737d64926ee44cf6695c',
-    CONVEXO_VAULTS: '0xf02d84e56da48cec9233cb7982db0ac82f29a973',
-    HOOK_DEPLOYER: '0x1843c76dfe7a353d239912d8e23bdebda712f4c9',
-    COMPLIANT_LP_HOOK: '0x9fe009296cc964573cc8fb394598a3d5b9800394',
-    POOL_REGISTRY: '0x0f0e9e5e7e6a47d35e261dd876438cd144f97f1e',
-    REPUTATION_MANAGER: '0x6ba429488cad3795af1ec65d80be760b70f58e4b',
-    PRICE_FEED_MANAGER: '0x64fd5631ffe78e907da7b48542abfb402680891a',
-    CONTRACT_SIGNER: '0x1917aac9c182454b3ab80aa8703734d2831adf08',
-    VAULT_FACTORY: '0x3933f0018fc7d21756b86557640d66b97f514bae',
+    CONVEXO_LPS: '0x8EFC7e25C12A815329331DA5f0e96AFfB4014472',
+    CONVEXO_VAULTS: '0xa932e3EAa0a5e5e65f0567405207603266937618',
+    CONVEXO_PASSPORT: '0x2cfa02372782cf20ef8342B0193fd69E4c5B04A8',
+    HOOK_DEPLOYER: '0xecDE45FefB5C2EF6E5CC615291DE9be9A99B46A6',
+    COMPLIANT_LP_HOOK: '0xe99A49BD81bbe61cDf7F6b7D247f76cACc2e5776',
+    POOL_REGISTRY: '0x83Df102F62c4640ac8BE584c2B4E20c8c373dC2E',
+    REPUTATION_MANAGER: '0x60aFA63fDf17a75534e8218BaAc1D64E7FD93b4a',
+    PRICE_FEED_MANAGER: '0x6A9af3B1da3fC07C78c37c380368773b1E830Fac',
+    CONTRACT_SIGNER: '0xE6b658c4D1e00a675DF046cA0bAeb86bef7da985',
+    VAULT_FACTORY: '0x8c2D66210A43201bae2a7BF924ecA0f53364967f',
   },
   BASE_SEPOLIA: {
     CHAIN_ID: 84532,
-    CONVEXO_LPS: '0xbABEe8acECC117c1295F8950f51Db59F7a881646',
-    CONVEXO_VAULTS: '0xd189d95eE1a126A66fc5A84934372Aa0Fc0bb6d2',
-    HOOK_DEPLOYER: '0xE0c0d95701558eF10768A13A944F56311EAD4649',
-    COMPLIANT_LP_HOOK: '0xDd973cE09ba55260e217d10f9DeC6D7945D73E79',
-    POOL_REGISTRY: '0x24d91b11B0Dd12d6520E58c72F8FCC9dC1C5b935',
-    REPUTATION_MANAGER: '0x3770Bb3BBEb0102a36f51aA253E69034058E4F84',
-    PRICE_FEED_MANAGER: '0x2Fa95f79Ce8C5c01581f6792ACc4181282aaEFB0',
-    CONTRACT_SIGNER: '0xf8dce148AB008f7ae47A26377252673438801712',
-    VAULT_FACTORY: '0x3D684Ac58f25a95c107565bCFfffb219B00557C7',
+    CONVEXO_LPS: '0x90caec19973DB5c39373d1f3072a7ED096aBAD84',
+    CONVEXO_VAULTS: '0xD0ECa5Dae7Ba021C75f2Fc69bDe756dd33C26adE',
+    CONVEXO_PASSPORT: '0x4A164470586B7e80eEf2734d24f5F784e4f88ad0',
+    HOOK_DEPLOYER: '0xA0b9E51B51656A6DCaFDEfc7C83167358Be425AB',
+    COMPLIANT_LP_HOOK: '0x331C35ba44FE83183eEd913D647F4f18E9BCf785',
+    POOL_REGISTRY: '0xA59C12e996C7224B925A98C35c6dd82464CA1e0d',
+    REPUTATION_MANAGER: '0x340Fd03C88297A5B0caFD5877FC1faecEffaf159',
+    PRICE_FEED_MANAGER: '0xD6cfde6525703b625ba1acB5645e2584eb7a702f',
+    CONTRACT_SIGNER: '0xBA579E561aF128d801f1a1A5416Ee73e2094C3A5',
+    VAULT_FACTORY: '0xE8C890871DE3c0D2fd90ad560ABBa3a25CD5e139',
   },
   UNICHAIN_SEPOLIA: {
     CHAIN_ID: 1301,
-    CONVEXO_LPS: '0xbb13194b2792e291109402369cb4fc0358aed132',
-    CONVEXO_VAULTS: '0xec02a78f2e6db438eb9b75aa173ac0f0d1d3126a',
-    HOOK_DEPLOYER: '0xc98bce4617f9708dd1363f21177be5ef21fb4993',
-    COMPLIANT_LP_HOOK: '0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7',
-    POOL_REGISTRY: '0x5a1f415986a189d79d19d65cb6e3d6dd7b807268',
-    REPUTATION_MANAGER: '0x6b51adc34a503b23db99444048ac7c2dc735a12e',
-    PRICE_FEED_MANAGER: '0x5d88bcf0d62f17846d41e161e92e497d4224764d',
-    CONTRACT_SIGNER: '0x6a6357c387331e75d6eeb4d4abc0f0200cd32830',
-    VAULT_FACTORY: '0xafb16cfaf1389713c59f7aee3c1a08d3cedc3ee3',
+    CONVEXO_LPS: '0x76dA1B31497bbD1093F9226Dcad505518CF62ca1',
+    CONVEXO_VAULTS: '0xe542857F76dBA4A53eF7D244cAdC227B454b1502',
+    CONVEXO_PASSPORT: '0xB612dB1FE343C4B5FFa9e8C3f4dde37769F7C5B6',
+    HOOK_DEPLOYER: '0xbfba31D3f7B36A78AbD7C7905DAcdECBe6BB97AD',
+    COMPLIANT_LP_HOOK: '0x2B09a55380E9023B85886005Dc53B600cF6e3f17',
+    POOL_REGISTRY: '0xf75AF6F9D586f9c16C5789B2C310Dd7a98dF97Ae',
+    REPUTATION_MANAGER: '0xB286824B6F5789BA6a6710A5e9FE487A4CB21F06',
+    PRICE_FEED_MANAGER: '0x9C60e348dfbb8Bba62F8408cB7Fa85dc88BD9957',
+    CONTRACT_SIGNER: '0x71E7AAB4d65383fb75Eea51eC58b5d5B999E0aEC',
+    VAULT_FACTORY: '0x0bb2e0Ce69aa107E3f3b7a5dd3D8192C212Ff0D5',
   },
 } as const;
 
@@ -155,6 +162,7 @@ export function getContracts(chainId: number) {
 // contracts/abis.ts
 import ConvexoLPsABI from '../abis/Convexo_LPs.json';
 import ConvexoVaultsABI from '../abis/Convexo_Vaults.json';
+import ConvexoPassportABI from '../abis/Convexo_Passport.json';
 import ReputationManagerABI from '../abis/ReputationManager.json';
 import VaultFactoryABI from '../abis/VaultFactory.json';
 import TokenizedBondVaultABI from '../abis/TokenizedBondVault.json';
@@ -163,6 +171,7 @@ import TokenizedBondVaultABI from '../abis/TokenizedBondVault.json';
 export {
   ConvexoLPsABI,
   ConvexoVaultsABI,
+  ConvexoPassportABI,
   ReputationManagerABI,
   VaultFactoryABI,
   TokenizedBondVaultABI,
@@ -291,11 +300,13 @@ const reputation = useUserReputation(address);
 
 // 2. Display access level
 if (reputation.tier === 0) {
-  return <p>❌ No access - Apply for KYB verification</p>;
+  return <p>❌ No access - Apply for verification</p>;
 } else if (reputation.tier === 1) {
   return <p>✅ Tier 1 - Can trade in liquidity pools</p>;
 } else if (reputation.tier === 2) {
   return <p>✅ Tier 2 - Can create vaults & trade in pools</p>;
+} else if (reputation.tier === 3) {
+  return <p>✅ Tier 3 - Can invest in vaults (ZKPassport verified)</p>;
 }
 ```
 
@@ -1043,9 +1054,9 @@ Base Sepolia USDC: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
 
 ## ✅ Frontend Handoff Checklist
 
-- [x] All 9 contracts deployed on 3 networks
+- [x] All 10 contracts deployed on 3 testnets (v2.0 with ZKPassport)
 - [x] All contracts verified on explorers
-- [x] 10 ABIs extracted and available
+- [x] 12 ABIs extracted and available
 - [x] Contract addresses documented
 - [x] Integration examples provided
 - [x] New vault flow documented
@@ -1056,7 +1067,7 @@ Base Sepolia USDC: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
 
 **Status: ✅ Ready for frontend integration!**
 
-All contracts are deployed, verified, and ready for frontend development. The new vault flow (v2.0) is fully tested with 14/14 tests passing. 🎉
+All contracts are deployed, verified, and ready for frontend development. Version 2.0 includes ZKPassport integration for individual investors. 🎉
 
 ---
 

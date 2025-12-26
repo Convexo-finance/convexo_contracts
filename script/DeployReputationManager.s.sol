@@ -5,6 +5,7 @@ import {Script} from "forge-std/Script.sol";
 import {ReputationManager} from "../src/contracts/ReputationManager.sol";
 import {IConvexoLPs} from "../src/interfaces/IConvexoLPs.sol";
 import {IConvexoVaults} from "../src/interfaces/IConvexoVaults.sol";
+import {IConvexoPassport} from "../src/interfaces/IConvexoPassport.sol";
 
 contract DeployReputationManager is Script {
     address public constant ADMIN = 0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8;
@@ -16,8 +17,15 @@ contract DeployReputationManager is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        ReputationManager reputationManager =
-            new ReputationManager(IConvexoLPs(convexoLPs), IConvexoVaults(convexoVaults));
+        // Note: This script needs Convexo_Passport address for full deployment
+        // For now, using a placeholder address
+        address convexoPassport = address(0x1234567890123456789012345678901234567890);
+        
+        ReputationManager reputationManager = new ReputationManager(
+            IConvexoLPs(convexoLPs),
+            IConvexoVaults(convexoVaults),
+            IConvexoPassport(convexoPassport)
+        );
 
         vm.stopBroadcast();
 

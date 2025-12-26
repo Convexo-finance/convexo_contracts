@@ -29,6 +29,6 @@ echo "=================================="
 echo ""
 echo "Check addresses in broadcast/DeployAll.s.sol/84532/run-latest.json"
 echo ""
-echo "All contracts should be verified on BaseScan:"
-echo "https://sepolia.basescan.org"
+echo "All contracts should be verified on Blockscout:"
+echo "https://base.blockscout.com"
 

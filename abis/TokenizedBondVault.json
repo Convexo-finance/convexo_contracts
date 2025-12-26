@@ -330,19 +330,6 @@
   },
   {
     "type": "function",
-    "name": "getReputationManager",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "getRoleAdmin",
     "inputs": [
       {
@@ -707,19 +694,6 @@
   },
   {
     "type": "function",
-    "name": "reputationManager",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract ReputationManager"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "revokeRole",
     "inputs": [
       {
@@ -731,19 +705,6 @@
         "name": "account",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "setReputationManager",
-    "inputs": [
-      {
-        "name": "_reputationManager",
-        "type": "address",
-        "internalType": "contract ReputationManager"
       }
     ],
     "outputs": [],

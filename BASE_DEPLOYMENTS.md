@@ -8,8 +8,8 @@ Complete deployment guide for all Base networks (Mainnet & Sepolia Testnet).
 
 | Network | Chain ID | Status | Contracts | Explorer |
 |---------|----------|--------|-----------|----------|
-| **Base Mainnet** | 8453 | ✅ Complete | 9/9 | [Basescan](https://basescan.org) |
-| **Base Sepolia** | 84532 | ✅ Complete | 9/9 | [Basescan](https://sepolia.basescan.org) |
+| **Base Mainnet** | 8453 | ✅ Complete | 9/9 (v2.2) | [Basescan](https://basescan.org) |
+| **Base Sepolia** | 84532 | ✅ Complete | 10/10 (v2.0) | [Basescan](https://sepolia.basescan.org) |
 
 ---
 
@@ -127,36 +127,37 @@ const BASE_MAINNET_CONFIG = {
 - **Currency**: ETH (Testnet)
 
 ## Deployment Summary
-**Status**: ✅ Complete - All 9 contracts deployed and verified  
-**Date**: December 24, 2024  
-**Version**: 2.2
+**Status**: ✅ Complete - All 10 contracts deployed and verified  
+**Date**: December 26, 2024  
+**Version**: 2.0 (with ZKPassport)
 
 ## Deployed Contracts
 
 ### NFT Contracts
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x4c90cfcb7e83c57bde40f4079c1baae812772bb5` | [View](https://sepolia.basescan.org/address/0x4c90cfcb7e83c57bde40f4079c1baae812772bb5) |
-| **Convexo_Vaults** | `0x964475c4dea04d5f464c14a64243063cd80c1e0a` | [View](https://sepolia.basescan.org/address/0x964475c4dea04d5f464c14a64243063cd80c1e0a) |
+| **Convexo_LPs** | `0x90caec19973DB5c39373d1f3072a7ED096aBAD84` | [View](https://sepolia.basescan.org/address/0x90caec19973DB5c39373d1f3072a7ED096aBAD84) |
+| **Convexo_Vaults** | `0xD0ECa5Dae7Ba021C75f2Fc69bDe756dd33C26adE` | [View](https://sepolia.basescan.org/address/0xD0ECa5Dae7Ba021C75f2Fc69bDe756dd33C26adE) |
+| **Convexo_Passport** | `0x4A164470586B7e80eEf2734d24f5F784e4f88ad0` | [View](https://sepolia.basescan.org/address/0x4A164470586B7e80eEf2734d24f5F784e4f88ad0) |
 
 ### Hook System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **HookDeployer** | `0xfa5d75fe8193f8a5533b4be8f4615fef00ba0a86` | [View](https://sepolia.basescan.org/address/0xfa5d75fe8193f8a5533b4be8f4615fef00ba0a86) |
-| **CompliantLPHook** | `0x6f09787124a3e1a30ca3b41e1550d093b5bf1f26` | [View](https://sepolia.basescan.org/address/0x6f09787124a3e1a30ca3b41e1550d093b5bf1f26) |
-| **PoolRegistry** | `0x406f11a81873cc496d1376e773195fd203679530` | [View](https://sepolia.basescan.org/address/0x406f11a81873cc496d1376e773195fd203679530) |
+| **HookDeployer** | `0xA0b9E51B51656A6DCaFDEfc7C83167358Be425AB` | [View](https://sepolia.basescan.org/address/0xA0b9E51B51656A6DCaFDEfc7C83167358Be425AB) |
+| **CompliantLPHook** | `0x331C35ba44FE83183eEd913D647F4f18E9BCf785` | [View](https://sepolia.basescan.org/address/0x331C35ba44FE83183eEd913D647F4f18E9BCf785) |
+| **PoolRegistry** | `0xA59C12e996C7224B925A98C35c6dd82464CA1e0d` | [View](https://sepolia.basescan.org/address/0xA59C12e996C7224B925A98C35c6dd82464CA1e0d) |
 
 ### Core Infrastructure
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ReputationManager** | `0xa3b71158f4ddb8c0117bf9e4bff7b0922233c95b` | [View](https://sepolia.basescan.org/address/0xa3b71158f4ddb8c0117bf9e4bff7b0922233c95b) |
-| **PriceFeedManager** | `0xa045d9ce0b8a5367c447759babcafd8778d0777e` | [View](https://sepolia.basescan.org/address/0xa045d9ce0b8a5367c447759babcafd8778d0777e) |
+| **ReputationManager** | `0x340Fd03C88297A5B0caFD5877FC1faecEffaf159` | [View](https://sepolia.basescan.org/address/0x340Fd03C88297A5B0caFD5877FC1faecEffaf159) |
+| **PriceFeedManager** | `0xD6cfde6525703b625ba1acB5645e2584eb7a702f` | [View](https://sepolia.basescan.org/address/0xD6cfde6525703b625ba1acB5645e2584eb7a702f) |
 
 ### Vault System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ContractSigner** | `0x5c999003291235dce835500b183049a3b28fe783` | [View](https://sepolia.basescan.org/address/0x5c999003291235dce835500b183049a3b28fe783) |
-| **VaultFactory** | `0xd75edf919d744e9dfcad68939674d8c9fada5c97` | [View](https://sepolia.basescan.org/address/0xd75edf919d744e9dfcad68939674d8c9fada5c97) |
+| **ContractSigner** | `0xBA579E561aF128d801f1a1A5416Ee73e2094C3A5` | [View](https://sepolia.basescan.org/address/0xBA579E561aF128d801f1a1A5416Ee73e2094C3A5) |
+| **VaultFactory** | `0xE8C890871DE3c0D2fd90ad560ABBa3a25CD5e139` | [View](https://sepolia.basescan.org/address/0xE8C890871DE3c0D2fd90ad560ABBa3a25CD5e139) |
 
 ## Network Dependencies (Sepolia)
 
@@ -171,19 +172,21 @@ const BASE_SEPOLIA_CONFIG = {
   chainId: 84532,
   name: "Base Sepolia",
   contracts: {
-    convexoLPs: "0x4c90cfcb7e83c57bde40f4079c1baae812772bb5",
-    convexoVaults: "0x964475c4dea04d5f464c14a64243063cd80c1e0a",
-    hookDeployer: "0xfa5d75fe8193f8a5533b4be8f4615fef00ba0a86",
-    compliantLPHook: "0x6f09787124a3e1a30ca3b41e1550d093b5bf1f26",
-    poolRegistry: "0x406f11a81873cc496d1376e773195fd203679530",
-    reputationManager: "0xa3b71158f4ddb8c0117bf9e4bff7b0922233c95b",
-    priceFeedManager: "0xa045d9ce0b8a5367c447759babcafd8778d0777e",
-    contractSigner: "0x5c999003291235dce835500b183049a3b28fe783",
-    vaultFactory: "0xd75edf919d744e9dfcad68939674d8c9fada5c97"
+    convexoLPs: "0x90caec19973DB5c39373d1f3072a7ED096aBAD84",
+    convexoVaults: "0xD0ECa5Dae7Ba021C75f2Fc69bDe756dd33C26adE",
+    convexoPassport: "0x4A164470586B7e80eEf2734d24f5F784e4f88ad0",
+    hookDeployer: "0xA0b9E51B51656A6DCaFDEfc7C83167358Be425AB",
+    compliantLPHook: "0x331C35ba44FE83183eEd913D647F4f18E9BCf785",
+    poolRegistry: "0xA59C12e996C7224B925A98C35c6dd82464CA1e0d",
+    reputationManager: "0x340Fd03C88297A5B0caFD5877FC1faecEffaf159",
+    priceFeedManager: "0xD6cfde6525703b625ba1acB5645e2584eb7a702f",
+    contractSigner: "0xBA579E561aF128d801f1a1A5416Ee73e2094C3A5",
+    vaultFactory: "0xE8C890871DE3c0D2fd90ad560ABBa3a25CD5e139"
   },
   usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
   ecop: "0xb934dcb57fb0673b7bc0fca590c5508f1cde955d",
-  poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408"
+  poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408",
+  zkpassportVerifier: "0x1D000001000EFD9a6371f4d90bB8920D5431c0D8"
 };
 ```
 
@@ -276,5 +279,5 @@ ECOP_ADDRESS_BASESEPOLIA=0xb934dcb57fb0673b7bc0fca590c5508f1cde955d
 
 ---
 
-*Last updated: December 24, 2025*
+*Last updated: December 26, 2024*
 

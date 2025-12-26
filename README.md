@@ -248,35 +248,42 @@ forge test -vvv
 
 ## 🌐 Deployment Status
 
-### 🚀 Mainnet Deployments (v2.2 - Current)
+### 🚀 Mainnet Deployments
 
-| Network | Chain ID | Contracts | Status | Date | Explorer |
-|---------|----------|-----------|--------|------|----------|
-| **Ethereum Mainnet** | 1 | 9/9 | ✅ Complete | Dec 24, 2024 | [Etherscan](https://etherscan.io) |
-| **Base Mainnet** | 8453 | 9/9 | ✅ Complete | Dec 24, 2024 | [BaseScan](https://basescan.org) |
-| **Unichain Mainnet** | 130 | 9/9 | ✅ Complete | Dec 24, 2024 | [Blockscout](https://unichain.blockscout.com) |
+| Network | Chain ID | Status | Contracts | Explorer |
+|---------|----------|--------|-----------|----------|
+| **Ethereum Mainnet** | 1 | ⏳ Pending | 0/10 (v2.0) | [Etherscan](https://etherscan.io) |
+| **Base Mainnet** | 8453 | ✅ Complete | 9/9 (v2.2) | [BaseScan](https://basescan.org) |
+| **Unichain Mainnet** | 130 | ✅ Complete | 9/9 (v2.2) | [Blockscout](https://unichain.blockscout.com) |
+
+**Note**: Base and Unichain mainnet are on v2.2 (9 contracts). Ethereum mainnet pending v2.0 deployment (10 contracts with ZKPassport).
 
 ### 🧪 Testnet Deployments
 
-| Network | Chain ID | Contracts | Status | Date | Explorer |
-|---------|----------|-----------|--------|------|----------|
-| **Ethereum Sepolia** | 11155111 | 9/9 | ✅ Complete | Dec 23, 2024 | [Etherscan](https://sepolia.etherscan.io) |
-| **Base Sepolia** | 84532 | 9/9 | ✅ Complete | Dec 24, 2024 | [BaseScan](https://sepolia.basescan.org) |
-| **Unichain Sepolia** | 1301 | 9/9 | ✅ Complete | Dec 24, 2024 | [Blockscout](https://unichain-sepolia.blockscout.com) |
+| Network | Chain ID | Status | Contracts | Explorer |
+|---------|----------|--------|-----------|----------|
+| **Ethereum Sepolia** | 11155111 | ✅ Complete | 10/10 (v2.0) | [Etherscan](https://sepolia.etherscan.io) |
+| **Base Sepolia** | 84532 | ✅ Complete | 10/10 (v2.0) | [BaseScan](https://sepolia.basescan.org) |
+| **Unichain Sepolia** | 1301 | ✅ Complete | 10/10 (v2.0) | [Blockscout](https://unichain-sepolia.blockscout.com) |
+
+**Note**: All testnets are on v2.0 with ZKPassport integration. ZKPassport verifier: `0x1D000001000EFD9a6371f4d90bB8920D5431c0D8` (same address on all chains).
 
 ### 📦 Deployed Contracts (All Networks)
 
 1. ✅ **Convexo_LPs** - NFT for liquidity pool access (Tier 1 - Business)
 2. ✅ **Convexo_Vaults** - NFT for vault creation (Tier 2 - Business)
-3. ✅ **HookDeployer** - Helper for deploying hooks with correct addresses
-4. ✅ **CompliantLPHook** - Uniswap V4 hook for gated pool access
-5. ✅ **PoolRegistry** - Registry for compliant pools
-6. ✅ **ReputationManager** - User tier calculation system
-7. ✅ **PriceFeedManager** - Chainlink price feed integration
-8. ✅ **ContractSigner** - Multi-signature contract system
-9. ✅ **VaultFactory** - Factory for creating tokenized bond vaults
+3. 🆕 **Convexo_Passport** - NFT for individual investors (Tier 3 - ZKPassport) - **v2.0 only**
+4. ✅ **HookDeployer** - Helper for deploying hooks with correct addresses
+5. ✅ **CompliantLPHook** - Uniswap V4 hook for gated pool access
+6. ✅ **PoolRegistry** - Registry for compliant pools
+7. ✅ **ReputationManager** - User tier calculation system (now with Passport support)
+8. ✅ **PriceFeedManager** - Chainlink price feed integration
+9. ✅ **ContractSigner** - Multi-signature contract system
+10. ✅ **VaultFactory** - Factory for creating tokenized bond vaults
 
-**Total: 9 Smart Contracts | All Verified ✅**
+**Total: 10 Smart Contracts (v2.0)**
+- **v2.2**: 9 contracts (Base & Unichain mainnet - deployed before ZKPassport)
+- **v2.0**: 10 contracts (all testnets - includes Convexo_Passport with ZKPassport at `0x1D000001000EFD9a6371f4d90bB8920D5431c0D8`)
 
 ---
 
@@ -314,127 +321,136 @@ forge test -vvv
    ETHERSCAN_API_KEY=your_etherscan_api_key
    BASESCAN_API_KEY=your_basescan_api_key
    
-   # Optional: Override default addresses
-   ZKPASSPORT_VERIFIER_ADDRESS=0x1D000001000EFD9a6371f4d90bB8920D5431c0D8
-   PASSPORT_BASE_URI=https://api.convexo.com/passport/
+   # Optional: Override default protocol fee collector
    PROTOCOL_FEE_COLLECTOR=your_fee_collector_address
+   
+   # ZKPassport verifier (already configured in DeployAll.s.sol)
+   # 0x1D000001000EFD9a6371f4d90bB8920D5431c0D8 (all chains)
    ```
 
-### Testnet Deployment
+### Deployment Workflow
 
-#### Deploy to Ethereum Sepolia
+**Always follow this order: Testnet → Mainnet → Extract ABIs → Update Addresses**
+
+#### Step 1: Deploy to Testnet First
+
+Test your deployment on testnet before deploying to mainnet.
+
+**Ethereum Sepolia (Chain ID: 11155111)**
 ```bash
-# Deploy all contracts
 ./scripts/deploy_ethereum_sepolia.sh
-
-# Or use forge directly
-forge script script/DeployAll.s.sol \
-  --rpc-url $ETHEREUM_SEPOLIA_RPC_URL \
-  --broadcast \
-  --verify \
-  -vvvv
 ```
 
-#### Deploy to Base Sepolia
+**Base Sepolia (Chain ID: 84532)**
 ```bash
-# Deploy all contracts
+./scripts/deploy_base_sepolia.sh
+```
+
+**Unichain Sepolia (Chain ID: 1301)**
+```bash
+./scripts/deploy_unichain_sepolia.sh
+```
+
+#### Step 2: Extract ABIs (After Testnet Deployment)
+
+Extract contract ABIs for frontend integration:
+```bash
+./scripts/extract-abis.sh
+```
+
+This creates ABIs in `abis/` directory for all 10 contracts.
+
+#### Step 3: Update addresses.json (After Testnet Deployment)
+
+Update `addresses.json` with deployed testnet addresses:
+```bash
+# Update specific network
+./scripts/update-addresses.sh 11155111  # Ethereum Sepolia
+./scripts/update-addresses.sh 84532     # Base Sepolia
+./scripts/update-addresses.sh 1301     # Unichain Sepolia
+
+# Or update all networks at once
+./scripts/update-addresses.sh
+```
+
+#### Step 4: Deploy to Mainnet (After Testnet Verification)
+
+⚠️ **IMPORTANT**: Only deploy to mainnet after:
+- ✅ All contracts verified on testnet
+- ✅ End-to-end testing complete
+- ✅ Using multisig wallet for admin roles
+- ✅ Sufficient ETH/native tokens for gas
+- ✅ All environment variables double-checked
+
+**Ethereum Mainnet (Chain ID: 1)**
+```bash
+./scripts/deploy_ethereum_mainnet.sh
+```
+
+**Base Mainnet (Chain ID: 8453)**
+```bash
+./scripts/deploy_base_mainnet.sh
+```
+
+**Unichain Mainnet (Chain ID: 130)**
+```bash
+./scripts/deploy_unichain_mainnet.sh
+```
+
+#### Step 5: Extract ABIs (After Mainnet Deployment)
+
+Extract ABIs again to ensure they're up to date:
+```bash
+./scripts/extract-abis.sh
+```
+
+#### Step 6: Update addresses.json (After Mainnet Deployment)
+
+Update `addresses.json` with deployed mainnet addresses:
+```bash
+# Update specific network
+./scripts/update-addresses.sh 1      # Ethereum Mainnet
+./scripts/update-addresses.sh 8453   # Base Mainnet
+./scripts/update-addresses.sh 130   # Unichain Mainnet
+
+# Or update all networks at once
+./scripts/update-addresses.sh
+```
+
+### Complete Deployment Example
+
+Here's a complete example for Base network:
+
+```bash
+# 1. Deploy to Base Sepolia (Testnet)
 ./scripts/deploy_base_sepolia.sh
 
-# Or use forge directly
-forge script script/DeployAll.s.sol \
-  --rpc-url $BASE_SEPOLIA_RPC_URL \
-  --broadcast \
-  --verify \
-  -vvvv
-```
-
-#### Deploy to Unichain Sepolia
-```bash
-# Deploy all contracts
-./scripts/deploy_unichain_sepolia.sh
-
-# Or use forge directly
-forge script script/DeployAll.s.sol \
-  --rpc-url $UNICHAIN_SEPOLIA_RPC_URL \
-  --broadcast \
-  --verify \
-  -vvvv
-```
-
-### Mainnet Deployment
-
-⚠️ **IMPORTANT**: Before mainnet deployment:
-1. ✅ Verify all contracts on testnet
-2. ✅ Test end-to-end flows
-3. ✅ Use a multisig wallet for admin roles
-4. ✅ Have sufficient ETH/native tokens for gas
-5. ✅ Double-check all environment variables
-
-#### Deploy to Ethereum Mainnet
-```bash
-# Step 1: Deploy contracts
-forge script script/DeployAll.s.sol \
-  --rpc-url $ETHEREUM_MAINNET_RPC_URL \
-  --broadcast \
-  --verify \
-  --slow \
-  -vvvv
-
-# Step 2: Save deployment addresses
-# Contract addresses will be in broadcast/DeployAll.s.sol/1/run-latest.json
-
-# Step 3: Extract ABIs
+# 2. Extract ABIs
 ./scripts/extract-abis.sh
 
-# Step 4: Update addresses.json
-# Add deployed addresses to addresses.json
-```
+# 3. Update addresses.json with testnet addresses
+./scripts/update-addresses.sh 84532
 
-#### Deploy to Base Mainnet
-```bash
-# Step 1: Deploy contracts
-forge script script/DeployAll.s.sol \
-  --rpc-url $BASE_MAINNET_RPC_URL \
-  --broadcast \
-  --verify \
-  --slow \
-  -vvvv
+# 4. Test thoroughly on testnet
+forge test --fork-url $BASE_SEPOLIA_RPC_URL -vvv
 
-# Step 2: Save deployment addresses
-# Contract addresses will be in broadcast/DeployAll.s.sol/8453/run-latest.json
+# 5. Deploy to Base Mainnet (when ready)
+./scripts/deploy_base_mainnet.sh
 
-# Step 3: Extract ABIs
+# 6. Extract ABIs again
 ./scripts/extract-abis.sh
 
-# Step 4: Update addresses.json
-# Add deployed addresses to addresses.json
+# 7. Update addresses.json with mainnet addresses
+./scripts/update-addresses.sh 8453
 ```
 
-#### Deploy to Unichain Mainnet
+
+
+### Additional Post-Deployment Tasks
+
+#### Verify Contracts (if not auto-verified)
 ```bash
-# Step 1: Deploy contracts (when available)
-forge script script/DeployAll.s.sol \
-  --rpc-url $UNICHAIN_MAINNET_RPC_URL \
-  --broadcast \
-  --verify \
-  --slow \
-  -vvvv
-
-# Step 2: Save deployment addresses
-# Contract addresses will be in broadcast/DeployAll.s.sol/130/run-latest.json
-
-# Step 3: Extract ABIs
-./scripts/extract-abis.sh
-
-# Step 4: Update addresses.json
-# Add deployed addresses to addresses.json
-```
-
-### Post-Deployment Steps
-
-#### 1. Verify Contracts (if not auto-verified)
-```bash
-# Verify all contracts on a network
+# Verify all contracts on a network (if automatic verification failed)
 ./scripts/verify_all.sh sepolia          # Ethereum Sepolia
 ./scripts/verify_all.sh base-sepolia     # Base Sepolia
 ./scripts/verify_all.sh unichain-sepolia # Unichain Sepolia
@@ -442,26 +458,18 @@ forge script script/DeployAll.s.sol \
 ./scripts/verify_all.sh base-mainnet     # Base Mainnet
 ```
 
-#### 2. Extract ABIs
-```bash
-./scripts/extract-abis.sh
-```
-ABIs saved to `abis/` directory for frontend integration.
-
-#### 3. Update Documentation
-```bash
-# Update deployment markdown files with new addresses
-# - ETHEREUM_DEPLOYMENTS.md
-# - BASE_DEPLOYMENTS.md
-# - UNICHAIN_DEPLOYMENTS.md
-# - addresses.json
-```
-
-#### 4. Test Deployment
+#### Test Deployment
 ```bash
 # Run integration tests against deployed contracts
 forge test --fork-url $RPC_URL -vvv
 ```
+
+#### Update Documentation
+After deployment, update the following files manually:
+- `ETHEREUM_DEPLOYMENTS.md` - Ethereum network addresses
+- `BASE_DEPLOYMENTS.md` - Base network addresses
+- `UNICHAIN_DEPLOYMENTS.md` - Unichain network addresses
+- `FRONTEND_INTEGRATION.md` - Frontend integration addresses
 
 ### Deployment Checklist
 
@@ -471,49 +479,63 @@ forge test --fork-url $RPC_URL -vvv
 - [ ] Sufficient gas funds in deployer wallet
 - [ ] Minter address configured
 - [ ] Protocol fee collector address set
-- [ ] ZKPassport verifier address confirmed
+- [x] ZKPassport verifier address confirmed (0x1D000001000EFD9a6371f4d90bB8920D5431c0D8)
 - [ ] Passport base URI configured
 
 #### During Deployment 🚀
 - [ ] Deploy script executes successfully
-- [ ] All 10 contracts deployed
+- [ ] All 10 contracts deployed (v2.0) or 9 contracts (v2.2)
 - [ ] Gas costs within budget
 - [ ] Deployment addresses saved
 
 #### Post-Deployment ✅
-- [ ] All contracts verified on block explorer
-- [ ] ABIs extracted and saved
-- [ ] addresses.json updated
-- [ ] Deployment markdown files updated
-- [ ] Frontend updated with new addresses
+- [x] All contracts verified on block explorer
+- [x] ABIs extracted (`./scripts/extract-abis.sh`)
+- [ ] addresses.json updated (`./scripts/update-addresses.sh <chain_id>`)
+- [x] Deployment markdown files updated (ETHEREUM_DEPLOYMENTS.md, BASE_DEPLOYMENTS.md, UNICHAIN_DEPLOYMENTS.md)
+- [ ] Frontend updated with new addresses (FRONTEND_INTEGRATION.md)
 - [ ] Admin roles transferred to multisig (mainnet only)
 - [ ] Initial NFTs minted for testing
 - [ ] Integration tests run against deployed contracts
 
-### Redeployment (v2.0 with ZKPassport)
+### Deployment Workflow Summary
 
-Since contracts have been updated with ZKPassport integration:
+**Standard workflow for each network:**
 
-```bash
-# 1. Backup old deployment addresses
-cp addresses.json addresses.json.backup
+1. **Deploy to Testnet**
+   ```bash
+   ./scripts/deploy_<network>_sepolia.sh
+   ```
 
-# 2. Deploy to testnet first
-./scripts/deploy_base_sepolia.sh
+2. **Extract ABIs**
+   ```bash
+   ./scripts/extract-abis.sh
+   ```
 
-# 3. Test thoroughly
-forge test --fork-url $BASE_SEPOLIA_RPC_URL -vvv
+3. **Update addresses.json**
+   ```bash
+   ./scripts/update-addresses.sh <chain_id>
+   ```
 
-# 4. Deploy to mainnet (when ready)
-forge script script/DeployAll.s.sol \
-  --rpc-url $BASE_MAINNET_RPC_URL \
-  --broadcast \
-  --verify \
-  --slow \
-  -vvvv
+4. **Test on Testnet**
+   ```bash
+   forge test --fork-url $<NETWORK>_SEPOLIA_RPC_URL -vvv
+   ```
 
-# 5. Update all documentation
-```
+5. **Deploy to Mainnet** (when ready)
+   ```bash
+   ./scripts/deploy_<network>_mainnet.sh
+   ```
+
+6. **Extract ABIs again**
+   ```bash
+   ./scripts/extract-abis.sh
+   ```
+
+7. **Update addresses.json with mainnet addresses**
+   ```bash
+   ./scripts/update-addresses.sh <mainnet_chain_id>
+   ```
 
 ### Troubleshooting
 

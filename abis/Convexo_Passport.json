@@ -3,35 +3,22 @@
     "type": "constructor",
     "inputs": [
       {
+        "name": "admin",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "_zkPassportVerifier",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "baseURI_",
+        "name": "initialBaseURI",
         "type": "string",
         "internalType": "string"
-      },
-      {
-        "name": "_admin",
-        "type": "address",
-        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "ADMIN_ROLE",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -48,16 +35,29 @@
   },
   {
     "type": "function",
-    "name": "addRestrictedCountry",
-    "inputs": [
+    "name": "MINTER_ROLE",
+    "inputs": [],
+    "outputs": [
       {
-        "name": "countryHash",
+        "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
       }
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "REVOKER_ROLE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -111,31 +111,25 @@
   },
   {
     "type": "function",
-    "name": "getApproved",
-    "inputs": [
-      {
-        "name": "tokenId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "name": "getActivePassportCount",
+    "inputs": [],
     "outputs": [
       {
         "name": "",
-        "type": "address",
-        "internalType": "address"
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "getHolderByIdentifier",
+    "name": "getApproved",
     "inputs": [
       {
-        "name": "identifier",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -227,10 +221,15 @@
   },
   {
     "type": "function",
-    "name": "hasActivePassport",
+    "name": "hasRole",
     "inputs": [
       {
-        "name": "holder",
+        "name": "role",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "account",
         "type": "address",
         "internalType": "address"
       }
@@ -246,15 +245,10 @@
   },
   {
     "type": "function",
-    "name": "hasRole",
+    "name": "holdsActivePassport",
     "inputs": [
       {
-        "name": "role",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "account",
+        "name": "holder",
         "type": "address",
         "internalType": "address"
       }
@@ -281,6 +275,25 @@
         "name": "operator",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isIdentifierUsed",
+    "inputs": [
+      {
+        "name": "uniqueIdentifier",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -326,19 +339,6 @@
   },
   {
     "type": "function",
-    "name": "removeRestrictedCountry",
-    "inputs": [
-      {
-        "name": "countryHash",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "renounceRole",
     "inputs": [
       {
@@ -354,25 +354,6 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "restrictedCountries",
-    "inputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -407,6 +388,30 @@
   },
   {
     "type": "function",
+    "name": "safeMint",
+    "inputs": [
+      {
+        "name": "to",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "uri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "safeMintWithZKPassport",
     "inputs": [
       {
@@ -415,113 +420,34 @@
         "internalType": "struct ProofVerificationParams",
         "components": [
           {
-            "name": "a",
-            "type": "uint256[2]",
-            "internalType": "uint256[2]"
+            "name": "publicKey",
+            "type": "bytes32",
+            "internalType": "bytes32"
           },
           {
-            "name": "b",
-            "type": "uint256[2][2]",
-            "internalType": "uint256[2][2]"
+            "name": "nullifier",
+            "type": "bytes32",
+            "internalType": "bytes32"
           },
           {
-            "name": "c",
-            "type": "uint256[2]",
-            "internalType": "uint256[2]"
+            "name": "proof",
+            "type": "bytes",
+            "internalType": "bytes"
           },
           {
-            "name": "input",
-            "type": "uint256[66]",
-            "internalType": "uint256[66]"
+            "name": "attestationId",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            "name": "boundData",
-            "type": "tuple",
-            "internalType": "struct BoundData",
-            "components": [
-              {
-                "name": "userIDHash",
-                "type": "bytes32",
-                "internalType": "bytes32"
-              },
-              {
-                "name": "userIDHash2",
-                "type": "bytes32",
-                "internalType": "bytes32"
-              },
-              {
-                "name": "commitment",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "timestampLowerbound",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "timestampUpperbound",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "identityCounterHash",
-                "type": "bytes32",
-                "internalType": "bytes32"
-              },
-              {
-                "name": "publicKeyHash",
-                "type": "bytes32",
-                "internalType": "bytes32"
-              },
-              {
-                "name": "scope",
-                "type": "uint256",
-                "internalType": "uint256"
-              }
-            ]
+            "name": "scope",
+            "type": "bytes32",
+            "internalType": "bytes32"
           },
           {
-            "name": "disclosedData",
-            "type": "tuple",
-            "internalType": "struct DisclosedData",
-            "components": [
-              {
-                "name": "nationality",
-                "type": "bytes32",
-                "internalType": "bytes32"
-              },
-              {
-                "name": "residenceCountry",
-                "type": "bytes32",
-                "internalType": "bytes32"
-              },
-              {
-                "name": "dateOfBirth",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "ageLowerBound",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "ageUpperBound",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "documentType",
-                "type": "bytes32",
-                "internalType": "bytes32"
-              },
-              {
-                "name": "isAdult",
-                "type": "bool",
-                "internalType": "bool"
-              }
-            ]
+            "name": "currentDate",
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
       },
@@ -704,7 +630,7 @@
       {
         "name": "",
         "type": "address",
-        "internalType": "address"
+        "internalType": "contract IZKPassportVerifier"
       }
     ],
     "stateMutability": "view"
@@ -804,7 +730,7 @@
       {
         "name": "tokenId",
         "type": "uint256",
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256"
       },
       {
@@ -812,6 +738,12 @@
         "type": "bytes32",
         "indexed": false,
         "internalType": "bytes32"
+      },
+      {
+        "name": "nationality",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
       }
     ],
     "anonymous": false
@@ -829,8 +761,14 @@
       {
         "name": "tokenId",
         "type": "uint256",
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256"
+      },
+      {
+        "name": "uniqueIdentifier",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
       }
     ],
     "anonymous": false
@@ -958,6 +896,11 @@
   },
   {
     "type": "error",
+    "name": "AlreadyHasPassport",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "ERC721IncorrectOwner",
     "inputs": [
       {
@@ -1058,5 +1001,30 @@
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "IdentifierAlreadyUsed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MustBeOver18",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PassportNotActive",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ProofVerificationFailed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SoulboundTokenCannotBeTransferred",
+    "inputs": []
   }
 ]

@@ -10,8 +10,52 @@ import {Convexo_LPs} from "../src/convexolps.sol";
 import {Convexo_Vaults} from "../src/convexovaults.sol";
 import {IConvexoLPs} from "../src/interfaces/IConvexoLPs.sol";
 import {IConvexoVaults} from "../src/interfaces/IConvexoVaults.sol";
+import {IConvexoPassport} from "../src/interfaces/IConvexoPassport.sol";
+import {ProofVerificationParams} from "../src/interfaces/IZKPassportVerifier.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
+
+// Mock Convexo_Passport for testing
+contract MockConvexoPassport is IConvexoPassport {
+    mapping(address => uint256) private _balances;
+    
+    function balanceOf(address owner) external view returns (uint256) {
+        return _balances[owner];
+    }
+    
+    function setBalance(address owner, uint256 balance) external {
+        _balances[owner] = balance;
+    }
+    
+    // Stub implementations for other interface functions
+    function safeMintWithZKPassport(ProofVerificationParams calldata, bool) external pure returns (uint256) {
+        revert("Not implemented in mock");
+    }
+    
+    function safeMint(address, string memory) external pure returns (uint256) {
+        revert("Not implemented in mock");
+    }
+    
+    function revokePassport(uint256) external pure {
+        revert("Not implemented in mock");
+    }
+    
+    function holdsActivePassport(address) external pure returns (bool) {
+        return false;
+    }
+    
+    function getVerifiedIdentity(address) external pure returns (VerifiedIdentity memory) {
+        revert("Not implemented in mock");
+    }
+    
+    function isIdentifierUsed(bytes32) external pure returns (bool) {
+        return false;
+    }
+    
+    function getActivePassportCount() external pure returns (uint256) {
+        return 0;
+    }
+}
 
 contract VaultFlowTest is Test {
     VaultFactory public vaultFactory;
@@ -67,7 +111,13 @@ contract VaultFlowTest is Test {
         vm.stopPrank();
 
         // Deploy core contracts
-        reputationManager = new ReputationManager(IConvexoLPs(address(convexoLPs)), IConvexoVaults(address(convexoVaults)));
+        // Create a mock Convexo_Passport for testing
+        MockConvexoPassport mockPassport = new MockConvexoPassport();
+        reputationManager = new ReputationManager(
+            IConvexoLPs(address(convexoLPs)),
+            IConvexoVaults(address(convexoVaults)),
+            IConvexoPassport(address(mockPassport))
+        );
         
         vm.prank(admin);
         contractSigner = new ContractSigner(admin);

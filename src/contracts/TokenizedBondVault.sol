@@ -245,17 +245,17 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
             
             // Calculate 1:1 redemption (since no interest/fees generated yet)
             // Principal only
-            uint256 redemptionAmount = shares; // 1 share = 1 USDC initially
+            uint256 earlyRedemptionAmount = shares; // 1 share = 1 USDC initially
             
-            require(usdc.balanceOf(address(this)) >= redemptionAmount, "Insufficient vault balance");
+            require(usdc.balanceOf(address(this)) >= earlyRedemptionAmount, "Insufficient vault balance");
 
             // Burn shares
             _burn(msg.sender, shares);
 
             // Transfer USDC
-            require(usdc.transfer(msg.sender, redemptionAmount), "USDC transfer failed");
+            require(usdc.transfer(msg.sender, earlyRedemptionAmount), "USDC transfer failed");
             
-            vaultInfo.totalRaised -= redemptionAmount;
+            vaultInfo.totalRaised -= earlyRedemptionAmount;
             
             // If total raised drops below principal, go back to Pending
             if (vaultInfo.totalRaised < vaultInfo.principalAmount) {
@@ -266,7 +266,7 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
                 vaultInfo.contractHash = bytes32(0); // Detach contract if any
             }
 
-            emit SharesRedeemed(msg.sender, shares, redemptionAmount);
+            emit SharesRedeemed(msg.sender, shares, earlyRedemptionAmount);
             emit VaultStateChanged(vaultInfo.state);
             return;
         }

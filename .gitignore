@@ -2,9 +2,19 @@
 cache/
 out/
 
-# Ignores development broadcast logs
+# Broadcast deployment logs
+# Track broadcast directory structure
 !/broadcast
+# Track only run-latest.json files (most recent deployments per network)
+!/broadcast/**/run-latest.json
+# Ignore all timestamped deployment files (historical records)
+/broadcast/**/run-*.json
+# But keep run-latest.json (exception to above rule)
+!/broadcast/**/run-latest.json
+# Ignore local chain deployments (Anvil)
 /broadcast/*/31337/
+/broadcast/**/31337/
+# Ignore dry-run deployments
 /broadcast/**/dry-run/
 
 # Docs

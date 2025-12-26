@@ -4,6 +4,7 @@ pragma solidity ^0.8.27;
 import {Script, console} from "forge-std/Script.sol";
 import {Convexo_LPs} from "../src/convexolps.sol";
 import {Convexo_Vaults} from "../src/convexovaults.sol";
+import {Convexo_Passport} from "../src/contracts/Convexo_Passport.sol";
 import {HookDeployer} from "../src/hooks/HookDeployer.sol";
 import {CompliantLPHook} from "../src/hooks/CompliantLPHook.sol";
 import {PoolRegistry} from "../src/contracts/PoolRegistry.sol";
@@ -14,6 +15,7 @@ import {VaultFactory} from "../src/contracts/VaultFactory.sol";
 import {IPoolManager} from "../src/interfaces/IPoolManager.sol";
 import {IConvexoLPs} from "../src/interfaces/IConvexoLPs.sol";
 import {IConvexoVaults} from "../src/interfaces/IConvexoVaults.sol";
+import {IConvexoPassport} from "../src/interfaces/IConvexoPassport.sol";
 
 /// @title DeployAll
 /// @notice Deploys all Convexo contracts in the correct order
@@ -24,6 +26,7 @@ contract DeployAll is Script {
     // Deployed contract addresses
     Convexo_LPs public convexoLPs;
     Convexo_Vaults public convexoVaults;
+    Convexo_Passport public convexoPassport;
     HookDeployer public hookDeployer;
     CompliantLPHook public compliantLPHook;
     PoolRegistry public poolRegistry;
@@ -31,6 +34,30 @@ contract DeployAll is Script {
     PriceFeedManager public priceFeedManager;
     ContractSigner public contractSigner;
     VaultFactory public vaultFactory;
+    
+    string public constant CONVEXO_PASSPORT_METADATA_URI = "https://metadata.convexo.finance/passport";
+    
+    /// @notice Get ZKPassport verifier address for the current network
+    /// @param chainId The chain ID
+    /// @return The ZKPassport verifier address
+    /// @dev ZKPassport uses the same verifier address across all supported chains
+    function getZKPassportVerifier(uint256 chainId) internal pure returns (address) {
+        // ZKPassport Verifier Address (same on all chains)
+        // Source: https://docs.zkpassport.id/
+        address verifier = 0x1D000001000EFD9a6371f4d90bB8920D5431c0D8;
+        
+        // Verify we're deploying to a supported network
+        if (chainId == 11155111 ||  // Ethereum Sepolia
+            chainId == 84532 ||      // Base Sepolia
+            chainId == 1301 ||       // Unichain Sepolia
+            chainId == 1 ||          // Ethereum Mainnet
+            chainId == 8453 ||       // Base Mainnet
+            chainId == 130) {        // Unichain Mainnet
+            return verifier;
+        } else {
+            revert("ZKPassport verifier not configured for this network");
+        }
+    }
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -96,6 +123,12 @@ contract DeployAll is Script {
         convexoVaults = new Convexo_Vaults(ADMIN, minter);
         console.log("Convexo_Vaults deployed at:", address(convexoVaults));
 
+        address zkPassportVerifier = getZKPassportVerifier(chainId);
+        require(zkPassportVerifier != address(0), "ZKPassport verifier address not configured");
+        convexoPassport = new Convexo_Passport(ADMIN, zkPassportVerifier, CONVEXO_PASSPORT_METADATA_URI);
+        console.log("Convexo_Passport deployed at:", address(convexoPassport));
+        console.log("Using ZKPassport Verifier at:", zkPassportVerifier);
+
         // ============================================================
         // Phase 2: Deploy Hook System
         // ============================================================
@@ -120,8 +153,11 @@ contract DeployAll is Script {
         // ============================================================
         console.log("\nPhase 3: Deploying Core Infrastructure...");
 
-        reputationManager =
-            new ReputationManager(IConvexoLPs(address(convexoLPs)), IConvexoVaults(address(convexoVaults)));
+        reputationManager = new ReputationManager(
+            IConvexoLPs(address(convexoLPs)),
+            IConvexoVaults(address(convexoVaults)),
+            IConvexoPassport(address(convexoPassport))
+        );
         console.log("ReputationManager deployed at:", address(reputationManager));
 
         priceFeedManager = new PriceFeedManager(ADMIN);
@@ -154,6 +190,7 @@ contract DeployAll is Script {
         console.log("\nNFTs:");
         console.log("  Convexo_LPs:", address(convexoLPs));
         console.log("  Convexo_Vaults:", address(convexoVaults));
+        console.log("  Convexo_Passport:", address(convexoPassport));
         console.log("\nHook System:");
         console.log("  HookDeployer:", address(hookDeployer));
         if (address(compliantLPHook) != address(0)) {
