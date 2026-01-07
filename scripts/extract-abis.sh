@@ -51,6 +51,9 @@ extract_abi "ContractSigner" "ContractSigner.sol"
 extract_abi "ReputationManager" "ReputationManager.sol"
 extract_abi "PriceFeedManager" "PriceFeedManager.sol"
 extract_abi "PoolRegistry" "PoolRegistry.sol"
+extract_abi "TreasuryFactory" "TreasuryFactory.sol"
+extract_abi "TreasuryVault" "TreasuryVault.sol"
+extract_abi "VeriffVerifier" "VeriffVerifier.sol"
 
 echo ""
 echo "Extracting Hook Contracts..."
@@ -71,7 +74,10 @@ jq -s '{
     "PriceFeedManager": .[7],
     "PoolRegistry": .[8],
     "HookDeployer": .[9],
-    "CompliantLPHook": .[10]
+    "CompliantLPHook": .[10],
+    "TreasuryFactory": .[11],
+    "TreasuryVault": .[12],
+    "VeriffVerifier": .[13]
 }' \
     "$ABI_OUTPUT_DIR/Convexo_LPs.json" \
     "$ABI_OUTPUT_DIR/Convexo_Vaults.json" \
@@ -84,6 +90,9 @@ jq -s '{
     "$ABI_OUTPUT_DIR/PoolRegistry.json" \
     "$ABI_OUTPUT_DIR/HookDeployer.json" \
     "$ABI_OUTPUT_DIR/CompliantLPHook.json" \
+    "$ABI_OUTPUT_DIR/TreasuryFactory.json" \
+    "$ABI_OUTPUT_DIR/TreasuryVault.json" \
+    "$ABI_OUTPUT_DIR/VeriffVerifier.json" \
     > "$ABI_OUTPUT_DIR/combined.json"
 echo "✅ Created combined ABI file at abis/combined.json"
 
@@ -103,7 +112,10 @@ echo "  - abis/PriceFeedManager.json"
 echo "  - abis/PoolRegistry.json"
 echo "  - abis/HookDeployer.json"
 echo "  - abis/CompliantLPHook.json"
+echo "  - abis/TreasuryFactory.json"
+echo "  - abis/TreasuryVault.json"
+echo "  - abis/VeriffVerifier.json"
 echo "  - abis/combined.json"
 echo ""
-echo "🎯 Total: 12 ABI files ready for frontend integration!"
+echo "🎯 Total: 15 ABI files ready for frontend integration!"
 

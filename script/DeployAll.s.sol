@@ -12,6 +12,8 @@ import {ReputationManager} from "../src/contracts/ReputationManager.sol";
 import {PriceFeedManager} from "../src/contracts/PriceFeedManager.sol";
 import {ContractSigner} from "../src/contracts/ContractSigner.sol";
 import {VaultFactory} from "../src/contracts/VaultFactory.sol";
+import {TreasuryFactory} from "../src/contracts/TreasuryFactory.sol";
+import {VeriffVerifier} from "../src/contracts/VeriffVerifier.sol";
 import {IPoolManager} from "../src/interfaces/IPoolManager.sol";
 import {IConvexoLPs} from "../src/interfaces/IConvexoLPs.sol";
 import {IConvexoVaults} from "../src/interfaces/IConvexoVaults.sol";
@@ -34,6 +36,8 @@ contract DeployAll is Script {
     PriceFeedManager public priceFeedManager;
     ContractSigner public contractSigner;
     VaultFactory public vaultFactory;
+    TreasuryFactory public treasuryFactory;
+    VeriffVerifier public veriffVerifier;
     
     string public constant CONVEXO_PASSPORT_METADATA_URI = "https://metadata.convexo.finance/passport";
     
@@ -97,8 +101,8 @@ contract DeployAll is Script {
         } else if (chainId == 130) {
             // Unichain Mainnet
             networkName = "Unichain Mainnet";
-            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_UNIMAINNET", address(0)); // TBD
-            usdc = vm.envOr("USDC_ADDRESS_UNIMAINNET", address(0)); // TBD
+            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_UNIMAINNET", 0x1F98400000000000000000000000000000000004);
+            usdc = vm.envOr("USDC_ADDRESS_UNIMAINNET", 0x078D782b760474a361dDA0AF3839290b0EF57AD6);
         } else {
             revert("Unsupported network");
         }
@@ -137,9 +141,9 @@ contract DeployAll is Script {
         hookDeployer = new HookDeployer();
         console.log("HookDeployer deployed at:", address(hookDeployer));
 
-        // Only deploy hook if PoolManager is provided
+        // Deploy hook if PoolManager is provided (uses Passport for access control)
         if (poolManager != address(0)) {
-            compliantLPHook = new CompliantLPHook(IPoolManager(poolManager), IConvexoLPs(address(convexoLPs)));
+            compliantLPHook = new CompliantLPHook(IPoolManager(poolManager), IConvexoPassport(address(convexoPassport)));
             console.log("CompliantLPHook deployed at:", address(compliantLPHook));
         } else {
             console.log("Skipping CompliantLPHook deployment (no POOL_MANAGER_ADDRESS set)");
@@ -179,6 +183,27 @@ contract DeployAll is Script {
             console.log("Skipping VaultFactory deployment (no USDC_ADDRESS set)");
         }
 
+        // ============================================================
+        // Phase 5: Deploy Treasury System
+        // ============================================================
+        console.log("\nPhase 5: Deploying Treasury System...");
+
+        // Only deploy TreasuryFactory if USDC is provided
+        if (usdc != address(0)) {
+            treasuryFactory = new TreasuryFactory(usdc, reputationManager);
+            console.log("TreasuryFactory deployed at:", address(treasuryFactory));
+        } else {
+            console.log("Skipping TreasuryFactory deployment (no USDC_ADDRESS set)");
+        }
+
+        // ============================================================
+        // Phase 6: Deploy Verification System
+        // ============================================================
+        console.log("\nPhase 6: Deploying Verification System...");
+
+        veriffVerifier = new VeriffVerifier(ADMIN, IConvexoLPs(address(convexoLPs)));
+        console.log("VeriffVerifier deployed at:", address(veriffVerifier));
+
         vm.stopBroadcast();
 
         // ============================================================
@@ -205,6 +230,12 @@ contract DeployAll is Script {
         if (address(vaultFactory) != address(0)) {
             console.log("  VaultFactory:", address(vaultFactory));
         }
+        console.log("\nTreasury System:");
+        if (address(treasuryFactory) != address(0)) {
+            console.log("  TreasuryFactory:", address(treasuryFactory));
+        }
+        console.log("\nVerification System:");
+        console.log("  VeriffVerifier:", address(veriffVerifier));
         console.log("========================================\n");
     }
 }

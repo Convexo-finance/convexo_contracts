@@ -17,4 +17,11 @@ interface IConvexoLPs {
     /// @param tokenId The token ID to query
     /// @return True if the token is active, false otherwise
     function getTokenState(uint256 tokenId) external view returns (bool);
+
+    /// @notice Mints a new NFT
+    /// @param to The address to mint to
+    /// @param companyId The company ID
+    /// @param uri The token URI
+    /// @return The token ID of the minted NFT
+    function safeMint(address to, string memory companyId, string memory uri) external returns (uint256);
 }

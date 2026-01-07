@@ -6,6 +6,7 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IContractSigner} from "../interfaces/IContractSigner.sol";
+import {ReputationManager} from "./ReputationManager.sol";
 
 /// @title TokenizedBondVault
 /// @notice Core vault contract for tokenized bonds with ERC20 share tokens
@@ -56,6 +57,9 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
     /// @notice Contract signer reference for verification
     address public immutable contractSigner;
 
+    /// @notice Reputation manager reference for access control
+    ReputationManager public immutable reputationManager;
+
     /// @notice Protocol fee collector address
     address public protocolFeeCollector;
 
@@ -98,6 +102,7 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
         address _contractSigner,
         address _admin,
         address _protocolFeeCollector,
+        ReputationManager _reputationManager,
         string memory _name,
         string memory _symbol
     ) ERC20(_name, _symbol) {
@@ -120,6 +125,7 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
 
         usdc = IERC20(_usdc);
         contractSigner = _contractSigner;
+        reputationManager = _reputationManager;
         protocolFeeCollector = _protocolFeeCollector;
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
@@ -129,6 +135,11 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
     /// @notice Purchase vault shares by depositing USDC
     /// @param amount The amount of USDC to deposit
     function purchaseShares(uint256 amount) external nonReentrant {
+        // Require Tier 1+ (Passport or higher) to invest
+        require(
+            reputationManager.canInvestInVaults(msg.sender),
+            "Must have Tier 1+ (Convexo_Passport or higher) to invest"
+        );
         require(vaultInfo.state == VaultState.Pending, "Vault not accepting deposits");
         require(amount > 0, "Amount must be greater than 0");
         require(vaultInfo.totalRaised + amount <= vaultInfo.principalAmount, "Exceeds principal amount");

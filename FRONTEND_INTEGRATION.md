@@ -1,62 +1,111 @@
 # Convexo Frontend Integration Guide
 
-**Version 2.0** - Updated with new vault flow and all network deployments
+**Version 2.1** - Updated with Treasury system, Veriff verification, and new tier hierarchy
 
 ## 🎯 Quick Start for Frontend Development
 
-All 9 contracts are deployed, tested, and verified on **3 testnets**:
+All **12 contracts** are deployed, tested, and verified on **6 networks**:
+
+### Testnets
 - ✅ Ethereum Sepolia (Chain ID: 11155111)
 - ✅ Base Sepolia (Chain ID: 84532)
 - ✅ Unichain Sepolia (Chain ID: 1301)
 
+### Mainnets
+- ✅ Ethereum Mainnet (Chain ID: 1)
+- ✅ Base Mainnet (Chain ID: 8453)
+- ✅ Unichain Mainnet (Chain ID: 130)
+
 ---
 
-## 📝 Deployed Contract Addresses (v2.0)
+## 📝 Deployed Contract Addresses (v2.1)
 
 ### Ethereum Sepolia (Chain ID: 11155111)
 
 | Contract | Address | Verified |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x8EFC7e25C12A815329331DA5f0e96AFfB4014472` | ✅ [View](https://sepolia.etherscan.io/address/0x8EFC7e25C12A815329331DA5f0e96AFfB4014472) |
-| **Convexo_Vaults** | `0xa932e3EAa0a5e5e65f0567405207603266937618` | ✅ [View](https://sepolia.etherscan.io/address/0xa932e3EAa0a5e5e65f0567405207603266937618) |
-| **Convexo_Passport** | `0x2cfa02372782cf20ef8342B0193fd69E4c5B04A8` | ✅ [View](https://sepolia.etherscan.io/address/0x2cfa02372782cf20ef8342B0193fd69E4c5B04A8) |
-| **HookDeployer** | `0xecDE45FefB5C2EF6E5CC615291DE9be9A99B46A6` | ✅ [View](https://sepolia.etherscan.io/address/0xecDE45FefB5C2EF6E5CC615291DE9be9A99B46A6) |
-| **CompliantLPHook** | `0xe99A49BD81bbe61cDf7F6b7D247f76cACc2e5776` | ✅ [View](https://sepolia.etherscan.io/address/0xe99A49BD81bbe61cDf7F6b7D247f76cACc2e5776) |
-| **PoolRegistry** | `0x83Df102F62c4640ac8BE584c2B4E20c8c373dC2E` | ✅ [View](https://sepolia.etherscan.io/address/0x83Df102F62c4640ac8BE584c2B4E20c8c373dC2E) |
-| **ReputationManager** | `0x60aFA63fDf17a75534e8218BaAc1D64E7FD93b4a` | ✅ [View](https://sepolia.etherscan.io/address/0x60aFA63fDf17a75534e8218BaAc1D64E7FD93b4a) |
-| **PriceFeedManager** | `0x6A9af3B1da3fC07C78c37c380368773b1E830Fac` | ✅ [View](https://sepolia.etherscan.io/address/0x6A9af3B1da3fC07C78c37c380368773b1E830Fac) |
-| **ContractSigner** | `0xE6b658c4D1e00a675DF046cA0bAeb86bef7da985` | ✅ [View](https://sepolia.etherscan.io/address/0xE6b658c4D1e00a675DF046cA0bAeb86bef7da985) |
-| **VaultFactory** | `0x8c2D66210A43201bae2a7BF924ecA0f53364967f` | ✅ [View](https://sepolia.etherscan.io/address/0x8c2D66210A43201bae2a7BF924ecA0f53364967f) |
+| **Convexo_LPs** | `0x6d2101b853e80ea873d2c7c0ec6138c837779c6a` | ✅ |
+| **Convexo_Vaults** | `0xd1ff2d103a864ccb150602dedc09804037b8ce85` | ✅ |
+| **Convexo_Passport** | `0x259adc4917c442dd9a509cb8333a9bed88fe5c70` | ✅ |
+| **HookDeployer** | `0xec97706ca992d571c17c3ac895e9317656d29a25` | ✅ |
+| **CompliantLPHook** | `0xb1697c34cc15cb1fba579f94693e9ab53292b51b` | ✅ |
+| **PoolRegistry** | `0x710299e39b130db198dd2a6973c2ccd7bcc2d093` | ✅ |
+| **ReputationManager** | `0x82e856e70a0057fc6e26c17793a890ec38194cfc` | ✅ |
+| **PriceFeedManager** | `0xebb59c7e14ea002924bf34eedf548836c25a3440` | ✅ |
+| **ContractSigner** | `0x59b0f14ac23cd3b0a6a926a302ac01e4221785bf` | ✅ |
+| **VaultFactory** | `0x4fc5ca49812b0c312046b000d234a96e9084effb` | ✅ |
+| **TreasuryFactory** | `0x53d38e2ca13d085d14a44b0deadc47995a82eca3` | ✅ |
+| **VeriffVerifier** | `0xb11f1c681b8719e6d82098e1316d2573477834ab` | ✅ |
 
 ### Base Sepolia (Chain ID: 84532)
 
 | Contract | Address | Verified |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x90caec19973DB5c39373d1f3072a7ED096aBAD84` | ✅ [View](https://sepolia.basescan.org/address/0x90caec19973DB5c39373d1f3072a7ED096aBAD84) |
-| **Convexo_Vaults** | `0xD0ECa5Dae7Ba021C75f2Fc69bDe756dd33C26adE` | ✅ [View](https://sepolia.basescan.org/address/0xD0ECa5Dae7Ba021C75f2Fc69bDe756dd33C26adE) |
-| **Convexo_Passport** | `0x4A164470586B7e80eEf2734d24f5F784e4f88ad0` | ✅ [View](https://sepolia.basescan.org/address/0x4A164470586B7e80eEf2734d24f5F784e4f88ad0) |
-| **HookDeployer** | `0xA0b9E51B51656A6DCaFDEfc7C83167358Be425AB` | ✅ [View](https://sepolia.basescan.org/address/0xA0b9E51B51656A6DCaFDEfc7C83167358Be425AB) |
-| **CompliantLPHook** | `0x331C35ba44FE83183eEd913D647F4f18E9BCf785` | ✅ [View](https://sepolia.basescan.org/address/0x331C35ba44FE83183eEd913D647F4f18E9BCf785) |
-| **PoolRegistry** | `0xA59C12e996C7224B925A98C35c6dd82464CA1e0d` | ✅ [View](https://sepolia.basescan.org/address/0xA59C12e996C7224B925A98C35c6dd82464CA1e0d) |
-| **ReputationManager** | `0x340Fd03C88297A5B0caFD5877FC1faecEffaf159` | ✅ [View](https://sepolia.basescan.org/address/0x340Fd03C88297A5B0caFD5877FC1faecEffaf159) |
-| **PriceFeedManager** | `0xD6cfde6525703b625ba1acB5645e2584eb7a702f` | ✅ [View](https://sepolia.basescan.org/address/0xD6cfde6525703b625ba1acB5645e2584eb7a702f) |
-| **ContractSigner** | `0xBA579E561aF128d801f1a1A5416Ee73e2094C3A5` | ✅ [View](https://sepolia.basescan.org/address/0xBA579E561aF128d801f1a1A5416Ee73e2094C3A5) |
-| **VaultFactory** | `0xE8C890871DE3c0D2fd90ad560ABBa3a25CD5e139` | ✅ [View](https://sepolia.basescan.org/address/0xE8C890871DE3c0D2fd90ad560ABBa3a25CD5e139) |
+| **Convexo_LPs** | `0xf048da86da99a76856c02a83fb53e72277acacdf` | ✅ |
+| **Convexo_Vaults** | `0xe9309e75f168b5c98c37a5465e539a0fdbf33eb9` | ✅ |
+| **Convexo_Passport** | `0x5078300fa7e2d29c2e2145beb8a6eb5ad0d45e0c` | ✅ |
+| **HookDeployer** | `0x26379c326108d66734d9265dbbf1c09b20dbd2b9` | ✅ |
+| **CompliantLPHook** | `0x058faa5e95b3deb41e6ecabe4dd870b8e3d90475` | ✅ |
+| **PoolRegistry** | `0x6ad2b7bd52d6382bc7ba37687be5533eb2cf4cd2` | ✅ |
+| **ReputationManager** | `0xc8d1160e2e7719e29b34ab36402aaa0ec24d8c01` | ✅ |
+| **PriceFeedManager** | `0x653bcfc6ea735fb67d73ff537746b804c75cd1f4` | ✅ |
+| **ContractSigner** | `0x437e0a14a515fa5dc5655a11856fe28c7bb78477` | ✅ |
+| **VaultFactory** | `0xb987dd28a350d0d88765ac7310c0895b76fa0828` | ✅ |
+| **TreasuryFactory** | `0x68ec89e0884d05d3b4d2f9b27e4212820b1a56e5` | ✅ |
+| **VeriffVerifier** | `0x6f7413e36ffed4bde41b4521cf240aef0668201f` | ✅ |
 
 ### Unichain Sepolia (Chain ID: 1301)
 
 | Contract | Address | Verified |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x76dA1B31497bbD1093F9226Dcad505518CF62ca1` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x76dA1B31497bbD1093F9226Dcad505518CF62ca1) |
-| **Convexo_Vaults** | `0xe542857F76dBA4A53eF7D244cAdC227B454b1502` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xe542857F76dBA4A53eF7D244cAdC227B454b1502) |
-| **Convexo_Passport** | `0xB612dB1FE343C4B5FFa9e8C3f4dde37769F7C5B6` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xB612dB1FE343C4B5FFa9e8C3f4dde37769F7C5B6) |
-| **HookDeployer** | `0xbfba31D3f7B36A78AbD7C7905DAcdECBe6BB97AD` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xbfba31D3f7B36A78AbD7C7905DAcdECBe6BB97AD) |
-| **CompliantLPHook** | `0x2B09a55380E9023B85886005Dc53B600cF6e3f17` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x2B09a55380E9023B85886005Dc53B600cF6e3f17) |
-| **PoolRegistry** | `0xf75AF6F9D586f9c16C5789B2C310Dd7a98dF97Ae` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xf75AF6F9D586f9c16C5789B2C310Dd7a98dF97Ae) |
-| **ReputationManager** | `0xB286824B6F5789BA6a6710A5e9FE487A4CB21F06` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0xB286824B6F5789BA6a6710A5e9FE487A4CB21F06) |
-| **PriceFeedManager** | `0x9C60e348dfbb8Bba62F8408cB7Fa85dc88BD9957` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x9C60e348dfbb8Bba62F8408cB7Fa85dc88BD9957) |
-| **ContractSigner** | `0x71E7AAB4d65383fb75Eea51eC58b5d5B999E0aEC` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x71E7AAB4d65383fb75Eea51eC58b5d5B999E0aEC) |
-| **VaultFactory** | `0x0bb2e0Ce69aa107E3f3b7a5dd3D8192C212Ff0D5` | ✅ [View](https://unichain-sepolia.blockscout.com/address/0x0bb2e0Ce69aa107E3f3b7a5dd3D8192C212Ff0D5) |
+| **Convexo_LPs** | `0xfb965542aa0b58538a9b50fe020314dd687eb128` | ✅ |
+| **Convexo_Vaults** | `0x503f203ce6d6462f433cd04c7ad2b05d61b56548` | ✅ |
+| **Convexo_Passport** | `0xab83ce760054c1d048d5a9de5194b05398a09d41` | ✅ |
+| **HookDeployer** | `0x18fb358bc74054b0c2530c48ef23f8a8d464cb18` | ✅ |
+| **CompliantLPHook** | `0x50ace0dce54df668477adee4e9d6a6c0df4fedee` | ✅ |
+| **PoolRegistry** | `0xa46629011e0b8561a45ea03b822d28c0b2432c3a` | ✅ |
+| **ReputationManager** | `0x62227ff7ccbdb4d72c3511290b28c3424f1500ef` | ✅ |
+| **PriceFeedManager** | `0x8efc7e25c12a815329331da5f0e96affb4014472` | ✅ |
+| **ContractSigner** | `0xa932e3eaa0a5e5e65f0567405207603266937618` | ✅ |
+| **VaultFactory** | `0x2cfa02372782cf20ef8342b0193fd69e4c5b04a8` | ✅ |
+| **TreasuryFactory** | `0xecde45fefb5c2ef6e5cc615291de9be9a99b46a6` | ✅ |
+| **VeriffVerifier** | `0xe99a49bd81bbe61cdf7f6b7d247f76cacc2e5776` | ✅ |
+
+### Base Mainnet (Chain ID: 8453)
+
+| Contract | Address | Verified |
+|----------|---------|----------|
+| **Convexo_LPs** | `0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841` | ✅ |
+| **Convexo_Vaults** | `0xfe381737efb123a24dc41b0e3eeffc0ccb5eee71` | ✅ |
+| **Convexo_Passport** | `0x16d8a264aa305c5b0fc2551a3baf8b8602aa1710` | ✅ |
+| **ReputationManager** | `0xfb0157e0f904bfa464d09235a723fc2c462d1e76` | ✅ |
+| **VaultFactory** | `0xb2785f4341b5bf26be07f7e2037550769ce830cd` | ✅ |
+| **TreasuryFactory** | `0x3738d60fcb27d719fdd5113b855e1158b93a95b1` | ✅ |
+| **VeriffVerifier** | `0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff` | ✅ |
+
+### Unichain Mainnet (Chain ID: 130)
+
+| Contract | Address | Verified |
+|----------|---------|----------|
+| **Convexo_LPs** | `0xa03e2718e0ade2d07bfd9ea5705af9a83bb2db96` | ✅ |
+| **Convexo_Vaults** | `0x805b733cc50818dabede4847c4a775a7b1610f96` | ✅ |
+| **Convexo_Passport** | `0x04aeb36d5fa2fb0b0df8b9561d9ee88273d3bc76` | ✅ |
+| **ReputationManager** | `0xb2785f4341b5bf26be07f7e2037550769ce830cd` | ✅ |
+| **VaultFactory** | `0xe4a58592171cd0770e6792600ea3098060a42d46` | ✅ |
+| **TreasuryFactory** | `0xd7cf4aba5b9b4877419ab8af3979da637493afb1` | ✅ |
+| **VeriffVerifier** | `0x99e9880a08e14112a18c091bd49a2b1713133687` | ✅ |
+
+### Ethereum Mainnet (Chain ID: 1)
+
+| Contract | Address | Verified |
+|----------|---------|----------|
+| **Convexo_LPs** | `0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7` | ✅ |
+| **Convexo_Vaults** | `0x5a1f415986a189d79d19d65cb6e3d6dd7b807268` | ✅ |
+| **Convexo_Passport** | `0x6b51adc34a503b23db99444048ac7c2dc735a12e` | ✅ |
+| **ReputationManager** | `0xc5e04ab886025b3fe3d99249d1db069e0b599d8e` | ✅ |
+| **VaultFactory** | `0xbabee8acecc117c1295f8950f51db59f7a881646` | ✅ |
+| **TreasuryFactory** | `0xd189d95ee1a126a66fc5a84934372aa0fc0bb6d2` | ✅ |
+| **VeriffVerifier** | `0xe0c0d95701558ef10768a13a944f56311ead4649` | ✅ |
 
 > **📖 See chain-specific deployment docs: [Ethereum](./ETHEREUM_DEPLOYMENTS.md) | [Base](./BASE_DEPLOYMENTS.md) | [Unichain](./UNICHAIN_DEPLOYMENTS.md)**
 
@@ -68,20 +117,24 @@ All contract ABIs are available in the `abis/` directory:
 
 ```
 abis/
-├── Convexo_LPs.json          # Tier 1 NFT
-├── Convexo_Vaults.json        # Tier 2 NFT
-├── Convexo_Passport.json      # Tier 3 NFT (ZKPassport)
-├── HookDeployer.json          # Hook deployment helper
-├── CompliantLPHook.json       # Uniswap V4 hook
-├── PoolRegistry.json          # Pool tracking
-├── ReputationManager.json     # User tier calculation
-├── PriceFeedManager.json      # Price feeds
-├── ContractSigner.json        # Multi-sig contracts
-├── VaultFactory.json          # Vault creation
-└── TokenizedBondVault.json    # Individual vault (ERC20 shares)
+├── Convexo_LPs.json          # Tier 2 NFT (Limited Partner)
+├── Convexo_Vaults.json       # Tier 3 NFT (Vault Creator)
+├── Convexo_Passport.json     # Tier 1 NFT (Individual - ZKPassport)
+├── HookDeployer.json         # Hook deployment helper
+├── CompliantLPHook.json      # Uniswap V4 hook
+├── PoolRegistry.json         # Pool tracking
+├── ReputationManager.json    # User tier calculation
+├── PriceFeedManager.json     # Price feeds
+├── ContractSigner.json       # Multi-sig contracts
+├── VaultFactory.json         # Vault creation
+├── TokenizedBondVault.json   # Individual vault (ERC20 shares)
+├── TreasuryFactory.json      # Treasury creation (NEW)
+├── TreasuryVault.json        # Treasury management (NEW)
+├── VeriffVerifier.json       # KYB verification (NEW)
+└── combined.json             # All ABIs combined
 ```
 
-**Total: 12 ABIs** - All contracts ready for frontend integration
+**Total: 15 ABIs** - All contracts ready for frontend integration
 
 ---
 
@@ -102,56 +155,82 @@ yarn add viem wagmi @rainbow-me/rainbowkit
 export const CONTRACTS = {
   ETHEREUM_SEPOLIA: {
     CHAIN_ID: 11155111,
-    CONVEXO_LPS: '0x8EFC7e25C12A815329331DA5f0e96AFfB4014472',
-    CONVEXO_VAULTS: '0xa932e3EAa0a5e5e65f0567405207603266937618',
-    CONVEXO_PASSPORT: '0x2cfa02372782cf20ef8342B0193fd69E4c5B04A8',
-    HOOK_DEPLOYER: '0xecDE45FefB5C2EF6E5CC615291DE9be9A99B46A6',
-    COMPLIANT_LP_HOOK: '0xe99A49BD81bbe61cDf7F6b7D247f76cACc2e5776',
-    POOL_REGISTRY: '0x83Df102F62c4640ac8BE584c2B4E20c8c373dC2E',
-    REPUTATION_MANAGER: '0x60aFA63fDf17a75534e8218BaAc1D64E7FD93b4a',
-    PRICE_FEED_MANAGER: '0x6A9af3B1da3fC07C78c37c380368773b1E830Fac',
-    CONTRACT_SIGNER: '0xE6b658c4D1e00a675DF046cA0bAeb86bef7da985',
-    VAULT_FACTORY: '0x8c2D66210A43201bae2a7BF924ecA0f53364967f',
+    CONVEXO_LPS: '0x6d2101b853e80ea873d2c7c0ec6138c837779c6a',
+    CONVEXO_VAULTS: '0xd1ff2d103a864ccb150602dedc09804037b8ce85',
+    CONVEXO_PASSPORT: '0x259adc4917c442dd9a509cb8333a9bed88fe5c70',
+    REPUTATION_MANAGER: '0x82e856e70a0057fc6e26c17793a890ec38194cfc',
+    VAULT_FACTORY: '0x4fc5ca49812b0c312046b000d234a96e9084effb',
+    TREASURY_FACTORY: '0x53d38e2ca13d085d14a44b0deadc47995a82eca3',
+    VERIFF_VERIFIER: '0xb11f1c681b8719e6d82098e1316d2573477834ab',
+    POOL_REGISTRY: '0x710299e39b130db198dd2a6973c2ccd7bcc2d093',
+    CONTRACT_SIGNER: '0x59b0f14ac23cd3b0a6a926a302ac01e4221785bf',
   },
   BASE_SEPOLIA: {
     CHAIN_ID: 84532,
-    CONVEXO_LPS: '0x90caec19973DB5c39373d1f3072a7ED096aBAD84',
-    CONVEXO_VAULTS: '0xD0ECa5Dae7Ba021C75f2Fc69bDe756dd33C26adE',
-    CONVEXO_PASSPORT: '0x4A164470586B7e80eEf2734d24f5F784e4f88ad0',
-    HOOK_DEPLOYER: '0xA0b9E51B51656A6DCaFDEfc7C83167358Be425AB',
-    COMPLIANT_LP_HOOK: '0x331C35ba44FE83183eEd913D647F4f18E9BCf785',
-    POOL_REGISTRY: '0xA59C12e996C7224B925A98C35c6dd82464CA1e0d',
-    REPUTATION_MANAGER: '0x340Fd03C88297A5B0caFD5877FC1faecEffaf159',
-    PRICE_FEED_MANAGER: '0xD6cfde6525703b625ba1acB5645e2584eb7a702f',
-    CONTRACT_SIGNER: '0xBA579E561aF128d801f1a1A5416Ee73e2094C3A5',
-    VAULT_FACTORY: '0xE8C890871DE3c0D2fd90ad560ABBa3a25CD5e139',
+    CONVEXO_LPS: '0xf048da86da99a76856c02a83fb53e72277acacdf',
+    CONVEXO_VAULTS: '0xe9309e75f168b5c98c37a5465e539a0fdbf33eb9',
+    CONVEXO_PASSPORT: '0x5078300fa7e2d29c2e2145beb8a6eb5ad0d45e0c',
+    REPUTATION_MANAGER: '0xc8d1160e2e7719e29b34ab36402aaa0ec24d8c01',
+    VAULT_FACTORY: '0xb987dd28a350d0d88765ac7310c0895b76fa0828',
+    TREASURY_FACTORY: '0x68ec89e0884d05d3b4d2f9b27e4212820b1a56e5',
+    VERIFF_VERIFIER: '0x6f7413e36ffed4bde41b4521cf240aef0668201f',
+    POOL_REGISTRY: '0x6ad2b7bd52d6382bc7ba37687be5533eb2cf4cd2',
+    CONTRACT_SIGNER: '0x437e0a14a515fa5dc5655a11856fe28c7bb78477',
   },
   UNICHAIN_SEPOLIA: {
     CHAIN_ID: 1301,
-    CONVEXO_LPS: '0x76dA1B31497bbD1093F9226Dcad505518CF62ca1',
-    CONVEXO_VAULTS: '0xe542857F76dBA4A53eF7D244cAdC227B454b1502',
-    CONVEXO_PASSPORT: '0xB612dB1FE343C4B5FFa9e8C3f4dde37769F7C5B6',
-    HOOK_DEPLOYER: '0xbfba31D3f7B36A78AbD7C7905DAcdECBe6BB97AD',
-    COMPLIANT_LP_HOOK: '0x2B09a55380E9023B85886005Dc53B600cF6e3f17',
-    POOL_REGISTRY: '0xf75AF6F9D586f9c16C5789B2C310Dd7a98dF97Ae',
-    REPUTATION_MANAGER: '0xB286824B6F5789BA6a6710A5e9FE487A4CB21F06',
-    PRICE_FEED_MANAGER: '0x9C60e348dfbb8Bba62F8408cB7Fa85dc88BD9957',
-    CONTRACT_SIGNER: '0x71E7AAB4d65383fb75Eea51eC58b5d5B999E0aEC',
-    VAULT_FACTORY: '0x0bb2e0Ce69aa107E3f3b7a5dd3D8192C212Ff0D5',
+    CONVEXO_LPS: '0xfb965542aa0b58538a9b50fe020314dd687eb128',
+    CONVEXO_VAULTS: '0x503f203ce6d6462f433cd04c7ad2b05d61b56548',
+    CONVEXO_PASSPORT: '0xab83ce760054c1d048d5a9de5194b05398a09d41',
+    REPUTATION_MANAGER: '0x62227ff7ccbdb4d72c3511290b28c3424f1500ef',
+    VAULT_FACTORY: '0x2cfa02372782cf20ef8342b0193fd69e4c5b04a8',
+    TREASURY_FACTORY: '0xecde45fefb5c2ef6e5cc615291de9be9a99b46a6',
+    VERIFF_VERIFIER: '0xe99a49bd81bbe61cdf7f6b7d247f76cacc2e5776',
+    POOL_REGISTRY: '0xa46629011e0b8561a45ea03b822d28c0b2432c3a',
+    CONTRACT_SIGNER: '0xa932e3eaa0a5e5e65f0567405207603266937618',
+  },
+  BASE_MAINNET: {
+    CHAIN_ID: 8453,
+    CONVEXO_LPS: '0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841',
+    CONVEXO_VAULTS: '0xfe381737efb123a24dc41b0e3eeffc0ccb5eee71',
+    CONVEXO_PASSPORT: '0x16d8a264aa305c5b0fc2551a3baf8b8602aa1710',
+    REPUTATION_MANAGER: '0xfb0157e0f904bfa464d09235a723fc2c462d1e76',
+    VAULT_FACTORY: '0xb2785f4341b5bf26be07f7e2037550769ce830cd',
+    TREASURY_FACTORY: '0x3738d60fcb27d719fdd5113b855e1158b93a95b1',
+    VERIFF_VERIFIER: '0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff',
+  },
+  UNICHAIN_MAINNET: {
+    CHAIN_ID: 130,
+    CONVEXO_LPS: '0xa03e2718e0ade2d07bfd9ea5705af9a83bb2db96',
+    CONVEXO_VAULTS: '0x805b733cc50818dabede4847c4a775a7b1610f96',
+    CONVEXO_PASSPORT: '0x04aeb36d5fa2fb0b0df8b9561d9ee88273d3bc76',
+    REPUTATION_MANAGER: '0xb2785f4341b5bf26be07f7e2037550769ce830cd',
+    VAULT_FACTORY: '0xe4a58592171cd0770e6792600ea3098060a42d46',
+    TREASURY_FACTORY: '0xd7cf4aba5b9b4877419ab8af3979da637493afb1',
+    VERIFF_VERIFIER: '0x99e9880a08e14112a18c091bd49a2b1713133687',
+  },
+  ETHEREUM_MAINNET: {
+    CHAIN_ID: 1,
+    CONVEXO_LPS: '0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7',
+    CONVEXO_VAULTS: '0x5a1f415986a189d79d19d65cb6e3d6dd7b807268',
+    CONVEXO_PASSPORT: '0x6b51adc34a503b23db99444048ac7c2dc735a12e',
+    REPUTATION_MANAGER: '0xc5e04ab886025b3fe3d99249d1db069e0b599d8e',
+    VAULT_FACTORY: '0xbabee8acecc117c1295f8950f51db59f7a881646',
+    TREASURY_FACTORY: '0xd189d95ee1a126a66fc5a84934372aa0fc0bb6d2',
+    VERIFF_VERIFIER: '0xe0c0d95701558ef10768a13a944f56311ead4649',
   },
 } as const;
 
 // Helper to get contracts for current chain
 export function getContracts(chainId: number) {
   switch (chainId) {
-    case 11155111:
-      return CONTRACTS.ETHEREUM_SEPOLIA;
-    case 84532:
-      return CONTRACTS.BASE_SEPOLIA;
-    case 1301:
-      return CONTRACTS.UNICHAIN_SEPOLIA;
-    default:
-      throw new Error(`Unsupported chain ID: ${chainId}`);
+    case 11155111: return CONTRACTS.ETHEREUM_SEPOLIA;
+    case 84532: return CONTRACTS.BASE_SEPOLIA;
+    case 1301: return CONTRACTS.UNICHAIN_SEPOLIA;
+    case 8453: return CONTRACTS.BASE_MAINNET;
+    case 130: return CONTRACTS.UNICHAIN_MAINNET;
+    case 1: return CONTRACTS.ETHEREUM_MAINNET;
+    default: throw new Error(`Unsupported chain ID: ${chainId}`);
   }
 }
 ```
@@ -166,7 +245,9 @@ import ConvexoPassportABI from '../abis/Convexo_Passport.json';
 import ReputationManagerABI from '../abis/ReputationManager.json';
 import VaultFactoryABI from '../abis/VaultFactory.json';
 import TokenizedBondVaultABI from '../abis/TokenizedBondVault.json';
-// ... import other ABIs as needed
+import TreasuryFactoryABI from '../abis/TreasuryFactory.json';
+import TreasuryVaultABI from '../abis/TreasuryVault.json';
+import VeriffVerifierABI from '../abis/VeriffVerifier.json';
 
 export {
   ConvexoLPsABI,
@@ -175,14 +256,30 @@ export {
   ReputationManagerABI,
   VaultFactoryABI,
   TokenizedBondVaultABI,
+  TreasuryFactoryABI,
+  TreasuryVaultABI,
+  VeriffVerifierABI,
 };
 ```
 
 ---
 
+## 🏆 Tier System (v2.1)
+
+| Tier | NFT | User Type | Access |
+|------|-----|-----------|--------|
+| **Tier 0** | None | Unverified | No access |
+| **Tier 1** | Convexo_Passport | Individual | Treasury creation + Vault investments |
+| **Tier 2** | Convexo_LPs | Limited Partner | LP pools + Vault investments |
+| **Tier 3** | Convexo_Vaults | Vault Creator | All above + Vault creation |
+
+**Key Change:** Tier hierarchy is now **reversed** - Passport is entry-level (Tier 1).
+
+---
+
 ## 🎨 Key Frontend Features to Implement
 
-### 1. User Reputation Check
+### 1. User Reputation Check (v2.1)
 
 ```typescript
 import { useContractRead } from 'wagmi';
@@ -190,8 +287,10 @@ import { CONTRACTS } from './contracts/addresses';
 import { ReputationManagerABI } from './contracts/abis';
 
 function useUserReputation(address: `0x${string}` | undefined) {
+  const contracts = getContracts(chainId);
+  
   const { data: tier } = useContractRead({
-    address: CONTRACTS.BASE_SEPOLIA.REPUTATION_MANAGER,
+    address: contracts.REPUTATION_MANAGER,
     abi: ReputationManagerABI,
     functionName: 'getReputationTier',
     args: address ? [address] : undefined,
@@ -199,9 +298,11 @@ function useUserReputation(address: `0x${string}` | undefined) {
   });
 
   return {
-    tier, // 0 = None, 1 = Compliant, 2 = Creditscore
-    hasCompliantAccess: tier && tier >= 1,
-    hasCreditscoreAccess: tier && tier >= 2,
+    tier, // 0 = None, 1 = Passport, 2 = LimitedPartner, 3 = VaultCreator
+    canCreateTreasury: tier && tier >= 1,
+    canInvestInVaults: tier && tier >= 1,
+    canAccessLPPools: tier && tier >= 2,
+    canCreateVaults: tier && tier === 3,
   };
 }
 ```
@@ -210,31 +311,222 @@ function useUserReputation(address: `0x${string}` | undefined) {
 
 ```typescript
 function useNFTOwnership(address: `0x${string}` | undefined) {
+  const contracts = getContracts(chainId);
+  
   const { data: lpsBalance } = useContractRead({
-    address: CONTRACTS.BASE_SEPOLIA.CONVEXO_LPS,
+    address: contracts.CONVEXO_LPS,
     abi: ConvexoLPsABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
   });
 
   const { data: vaultsBalance } = useContractRead({
-    address: CONTRACTS.BASE_SEPOLIA.CONVEXO_VAULTS,
+    address: contracts.CONVEXO_VAULTS,
     abi: ConvexoVaultsABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
   });
 
+  const { data: passportBalance } = useContractRead({
+    address: contracts.CONVEXO_PASSPORT,
+    abi: ConvexoPassportABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+  });
+
   return {
-    hasLPsNFT: lpsBalance && lpsBalance > 0n,
-    hasVaultsNFT: vaultsBalance && vaultsBalance > 0n,
+    hasLPsNFT: lpsBalance && lpsBalance > 0n,      // Tier 2
+    hasVaultsNFT: vaultsBalance && vaultsBalance > 0n, // Tier 3
+    hasPassportNFT: passportBalance && passportBalance > 0n, // Tier 1
   };
 }
 ```
 
-### 3. Vault Investment Interface
+### 3. Display User Access Level
+
+```typescript
+function UserAccessBadge({ address }: { address: `0x${string}` }) {
+  const { tier, canCreateTreasury, canInvestInVaults, canAccessLPPools, canCreateVaults } = useUserReputation(address);
+
+  if (tier === 0) {
+    return (
+      <div className="badge badge-error">
+        <p>❌ No access - Get verified first</p>
+      </div>
+    );
+  }
+
+  if (tier === 1) {
+    return (
+      <div className="badge badge-primary">
+        <p>🎫 Tier 1 - Passport Holder</p>
+        <ul>
+          <li>✅ Create personal treasury</li>
+          <li>✅ Invest in vaults</li>
+        </ul>
+      </div>
+    );
+  }
+
+  if (tier === 2) {
+    return (
+      <div className="badge badge-secondary">
+        <p>💼 Tier 2 - Limited Partner</p>
+        <ul>
+          <li>✅ Access LP pools</li>
+          <li>✅ Invest in vaults</li>
+        </ul>
+      </div>
+    );
+  }
+
+  if (tier === 3) {
+    return (
+      <div className="badge badge-success">
+        <p>🏆 Tier 3 - Vault Creator</p>
+        <ul>
+          <li>✅ Create vaults</li>
+          <li>✅ Access LP pools</li>
+          <li>✅ Invest in vaults</li>
+        </ul>
+      </div>
+    );
+  }
+}
+```
+
+---
+
+## 🏦 Treasury System (NEW in v2.1)
+
+### Create Treasury (Tier 1+)
+
+```typescript
+function CreateTreasuryForm() {
+  const { address } = useAccount();
+  const contracts = getContracts(chainId);
+  
+  // Check if user can create treasury
+  const { data: canCreate } = useContractRead({
+    address: contracts.REPUTATION_MANAGER,
+    abi: ReputationManagerABI,
+    functionName: 'canCreateTreasury',
+    args: [address],
+  });
+  
+  if (!canCreate) {
+    return (
+      <div className="alert alert-warning">
+        <p>❌ Tier 1+ NFT required to create treasuries</p>
+        <p>Get your Convexo Passport via ZKPassport verification</p>
+      </div>
+    );
+  }
+
+  // Create single-sig treasury
+  const { write: createTreasury } = useContractWrite({
+    address: contracts.TREASURY_FACTORY,
+    abi: TreasuryFactoryABI,
+    functionName: 'createTreasury',
+    args: [
+      [], // Empty array for single-sig
+      1,  // 1 signature required
+    ],
+  });
+
+  return (
+    <div className="create-treasury">
+      <h3>Create Personal Treasury</h3>
+      <button onClick={() => createTreasury?.()}>
+        Create Treasury
+      </button>
+    </div>
+  );
+}
+```
+
+### List User's Treasuries
+
+```typescript
+function UserTreasuries({ address }: { address: `0x${string}` }) {
+  const contracts = getContracts(chainId);
+  
+  const { data: treasuryIds } = useContractRead({
+    address: contracts.TREASURY_FACTORY,
+    abi: TreasuryFactoryABI,
+    functionName: 'getTreasuriesByOwner',
+    args: [address],
+  });
+
+  return (
+    <div className="treasuries-list">
+      <h3>Your Treasuries</h3>
+      {treasuryIds?.map((id) => (
+        <TreasuryCard key={id} treasuryId={id} />
+      ))}
+    </div>
+  );
+}
+```
+
+### Treasury Management
+
+```typescript
+function TreasuryCard({ treasuryId }: { treasuryId: bigint }) {
+  const contracts = getContracts(chainId);
+  
+  // Get treasury address
+  const { data: treasuryAddress } = useContractRead({
+    address: contracts.TREASURY_FACTORY,
+    abi: TreasuryFactoryABI,
+    functionName: 'getTreasury',
+    args: [treasuryId],
+  });
+
+  // Get treasury balance
+  const { data: balance } = useContractRead({
+    address: treasuryAddress as `0x${string}`,
+    abi: TreasuryVaultABI,
+    functionName: 'getBalance',
+    enabled: !!treasuryAddress,
+  });
+
+  // Deposit USDC
+  const { write: deposit } = useContractWrite({
+    address: treasuryAddress as `0x${string}`,
+    abi: TreasuryVaultABI,
+    functionName: 'deposit',
+  });
+
+  // Propose withdrawal
+  const { write: proposeWithdrawal } = useContractWrite({
+    address: treasuryAddress as `0x${string}`,
+    abi: TreasuryVaultABI,
+    functionName: 'proposeWithdrawal',
+  });
+
+  return (
+    <div className="treasury-card">
+      <h4>Treasury #{Number(treasuryId)}</h4>
+      <p>Balance: {formatUnits(balance || 0n, 6)} USDC</p>
+      <p>Address: {treasuryAddress}</p>
+      <button onClick={() => deposit?.()}>Deposit USDC</button>
+      <button onClick={() => proposeWithdrawal?.()}>Propose Withdrawal</button>
+    </div>
+  );
+}
+```
+
+---
+
+## 💰 Vault Investment Interface
+
+### Vault Investment Card
 
 ```typescript
 function VaultInvestmentCard({ vaultAddress }: { vaultAddress: `0x${string}` }) {
+  const { address } = useAccount();
+  
   const { data: metrics } = useContractRead({
     address: vaultAddress,
     abi: TokenizedBondVaultABI,
@@ -245,7 +537,8 @@ function VaultInvestmentCard({ vaultAddress }: { vaultAddress: `0x${string}` }) 
     address: vaultAddress,
     abi: TokenizedBondVaultABI,
     functionName: 'getInvestorReturn',
-    args: [userAddress],
+    args: [address],
+    enabled: !!address,
   });
 
   if (!metrics) return null;
@@ -271,20 +564,52 @@ function VaultInvestmentCard({ vaultAddress }: { vaultAddress: `0x${string}` }) 
 }
 ```
 
-### 4. Purchase Vault Shares
+### Purchase Vault Shares (Tier 1+ Required)
 
 ```typescript
-function usePurchaseShares(vaultAddress: `0x${string}`) {
-  const { config } = usePrepareContractWrite({
+function InvestInVault({ vaultAddress }: { vaultAddress: `0x${string}` }) {
+  const { address } = useAccount();
+  const contracts = getContracts(chainId);
+  
+  // Check if user can invest (Tier 1+)
+  const { data: canInvest } = useContractRead({
+    address: contracts.REPUTATION_MANAGER,
+    abi: ReputationManagerABI,
+    functionName: 'canInvestInVaults',
+    args: [address],
+  });
+
+  if (!canInvest) {
+    return (
+      <div className="alert alert-warning">
+        <p>❌ Tier 1+ NFT required to invest</p>
+        <p>Get verified via ZKPassport (individual) or Veriff (business)</p>
+      </div>
+    );
+  }
+
+  // Approve USDC
+  const { write: approveUSDC } = useContractWrite({
+    address: USDC_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: 'approve',
+    args: [vaultAddress, parseUnits('10000', 6)],
+  });
+
+  // Purchase shares
+  const { write: purchaseShares } = useContractWrite({
     address: vaultAddress,
     abi: TokenizedBondVaultABI,
     functionName: 'purchaseShares',
     args: [parseUnits('1000', 6)], // 1000 USDC
   });
 
-  const { write, isLoading } = useContractWrite(config);
-
-  return { purchaseShares: write, isLoading };
+  return (
+    <div className="invest-form">
+      <button onClick={() => approveUSDC?.()}>1. Approve USDC</button>
+      <button onClick={() => purchaseShares?.()}>2. Invest</button>
+    </div>
+  );
 }
 ```
 
@@ -292,7 +617,7 @@ function usePurchaseShares(vaultAddress: `0x${string}`) {
 
 ## 🔑 Key User Flows
 
-### Flow 1: Check User Access
+### Flow 1: Check User Access Level
 
 ```typescript
 // 1. Check reputation tier
@@ -302,523 +627,90 @@ const reputation = useUserReputation(address);
 if (reputation.tier === 0) {
   return <p>❌ No access - Apply for verification</p>;
 } else if (reputation.tier === 1) {
-  return <p>✅ Tier 1 - Can trade in liquidity pools</p>;
+  return <p>✅ Tier 1 - Can create treasury & invest in vaults</p>;
 } else if (reputation.tier === 2) {
-  return <p>✅ Tier 2 - Can create vaults & trade in pools</p>;
+  return <p>✅ Tier 2 - Can access LP pools & invest in vaults</p>;
 } else if (reputation.tier === 3) {
-  return <p>✅ Tier 3 - Can invest in vaults (ZKPassport verified)</p>;
+  return <p>✅ Tier 3 - Can create vaults & all Tier 2 benefits</p>;
 }
 ```
 
-### Flow 2: Browse & Invest in Vaults
+### Flow 2: Individual Verification (ZKPassport → Tier 1)
 
 ```typescript
-// 1. Get all vaults from VaultFactory
-const { data: vaultCount } = useContractRead({
-  address: CONTRACTS.BASE_SEPOLIA.VAULT_FACTORY,
-  abi: VaultFactoryABI,
-  functionName: 'getVaultCount',
-});
-
-// 2. Get each vault address
-const vaults = Array.from({ length: Number(vaultCount) }, (_, i) => 
-  useContractRead({
-    address: CONTRACTS.BASE_SEPOLIA.VAULT_FACTORY,
-    abi: VaultFactoryABI,
-    functionName: 'getVault',
-    args: [BigInt(i)],
-  })
-);
-
-// 3. Display vault cards with metrics
-{vaults.map(vault => <VaultInvestmentCard vaultAddress={vault.data} />)}
+// See ZKPASSPORT_FRONTEND_INTEGRATION.md for complete flow
+// 1. User verifies identity with ZKPassport
+// 2. User mints Convexo_Passport NFT
+// 3. User gets Tier 1 access
 ```
 
-### Flow 3: Borrower Creates Vault (Tier 2 Required)
+### Flow 3: Business Verification (Veriff → Tier 2)
 
-**✨ New in v2.0**: Borrowers create vaults directly if they have Tier 2 NFT (no admin needed).
+```typescript
+// Admin flow (backend)
+// 1. User completes Veriff verification
+// 2. Admin calls veriffVerifier.submitVerification(userAddress, sessionId)
+// 3. Admin reviews and calls veriffVerifier.approveVerification(userAddress)
+// 4. Convexo_LPs NFT is automatically minted
+// 5. User gets Tier 2 access
+```
+
+### Flow 4: Vault Creator (Credit Score → Tier 3)
+
+```typescript
+// Admin flow (backend)
+// 1. User submits financial data for AI credit scoring
+// 2. If score > 70, admin mints Convexo_Vaults NFT
+// 3. User gets Tier 3 access
+// 4. User can now create vaults
+```
+
+### Flow 5: Create Vault (Tier 3 Required)
 
 ```typescript
 function CreateVaultForm() {
   const { address } = useAccount();
-  const { chain } = useNetwork();
-  const contracts = getContracts(chain?.id || 84532);
+  const contracts = getContracts(chainId);
   
-  // 1. Check if user has Tier 2 NFT
-  const { data: tier } = useContractRead({
+  // Check if user can create vaults (Tier 3)
+  const { data: canCreate } = useContractRead({
     address: contracts.REPUTATION_MANAGER,
     abi: ReputationManagerABI,
-    functionName: 'getReputationTier',
+    functionName: 'canCreateVaults',
     args: [address],
   });
   
-  if (!tier || tier < 2) {
+  if (!canCreate) {
     return (
       <div className="alert alert-warning">
-        <p>❌ Tier 2 NFT required to create vaults</p>
-        <p>Complete credit scoring to receive Tier 2 access</p>
+        <p>❌ Tier 3 NFT required to create vaults</p>
+        <p>Complete credit scoring to receive Tier 3 access</p>
       </div>
     );
   }
 
-  // 2. Create vault (no contract hash needed upfront)
-  const { write: createVault, isLoading } = useContractWrite({
+  const { write: createVault } = useContractWrite({
     address: contracts.VAULT_FACTORY,
     abi: VaultFactoryABI,
     functionName: 'createVault',
     args: [
       parseUnits('50000', 6),  // 50k USDC principal
-      1200,                     // 12% interest rate (12%)
-      Math.floor(Date.now() / 1000) + 180 * 24 * 60 * 60, // 180 days maturity
-      "My Business Vault",      // Vault name
-      "MBV"                     // Vault symbol
+      1200,                     // 12% interest rate
+      200,                      // 2% protocol fee
+      Math.floor(Date.now() / 1000) + 180 * 24 * 60 * 60, // 180 days
+      "My Business Vault",
+      "MBV"
     ],
   });
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); createVault?.(); }}>
       <h3>Create Funding Vault</h3>
-      <input type="number" placeholder="Principal Amount (USDC)" />
-      <input type="number" placeholder="Interest Rate (%)" defaultValue="12" />
-      <input type="number" placeholder="Duration (days)" defaultValue="180" />
-      <input type="text" placeholder="Vault Name" />
-      <input type="text" placeholder="Vault Symbol" />
-      <button disabled={isLoading} type="submit">
-        {isLoading ? 'Creating...' : 'Create Vault'}
-      </button>
+      <button type="submit">Create Vault</button>
     </form>
   );
 }
 ```
-
-**Key Changes in v2.0:**
-- ✅ No `contractHash` parameter needed during creation
-- ✅ Borrower creates vault directly (not admin)
-- ✅ Contract is attached AFTER vault is fully funded
-- ✅ Funds locked until contract is signed by all parties
-
-### Flow 4: Investors Fund Vault
-
-```typescript
-function InvestInVault({ vaultAddress }: { vaultAddress: `0x${string}` }) {
-  // 1. Get vault info
-  const { data: vaultMetrics } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'getVaultMetrics',
-  });
-
-  const [totalShares, sharePrice, tvl, target, progress, apy] = vaultMetrics || [];
-
-  // 2. Approve USDC
-  const { write: approveUSDC } = useContractWrite({
-    address: USDC_ADDRESS,
-    abi: ERC20_ABI,
-    functionName: 'approve',
-    args: [vaultAddress, parseUnits('10000', 6)],
-  });
-
-  // 3. Purchase shares
-  const { write: purchaseShares } = useContractWrite({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'purchaseShares',
-    args: [parseUnits('1000', 6)], // 1000 USDC
-  });
-
-  return (
-    <div>
-      <p>Progress: {Number(progress) / 100}%</p>
-      <p>APY: {Number(apy) / 100}%</p>
-      <button onClick={() => approveUSDC?.()}>1. Approve USDC</button>
-      <button onClick={() => purchaseShares?.()}>2. Invest</button>
-    </div>
-  );
-}
-```
-
-### Flow 5: Attach Contract & Withdraw Funds
-
-**✨ New in v2.0**: Borrower attaches contract AFTER vault is funded, then withdraws.
-
-```typescript
-function VaultManagement({ vaultAddress }: { vaultAddress: `0x${string}` }) {
-  const { address } = useAccount();
-  
-  // 1. Check vault state
-  const { data: vaultState } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'getVaultState',
-  });
-
-  // 2. Get vault info
-  const { data: borrower } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'getVaultBorrower',
-  });
-
-  const { data: contractHash } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'contractHash',
-  });
-
-  // State: 0=Pending, 1=Funded, 2=Active, 3=Repaying, 4=Completed, 5=Defaulted
-  const isPending = vaultState === 0;
-  const isFunded = vaultState === 1;
-  const isActive = vaultState === 2;
-  const isBorrower = borrower?.toLowerCase() === address?.toLowerCase();
-
-  // 3. Attach contract (after funding, before withdrawal)
-  const { write: attachContract, isLoading: isAttaching } = useContractWrite({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'attachContract',
-    args: ['0x...'], // Contract hash from ContractSigner
-  });
-
-  // 4. Withdraw funds (after contract is signed)
-  const { write: withdrawFunds, isLoading: isWithdrawing } = useContractWrite({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'withdrawFunds',
-  });
-
-  if (!isBorrower) {
-    return <p>Only borrower can manage this vault</p>;
-  }
-
-  return (
-    <div className="vault-management">
-      <h3>Vault Status</h3>
-      <p>State: {['Pending', 'Funded', 'Active', 'Repaying', 'Completed', 'Defaulted'][vaultState || 0]}</p>
-      
-      {isPending && <p>⏳ Waiting for investors to fund vault...</p>}
-      
-      {isFunded && !contractHash && (
-        <div>
-          <p>✅ Vault fully funded!</p>
-          <p>📝 Next: Create and sign contract with investors</p>
-          <button onClick={() => attachContract?.()} disabled={isAttaching}>
-            {isAttaching ? 'Attaching...' : 'Attach Signed Contract'}
-          </button>
-        </div>
-      )}
-      
-      {isFunded && contractHash && (
-        <div>
-          <p>✅ Contract attached!</p>
-          <p>⏳ Waiting for all signatures...</p>
-        </div>
-      )}
-      
-      {isActive && (
-        <div>
-          <p>✅ Contract fully signed!</p>
-          <button onClick={() => withdrawFunds?.()} disabled={isWithdrawing}>
-            {isWithdrawing ? 'Withdrawing...' : 'Withdraw Funds'}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-```
-
-**New Vault Flow:**
-1. **Pending** → Vault created, waiting for funding
-2. **Funded** → Fully funded, borrower attaches contract hash
-3. **Active** → Contract signed, borrower can withdraw
-4. **Repaying** → Borrower making repayments
-5. **Completed** → Fully repaid
-6. **Defaulted** → Past maturity, not fully repaid
-
-### Flow 6: Flexible Repayment System
-
-**✨ New in v2.0**: Borrower can repay anytime, any amount. Each party withdraws independently.
-
-```typescript
-function RepaymentInterface({ vaultAddress }: { vaultAddress: `0x${string}` }) {
-  const { address } = useAccount();
-  
-  // 1. Get vault metrics
-  const { data: principalAmount } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'getVaultPrincipalAmount',
-  });
-
-  const { data: interestRate } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'getVaultInterestRate',
-  });
-
-  // Calculate total due: Principal + Interest (12%) + Protocol Fee (2%)
-  const principal = principalAmount ? Number(formatUnits(principalAmount, 6)) : 0;
-  const interest = principal * (Number(interestRate) / 10000); // 1200 = 12%
-  const protocolFee = principal * 0.02; // 2%
-  const totalDue = principal + interest + protocolFee;
-
-  // 2. Make repayment (any amount, anytime)
-  const [repayAmount, setRepayAmount] = useState('');
-  
-  const { write: makeRepayment, isLoading } = useContractWrite({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'makeRepayment',
-    args: [parseUnits(repayAmount || '0', 6)],
-  });
-
-  return (
-    <div className="repayment-interface">
-      <h3>Repayment</h3>
-      <div className="repayment-breakdown">
-        <p>Principal: ${principal.toLocaleString()} USDC</p>
-        <p>Interest (12%): ${interest.toLocaleString()} USDC</p>
-        <p>Protocol Fee (2%): ${protocolFee.toLocaleString()} USDC</p>
-        <p><strong>Total Due: ${totalDue.toLocaleString()} USDC</strong></p>
-      </div>
-      
-      <div className="repayment-form">
-        <input
-          type="number"
-          placeholder="Amount to repay"
-          value={repayAmount}
-          onChange={(e) => setRepayAmount(e.target.value)}
-        />
-        <button onClick={() => makeRepayment?.()} disabled={isLoading}>
-          {isLoading ? 'Repaying...' : 'Make Repayment'}
-        </button>
-        <p className="help-text">
-          💡 You can repay any amount, anytime before maturity
-        </p>
-      </div>
-    </div>
-  );
-}
-```
-
-### Flow 7: Independent Withdrawals
-
-**✨ New in v2.2**: Protocol fees are now protected! Investors can only withdraw their portion.
-
-```typescript
-function WithdrawalInterface({ vaultAddress }: { vaultAddress: `0x${string}` }) {
-  const { address } = useAccount();
-  const { chain } = useNetwork();
-  const contracts = getContracts(chain?.id || 84532);
-  
-  // 🔒 NEW in v2.2: Get available funds for investors (excluding protocol fees)
-  const { data: availableForInvestors } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'getAvailableForInvestors',
-  });
-  
-  // Check if user is protocol collector
-  const isProtocolCollector = address?.toLowerCase() === contracts.PROTOCOL_FEE_COLLECTOR?.toLowerCase();
-  
-  // 1. Protocol Collector Withdrawal
-  const { data: protocolFeesAvailable } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'protocolFeesEarned',
-  });
-
-  const { write: withdrawProtocolFees, isLoading: isWithdrawingFees } = useContractWrite({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'withdrawProtocolFees',
-  });
-
-  // 2. Investor Withdrawal (redeem shares)
-  const { data: userShares } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'balanceOf',
-    args: [address],
-  });
-
-  const { write: redeemShares, isLoading: isRedeeming } = useContractWrite({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'redeemShares',
-    args: [userShares || 0n],
-  });
-
-  return (
-    <div className="withdrawal-interface">
-      {isProtocolCollector && (
-        <div className="protocol-withdrawal">
-          <h4>Protocol Fees</h4>
-          <p>Available: {formatUnits(protocolFeesAvailable || 0n, 6)} USDC</p>
-          <button onClick={() => withdrawProtocolFees?.()} disabled={isWithdrawingFees}>
-            {isWithdrawingFees ? 'Withdrawing...' : 'Withdraw Protocol Fees'}
-          </button>
-        </div>
-      )}
-      
-      {userShares && userShares > 0n && (
-        <div className="investor-withdrawal">
-          <h4>Your Investment</h4>
-          <p>Shares: {formatUnits(userShares, 18)}</p>
-          <button onClick={() => redeemShares?.()} disabled={isRedeeming}>
-            {isRedeeming ? 'Redeeming...' : 'Redeem All Shares'}
-          </button>
-          <p className="help-text">
-            💡 You'll receive your proportional share of repayments
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-```
-
-**Key Features:**
-- ✅ Borrower pays: Principal + 12% interest + 2% protocol fee
-- ✅ Flexible repayment: Any amount, anytime
-- ✅ Protocol collector withdraws 2% fee independently
-- ✅ Investors redeem shares for principal + 12% returns
-- ✅ Funds locked in vault until withdrawn
-- ✅ Proportional distribution based on repayments
-
-### Flow 8: Vault Timeline Display
-
-**✨ New in v2.1**: Track all vault milestones with timestamps for complete transparency.
-
-```typescript
-interface VaultTimeline {
-  createdAt: number;
-  fundedAt: number;
-  contractAttachedAt: number;
-  fundsWithdrawnAt: number;
-  actualDueDate: number;
-}
-
-function VaultTimelineDisplay({ vaultAddress }: { vaultAddress: `0x${string}` }) {
-  // Fetch all timestamps
-  const { data: createdAt } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'getVaultCreatedAt',
-  });
-
-  const { data: fundedAt } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'getVaultFundedAt',
-  });
-
-  const { data: contractAttachedAt } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'getVaultContractAttachedAt',
-  });
-
-  const { data: fundsWithdrawnAt } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'getVaultFundsWithdrawnAt',
-  });
-
-  const { data: actualDueDate } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'getActualDueDate',
-  });
-
-  // Helper to format timestamp
-  const formatDate = (timestamp: bigint | undefined) => {
-    if (!timestamp || timestamp === 0n) return 'Pending';
-    return new Date(Number(timestamp) * 1000).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  // Calculate days remaining
-  const getDaysRemaining = () => {
-    if (!actualDueDate || actualDueDate === 0n) return null;
-    const now = Math.floor(Date.now() / 1000);
-    const secondsRemaining = Number(actualDueDate) - now;
-    return Math.floor(secondsRemaining / 86400);
-  };
-
-  const daysRemaining = getDaysRemaining();
-
-  return (
-    <div className="vault-timeline">
-      <h3>Vault Timeline</h3>
-      
-      <div className="timeline-events">
-        <div className="timeline-event completed">
-          <div className="event-icon">✅</div>
-          <div className="event-details">
-            <h4>Vault Created</h4>
-            <p>{formatDate(createdAt)}</p>
-          </div>
-        </div>
-
-        <div className={`timeline-event ${fundedAt && fundedAt > 0n ? 'completed' : 'pending'}`}>
-          <div className="event-icon">{fundedAt && fundedAt > 0n ? '✅' : '⏳'}</div>
-          <div className="event-details">
-            <h4>Fully Funded</h4>
-            <p>{formatDate(fundedAt)}</p>
-          </div>
-        </div>
-
-        <div className={`timeline-event ${contractAttachedAt && contractAttachedAt > 0n ? 'completed' : 'pending'}`}>
-          <div className="event-icon">{contractAttachedAt && contractAttachedAt > 0n ? '✅' : '⏳'}</div>
-          <div className="event-details">
-            <h4>Contract Signed</h4>
-            <p>{formatDate(contractAttachedAt)}</p>
-          </div>
-        </div>
-
-        <div className={`timeline-event ${fundsWithdrawnAt && fundsWithdrawnAt > 0n ? 'completed' : 'pending'}`}>
-          <div className="event-icon">{fundsWithdrawnAt && fundsWithdrawnAt > 0n ? '✅' : '⏳'}</div>
-          <div className="event-details">
-            <h4>Funds Withdrawn</h4>
-            <p>{formatDate(fundsWithdrawnAt)}</p>
-          </div>
-        </div>
-
-        <div className={`timeline-event ${daysRemaining !== null && daysRemaining <= 0 ? 'completed' : 'pending'}`}>
-          <div className="event-icon">{daysRemaining !== null && daysRemaining <= 0 ? '✅' : '📅'}</div>
-          <div className="event-details">
-            <h4>Due Date</h4>
-            <p>{formatDate(actualDueDate)}</p>
-            {daysRemaining !== null && daysRemaining > 0 && (
-              <p className="days-remaining">
-                {daysRemaining} days remaining
-              </p>
-            )}
-            {daysRemaining !== null && daysRemaining < 0 && (
-              <p className="overdue">
-                {Math.abs(daysRemaining)} days overdue
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-```
-
-**Why This Matters:**
-- ✅ **Accurate Due Dates**: Due date calculated from withdrawal time, not creation time
-- ✅ **Complete Audit Trail**: Immutable timestamps for all major events
-- ✅ **Better UX**: Users see exactly when each milestone occurred
-- ✅ **Compliance**: Transparent timeline for all parties
-- ✅ **Progress Tracking**: Visual representation of vault lifecycle
 
 ---
 
@@ -826,29 +718,31 @@ function VaultTimelineDisplay({ vaultAddress }: { vaultAddress: `0x${string}` })
 
 ### 1. User Dashboard
 
-- **NFT Status**: Show if user has Convexo_LPs and/or Convexo_Vaults NFT
+- **NFT Status**: Show if user has Passport, LPs, or Vaults NFT
 - **Reputation Tier**: Display tier and access level
+- **Treasuries**: List user's personal treasuries (NEW)
 - **Portfolio**: Show all vault investments with real-time returns
-- **Created Vaults**: List vaults created by the user (for Tier 2 borrowers)
-- **Investments**: List vaults the user has invested in
+- **Created Vaults**: List vaults created by the user (Tier 3 only)
 
-### 2. Vault Marketplace
+### 2. Treasury Dashboard (NEW)
 
-- **Browse Vaults**: Display all available vaults with:
-  - TVL
-  - APY
-  - Funding progress
-  - Maturity date
-  - Risk level
+- **Create Treasury**: Form to create new treasury
+- **Treasury List**: Show all user's treasuries
+- **Treasury Details**: Balance, signers, pending proposals
+- **Deposit/Withdraw**: USDC management
+
+### 3. Vault Marketplace
+
+- **Browse Vaults**: Display all available vaults
 - **Filter Options**: By APY, risk, maturity
 - **Invest Modal**: Amount input + approval flow
+- **Tier Check**: Show if user can invest
 
-### 3. Admin Dashboard (if applicable)
+### 4. Verification Status
 
-- **Mint NFTs**: Interface to mint Convexo_LPs and Convexo_Vaults
-- **Manage Pools**: Register/deregister pools
-- **Price Feeds**: Configure Chainlink price feeds
-- **Contract Signing**: Manage multi-sig contracts
+- **ZKPassport**: Individual verification flow
+- **Veriff Status**: Business verification status
+- **Credit Score**: AI scoring for Tier 3
 
 ---
 
@@ -877,15 +771,16 @@ export const baseSepolia = defineChain({
 
 ---
 
-## 🔐 USDC Contract
+## 🔐 USDC Contracts
 
-Base Sepolia USDC: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
-
-### Get Test USDC
-
-1. Visit [Base Sepolia Faucet](https://www.coinbase.com/faucets/base-ethereum-goerli-faucet)
-2. Get test ETH for gas
-3. Swap for USDC on testnet DEX or mint from faucet
+| Network | USDC Address |
+|---------|-------------|
+| **Ethereum Sepolia** | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` |
+| **Base Sepolia** | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
+| **Unichain Sepolia** | `0x31d0220469e10c4E71834a79b1f276d740d3768F` |
+| **Ethereum Mainnet** | `0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48` |
+| **Base Mainnet** | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` |
+| **Unichain Mainnet** | `0x078D782b760474a361dDA0AF3839290b0EF57AD6` |
 
 ---
 
@@ -894,182 +789,83 @@ Base Sepolia USDC: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
 ### For Frontend Developers:
 
 #### Basic Setup
-- [ ] Connect wallet to Ethereum/Base/Unichain Sepolia
+- [ ] Connect wallet to all 6 networks
 - [ ] Switch between networks
 - [ ] Check user reputation tier
 - [ ] Display NFT ownership status
 
-#### Vault Creation (Tier 2 Borrowers)
-- [ ] Verify Tier 2 NFT requirement
-- [ ] Create new vault
-- [ ] View created vault status
-- [ ] Monitor funding progress
+#### Individual Verification (Tier 1)
+- [ ] ZKPassport verification flow
+- [ ] Mint Convexo_Passport NFT
+- [ ] Verify Tier 1 access
 
-#### Investment Flow (All Users)
+#### Treasury System (Tier 1+)
+- [ ] Create single-sig treasury
+- [ ] Create multi-sig treasury
+- [ ] Deposit USDC
+- [ ] Propose withdrawal
+- [ ] Approve withdrawal (multi-sig)
+- [ ] Execute withdrawal
+
+#### Vault Investment (Tier 1+)
 - [ ] List all available vaults
-- [ ] Show vault metrics (TVL, APY, progress, etc.)
+- [ ] Show vault metrics
 - [ ] Approve USDC spending
 - [ ] Purchase vault shares
 - [ ] Display user's investment returns
-- [ ] Track share balance
+- [ ] Redeem shares (after full repayment)
 
-#### Contract Signing Flow (Borrowers)
-- [ ] Detect when vault is fully funded
-- [ ] Attach contract hash to vault
-- [ ] Monitor contract signature status
-- [ ] Enable withdrawal when fully signed
-
-#### Repayment & Withdrawal
-- [ ] Borrower makes flexible repayments
-- [ ] Protocol collector withdraws fees
-- [ ] Investors redeem shares
-- [ ] Display proportional distributions
-
-#### Liquidity Pools (Tier 1+)
-- [ ] Verify pool access with NFT
-- [ ] Test USDC/ECOP swaps
-- [ ] Display pool liquidity
-
-### Test Accounts Needed:
-
-1. **No NFT Account**: Test restricted access (Tier 0)
-2. **Tier 1 Account**: Has Convexo_LPs NFT (pool access)
-3. **Tier 2 Account**: Has both NFTs (can create vaults)
-4. **Protocol Admin**: For fee collection testing
+#### Vault Creation (Tier 3)
+- [ ] Verify Tier 3 NFT requirement
+- [ ] Create new vault
+- [ ] Monitor funding progress
+- [ ] Attach contract hash
+- [ ] Withdraw funds
+- [ ] Make repayments
 
 ---
 
-## 📞 Support & Resources
+## 🆕 What's New in Version 2.1
 
-### Documentation
-- **Contract Reference**: [CONTRACTS_REFERENCE.md](./CONTRACTS_REFERENCE.md) - Complete contract documentation
-- **Ethereum**: [ETHEREUM_DEPLOYMENTS.md](./ETHEREUM_DEPLOYMENTS.md) - All Ethereum deployments
-- **Base**: [BASE_DEPLOYMENTS.md](./BASE_DEPLOYMENTS.md) - All Base deployments
-- **Unichain**: [UNICHAIN_DEPLOYMENTS.md](./UNICHAIN_DEPLOYMENTS.md) - All Unichain deployments
+### New Contracts
+1. **TreasuryFactory** - Create personal multi-sig treasuries (Tier 1+)
+2. **TreasuryVault** - Multi-sig USDC treasury management
+3. **VeriffVerifier** - Human-approved KYB for Tier 2 access
 
-### Explorers
-- **Ethereum Sepolia**: https://sepolia.etherscan.io
-- **Base Sepolia**: https://sepolia.basescan.org
-- **Unichain Sepolia**: https://unichain-sepolia.blockscout.com
+### Tier System Changes
+- **Tier 1**: Passport (Individual) - Treasury + Vault investments
+- **Tier 2**: LPs (Limited Partner) - LP pools + Vault investments
+- **Tier 3**: Vaults (Vault Creator) - All above + Vault creation
 
-### Key Addresses
-- **Admin**: `0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8`
-- **USDC (Ethereum)**: `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`
-- **USDC (Base)**: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
-- **USDC (Unichain)**: `0x31d0220469e10c4E71834a79b1f276d740d3768F`
-
----
-
-## 🆕 What's New in Version 2.0
-
-### Major Changes
-1. **Borrower-Initiated Vaults**
-   - Borrowers create vaults directly (requires Tier 2 NFT)
-   - No admin intervention needed
-   - Contract attached AFTER funding
-
-2. **Flexible Repayment System**
-   - Pay anytime, any amount before maturity
-   - No fixed payment schedule
-   - Real-time tracking of repayments
-
-3. **Independent Withdrawals**
-   - Protocol collector withdraws 2% fee independently
-   - Investors redeem shares independently
-   - Proportional distribution based on repayments
-   - Funds locked in vault until withdrawn
-
-4. **New Vault States**
-   - `Pending`: Created, waiting for funding
-   - `Funded`: Fully funded, waiting for contract
-   - `Active`: Contract signed, funds withdrawable
-   - `Repaying`: Borrower making repayments
-   - `Completed`: Fully repaid
-   - `Defaulted`: Past maturity, not fully repaid
-
-5. **Simplified Architecture**
-   - Removed `InvoiceFactoring` contract
-   - Removed `TokenizedBondCredits` contract
-   - Focus on core Tokenized Bond Vaults
-   - 9 contracts (down from 11)
+### New ReputationManager Functions
+- `canCreateTreasury()` - Tier 1+
+- `canInvestInVaults()` - Tier 1+
+- `canAccessLPPools()` - Tier 2+
+- `canCreateVaults()` - Tier 3
 
 ### Breaking Changes
-- `createVault()` no longer requires `contractHash` parameter
-- `VaultFactory` now checks for Tier 2 NFT ownership
-- New `attachContract()` function for borrowers
-- `withdrawFunds()` replaces `disburseLoan()`
-- Separate `withdrawProtocolFees()` and `redeemShares()` functions
-
----
-
-## 🚀 Next Steps
-
-1. **Set up multi-chain support** with Wagmi
-2. **Implement network switching** (Ethereum/Base/Unichain)
-3. **Build vault creation flow** for Tier 2 users
-4. **Create investment interface** with USDC approval
-5. **Add contract signing flow** for borrowers
-6. **Implement repayment interface** with flexible amounts
-7. **Build withdrawal interfaces** for protocol & investors
-8. **Add real-time vault state monitoring**
-9. **Implement admin dashboard** for NFT minting
-
----
-
-## 💡 Pro Tips
-
-1. **Multi-chain Support**: Use Wagmi's `useNetwork()` and `useSwitchNetwork()` hooks
-2. **Cache contract reads**: Use SWR or React Query for better UX
-3. **Real-time updates**: Listen to contract events with `useContractEvent()`
-4. **Error handling**: Parse revert reasons and show user-friendly messages
-5. **Loading states**: Show loading spinners during transactions
-6. **Gas optimization**: Batch reads with `multicall`
-7. **Mobile responsive**: Ensure wallet connection works on mobile
-8. **State management**: Track vault states (Pending → Funded → Active → Repaying)
-9. **Notifications**: Alert users when vaults are funded or contracts need signing
-10. **Analytics**: Track TVL, APY, and user activity across all vaults
-
----
-
-## 🔗 Useful Links
-
-### Development Tools
-- [Viem Docs](https://viem.sh/) - TypeScript interface for Ethereum
-- [Wagmi Docs](https://wagmi.sh/) - React hooks for Ethereum
-- [RainbowKit](https://www.rainbowkit.com/) - Wallet connection UI
-- [ConnectKit](https://docs.family.co/connectkit) - Alternative wallet UI
-
-### Network Documentation
-- [Ethereum Docs](https://ethereum.org/developers)
-- [Base Docs](https://docs.base.org/)
-- [Unichain Docs](https://docs.unichain.org/)
-- [Uniswap V4 Docs](https://docs.uniswap.org/contracts/v4/overview)
-
-### Testing Resources
-- [Ethereum Sepolia Faucet](https://sepoliafaucet.com/)
-- [Base Sepolia Faucet](https://www.coinbase.com/faucets/base-ethereum-goerli-faucet)
-- [Unichain Sepolia Faucet](https://faucet.unichain.org/)
+- Tier numbering reversed (Passport is now Tier 1, Vaults is Tier 3)
+- New treasury creation flow
+- `canInvestInVaults()` replaces tier checks in vault
 
 ---
 
 ## ✅ Frontend Handoff Checklist
 
-- [x] All 10 contracts deployed on 3 testnets (v2.0 with ZKPassport)
+- [x] All 12 contracts deployed on 6 networks (v2.1)
 - [x] All contracts verified on explorers
-- [x] 12 ABIs extracted and available
+- [x] 15 ABIs extracted and available
 - [x] Contract addresses documented
 - [x] Integration examples provided
-- [x] New vault flow documented
-- [x] Repayment system explained
-- [x] Withdrawal flows detailed
+- [x] Treasury system documented
+- [x] Tier system updated
 - [x] Testing checklist created
 - [x] Multi-chain support ready
 
 **Status: ✅ Ready for frontend integration!**
 
-All contracts are deployed, verified, and ready for frontend development. Version 2.0 includes ZKPassport integration for individual investors. 🎉
+All 12 contracts are deployed, verified, and ready for frontend development on all 6 networks. 🎉
 
 ---
 
 **Questions?** Check [CONTRACTS_REFERENCE.md](./CONTRACTS_REFERENCE.md) for detailed contract documentation.
-

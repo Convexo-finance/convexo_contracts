@@ -8,8 +8,8 @@ Complete deployment guide for all Ethereum networks (Mainnet & Sepolia Testnet).
 
 | Network | Chain ID | Status | Contracts | Explorer |
 |---------|----------|--------|-----------|----------|
-| **Ethereum Mainnet** | 1 | ✅ Complete | 10/10 | [Etherscan](https://etherscan.io) |
-| **Ethereum Sepolia** | 11155111 | ✅ Complete | 10/10 | [Etherscan](https://sepolia.etherscan.io) |
+| **Ethereum Mainnet** | 1 | ✅ Complete | 12/12 | [Etherscan](https://etherscan.io) |
+| **Ethereum Sepolia** | 11155111 | ✅ Complete | 12/12 | [Etherscan](https://sepolia.etherscan.io) |
 
 ---
 
@@ -23,37 +23,43 @@ Complete deployment guide for all Ethereum networks (Mainnet & Sepolia Testnet).
 - **Currency**: ETH
 
 ## Deployment Summary
-**Status**: ✅ **Complete - All 10 contracts deployed and verified**  
-**Date**: December 26, 2025  
-**Version**: 2.0 (with Convexo_Passport)
+**Status**: ✅ **Complete - All 12 contracts deployed and verified**  
+**Date**: January 7, 2026  
+**Version**: 2.1 (with Treasury & Veriff)
 
 ## Deployed Contracts
 
 ### NFT Contracts
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x7356bf8000de3ca7518a363b954d67cc54f7c84d` | [View on Etherscan](https://etherscan.io/address/0x7356bf8000de3ca7518a363b954d67cc54f7c84d) |
-| **Convexo_Vaults** | `0x282a52f7607ef04415c6567d18f1bf9acd043f42` | [View on Etherscan](https://etherscan.io/address/0x282a52f7607ef04415c6567d18f1bf9acd043f42) |
-| **Convexo_Passport** | `0x292ef88a7199916899fc296ff6b522306fa2b19a` | [View on Etherscan](https://etherscan.io/address/0x292ef88a7199916899fc296ff6b522306fa2b19a) |
+| **Convexo_LPs** | `0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7` | [View on Etherscan](https://etherscan.io/address/0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7) |
+| **Convexo_Vaults** | `0x5a1f415986a189d79d19d65cb6e3d6dd7b807268` | [View on Etherscan](https://etherscan.io/address/0x5a1f415986a189d79d19d65cb6e3d6dd7b807268) |
+| **Convexo_Passport** | `0x6b51adc34a503b23db99444048ac7c2dc735a12e` | [View on Etherscan](https://etherscan.io/address/0x6b51adc34a503b23db99444048ac7c2dc735a12e) |
 
 ### Hook System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **HookDeployer** | `0x4dbccff8730398a35d517ab8a1e8413a45d686c4` | [View on Etherscan](https://etherscan.io/address/0x4dbccff8730398a35d517ab8a1e8413a45d686c4) |
-| **CompliantLPHook** | `0xbb13194b2792e291109402369cb4fc0358aed132` | [View on Etherscan](https://etherscan.io/address/0xbb13194b2792e291109402369cb4fc0358aed132) |
-| **PoolRegistry** | `0xec02a78f2e6db438eb9b75aa173ac0f0d1d3126a` | [View on Etherscan](https://etherscan.io/address/0xec02a78f2e6db438eb9b75aa173ac0f0d1d3126a) |
+| **HookDeployer** | `0x5d88bcf0d62f17846d41e161e92e497d4224764d` | [View on Etherscan](https://etherscan.io/address/0x5d88bcf0d62f17846d41e161e92e497d4224764d) |
+| **CompliantLPHook** | `0x6a6357c387331e75d6eeb4d4abc0f0200cd32830` | [View on Etherscan](https://etherscan.io/address/0x6a6357c387331e75d6eeb4d4abc0f0200cd32830) |
+| **PoolRegistry** | `0xafb16cfaf1389713c59f7aee3c1a08d3cedc3ee3` | [View on Etherscan](https://etherscan.io/address/0xafb16cfaf1389713c59f7aee3c1a08d3cedc3ee3) |
 
 ### Core Infrastructure
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ReputationManager** | `0xc98bce4617f9708dd1363f21177be5ef21fb4993` | [View on Etherscan](https://etherscan.io/address/0xc98bce4617f9708dd1363f21177be5ef21fb4993) |
-| **PriceFeedManager** | `0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7` | [View on Etherscan](https://etherscan.io/address/0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7) |
+| **ReputationManager** | `0xc5e04ab886025b3fe3d99249d1db069e0b599d8e` | [View on Etherscan](https://etherscan.io/address/0xc5e04ab886025b3fe3d99249d1db069e0b599d8e) |
+| **PriceFeedManager** | `0xd09e7252c6402155f9d13653de24ae4f0a220fec` | [View on Etherscan](https://etherscan.io/address/0xd09e7252c6402155f9d13653de24ae4f0a220fec) |
 
 ### Vault System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ContractSigner** | `0x5a1f415986a189d79d19d65cb6e3d6dd7b807268` | [View on Etherscan](https://etherscan.io/address/0x5a1f415986a189d79d19d65cb6e3d6dd7b807268) |
-| **VaultFactory** | `0x6b51adc34a503b23db99444048ac7c2dc735a12e` | [View on Etherscan](https://etherscan.io/address/0x6b51adc34a503b23db99444048ac7c2dc735a12e) |
+| **ContractSigner** | `0x74577d6e9140944db7ae2f1e103a39962c80c235` | [View on Etherscan](https://etherscan.io/address/0x74577d6e9140944db7ae2f1e103a39962c80c235) |
+| **VaultFactory** | `0xbabee8acecc117c1295f8950f51db59f7a881646` | [View on Etherscan](https://etherscan.io/address/0xbabee8acecc117c1295f8950f51db59f7a881646) |
+
+### Treasury & Verification (NEW in v2.1)
+| Contract | Address | Explorer |
+|----------|---------|----------|
+| **TreasuryFactory** | `0xd189d95ee1a126a66fc5a84934372aa0fc0bb6d2` | [View on Etherscan](https://etherscan.io/address/0xd189d95ee1a126a66fc5a84934372aa0fc0bb6d2) |
+| **VeriffVerifier** | `0xe0c0d95701558ef10768a13a944f56311ead4649` | [View on Etherscan](https://etherscan.io/address/0xe0c0d95701558ef10768a13a944f56311ead4649) |
 
 ## Network Dependencies
 
@@ -76,16 +82,18 @@ const ETHEREUM_MAINNET_CONFIG = {
   chainId: 1,
   name: "Ethereum Mainnet",
   contracts: {
-    convexoLPs: "0x7356bf8000de3ca7518a363b954d67cc54f7c84d",
-    convexoVaults: "0x282a52f7607ef04415c6567d18f1bf9acd043f42",
-    convexoPassport: "0x292ef88a7199916899fc296ff6b522306fa2b19a",
-    hookDeployer: "0x4dbccff8730398a35d517ab8a1e8413a45d686c4",
-    compliantLPHook: "0xbb13194b2792e291109402369cb4fc0358aed132",
-    poolRegistry: "0xec02a78f2e6db438eb9b75aa173ac0f0d1d3126a",
-    reputationManager: "0xc98bce4617f9708dd1363f21177be5ef21fb4993",
-    priceFeedManager: "0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7",
-    contractSigner: "0x5a1f415986a189d79d19d65cb6e3d6dd7b807268",
-    vaultFactory: "0x6b51adc34a503b23db99444048ac7c2dc735a12e"
+    convexoLPs: "0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7",
+    convexoVaults: "0x5a1f415986a189d79d19d65cb6e3d6dd7b807268",
+    convexoPassport: "0x6b51adc34a503b23db99444048ac7c2dc735a12e",
+    hookDeployer: "0x5d88bcf0d62f17846d41e161e92e497d4224764d",
+    compliantLPHook: "0x6a6357c387331e75d6eeb4d4abc0f0200cd32830",
+    poolRegistry: "0xafb16cfaf1389713c59f7aee3c1a08d3cedc3ee3",
+    reputationManager: "0xc5e04ab886025b3fe3d99249d1db069e0b599d8e",
+    priceFeedManager: "0xd09e7252c6402155f9d13653de24ae4f0a220fec",
+    contractSigner: "0x74577d6e9140944db7ae2f1e103a39962c80c235",
+    vaultFactory: "0xbabee8acecc117c1295f8950f51db59f7a881646",
+    treasuryFactory: "0xd189d95ee1a126a66fc5a84934372aa0fc0bb6d2",
+    veriffVerifier: "0xe0c0d95701558ef10768a13a944f56311ead4649"
   },
   usdc: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
   poolManager: "0x8C4BcBE6b9eF47855f97E675296FA3F6fafa5F1A",
@@ -105,37 +113,43 @@ const ETHEREUM_MAINNET_CONFIG = {
 - **Currency**: ETH (Testnet)
 
 ## Deployment Summary
-**Status**: ✅ Complete - All 10 contracts deployed and verified  
-**Date**: December 26, 2025  
-**Version**: 2.0 (with Convexo_Passport)
+**Status**: ✅ Complete - All 12 contracts deployed and verified  
+**Date**: January 7, 2026  
+**Version**: 2.1 (with Treasury & Veriff)
 
 ## Deployed Contracts
 
 ### NFT Contracts
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x2f781b3fffd6853a3d8ffca338d33b1d61ffab0e` | [View](https://sepolia.etherscan.io/address/0x2f781b3fffd6853a3d8ffca338d33b1d61ffab0e) |
-| **Convexo_Vaults** | `0xefa4e787c96df9df08de5230ec6cf6126a211edc` | [View](https://sepolia.etherscan.io/address/0xefa4e787c96df9df08de5230ec6cf6126a211edc) |
-| **Convexo_Passport** | `0x19d9fc7c6c3e62c1c7358504f47e629333b10627` | [View](https://sepolia.etherscan.io/address/0x19d9fc7c6c3e62c1c7358504f47e629333b10627) |
+| **Convexo_LPs** | `0x6d2101b853e80ea873d2c7c0ec6138c837779c6a` | [View](https://sepolia.etherscan.io/address/0x6d2101b853e80ea873d2c7c0ec6138c837779c6a) |
+| **Convexo_Vaults** | `0xd1ff2d103a864ccb150602dedc09804037b8ce85` | [View](https://sepolia.etherscan.io/address/0xd1ff2d103a864ccb150602dedc09804037b8ce85) |
+| **Convexo_Passport** | `0x259adc4917c442dd9a509cb8333a9bed88fe5c70` | [View](https://sepolia.etherscan.io/address/0x259adc4917c442dd9a509cb8333a9bed88fe5c70) |
 
 ### Hook System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **HookDeployer** | `0xda82a962e5671cfa97663e25495028c313a524e8` | [View](https://sepolia.etherscan.io/address/0xda82a962e5671cfa97663e25495028c313a524e8) |
-| **CompliantLPHook** | `0x7fcc3c235cbd5bd6059e4744c3a005c68a2d4da4` | [View](https://sepolia.etherscan.io/address/0x7fcc3c235cbd5bd6059e4744c3a005c68a2d4da4) |
-| **PoolRegistry** | `0x43d5c9507f399e689ddf4c05ba542a3ad5dbe53e` | [View](https://sepolia.etherscan.io/address/0x43d5c9507f399e689ddf4c05ba542a3ad5dbe53e) |
+| **HookDeployer** | `0xec97706ca992d571c17c3ac895e9317656d29a25` | [View](https://sepolia.etherscan.io/address/0xec97706ca992d571c17c3ac895e9317656d29a25) |
+| **CompliantLPHook** | `0xb1697c34cc15cb1fba579f94693e9ab53292b51b` | [View](https://sepolia.etherscan.io/address/0xb1697c34cc15cb1fba579f94693e9ab53292b51b) |
+| **PoolRegistry** | `0x710299e39b130db198dd2a6973c2ccd7bcc2d093` | [View](https://sepolia.etherscan.io/address/0x710299e39b130db198dd2a6973c2ccd7bcc2d093) |
 
 ### Core Infrastructure
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ReputationManager** | `0x549858f0f85ecce1f9713dc3ba5b61c7f9cca69d` | [View](https://sepolia.etherscan.io/address/0x549858f0f85ecce1f9713dc3ba5b61c7f9cca69d) |
-| **PriceFeedManager** | `0xd34de952cec3af29abab321e68d7e51c098dc063` | [View](https://sepolia.etherscan.io/address/0xd34de952cec3af29abab321e68d7e51c098dc063) |
+| **ReputationManager** | `0x82e856e70a0057fc6e26c17793a890ec38194cfc` | [View](https://sepolia.etherscan.io/address/0x82e856e70a0057fc6e26c17793a890ec38194cfc) |
+| **PriceFeedManager** | `0xebb59c7e14ea002924bf34eedf548836c25a3440` | [View](https://sepolia.etherscan.io/address/0xebb59c7e14ea002924bf34eedf548836c25a3440) |
 
 ### Vault System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ContractSigner** | `0xa2dfbe7252fcf7dd1b7760342ba126483d3b0548` | [View](https://sepolia.etherscan.io/address/0xa2dfbe7252fcf7dd1b7760342ba126483d3b0548) |
-| **VaultFactory** | `0xe48f35fd0e00af2059f18cf67268cce6e87f4ea4` | [View](https://sepolia.etherscan.io/address/0xe48f35fd0e00af2059f18cf67268cce6e87f4ea4) |
+| **ContractSigner** | `0x59b0f14ac23cd3b0a6a926a302ac01e4221785bf` | [View](https://sepolia.etherscan.io/address/0x59b0f14ac23cd3b0a6a926a302ac01e4221785bf) |
+| **VaultFactory** | `0x4fc5ca49812b0c312046b000d234a96e9084effb` | [View](https://sepolia.etherscan.io/address/0x4fc5ca49812b0c312046b000d234a96e9084effb) |
+
+### Treasury & Verification (NEW in v2.1)
+| Contract | Address | Explorer |
+|----------|---------|----------|
+| **TreasuryFactory** | `0x53d38e2ca13d085d14a44b0deadc47995a82eca3` | [View](https://sepolia.etherscan.io/address/0x53d38e2ca13d085d14a44b0deadc47995a82eca3) |
+| **VeriffVerifier** | `0xb11f1c681b8719e6d82098e1316d2573477834ab` | [View](https://sepolia.etherscan.io/address/0xb11f1c681b8719e6d82098e1316d2573477834ab) |
 
 ## Network Dependencies (Sepolia)
 
@@ -151,16 +165,18 @@ const ETHEREUM_SEPOLIA_CONFIG = {
   chainId: 11155111,
   name: "Ethereum Sepolia",
   contracts: {
-    convexoLPs: "0x2f781b3fffd6853a3d8ffca338d33b1d61ffab0e",
-    convexoVaults: "0xefa4e787c96df9df08de5230ec6cf6126a211edc",
-    convexoPassport: "0x19d9fc7c6c3e62c1c7358504f47e629333b10627",
-    hookDeployer: "0xda82a962e5671cfa97663e25495028c313a524e8",
-    compliantLPHook: "0x7fcc3c235cbd5bd6059e4744c3a005c68a2d4da4",
-    poolRegistry: "0x43d5c9507f399e689ddf4c05ba542a3ad5dbe53e",
-    reputationManager: "0x549858f0f85ecce1f9713dc3ba5b61c7f9cca69d",
-    priceFeedManager: "0xd34de952cec3af29abab321e68d7e51c098dc063",
-    contractSigner: "0xa2dfbe7252fcf7dd1b7760342ba126483d3b0548",
-    vaultFactory: "0xe48f35fd0e00af2059f18cf67268cce6e87f4ea4"
+    convexoLPs: "0x6d2101b853e80ea873d2c7c0ec6138c837779c6a",
+    convexoVaults: "0xd1ff2d103a864ccb150602dedc09804037b8ce85",
+    convexoPassport: "0x259adc4917c442dd9a509cb8333a9bed88fe5c70",
+    hookDeployer: "0xec97706ca992d571c17c3ac895e9317656d29a25",
+    compliantLPHook: "0xb1697c34cc15cb1fba579f94693e9ab53292b51b",
+    poolRegistry: "0x710299e39b130db198dd2a6973c2ccd7bcc2d093",
+    reputationManager: "0x82e856e70a0057fc6e26c17793a890ec38194cfc",
+    priceFeedManager: "0xebb59c7e14ea002924bf34eedf548836c25a3440",
+    contractSigner: "0x59b0f14ac23cd3b0a6a926a302ac01e4221785bf",
+    vaultFactory: "0x4fc5ca49812b0c312046b000d234a96e9084effb",
+    treasuryFactory: "0x53d38e2ca13d085d14a44b0deadc47995a82eca3",
+    veriffVerifier: "0xb11f1c681b8719e6d82098e1316d2573477834ab"
   },
   usdc: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
   ecop: "0x19ac2612e560b2bbedf88660a2566ef53c0a15a1",
@@ -185,6 +201,17 @@ const ETHEREUM_SEPOLIA_CONFIG = {
 
 ---
 
+## 🏆 Tier System (v2.1)
+
+| Tier | NFT | User Type | Access |
+|------|-----|-----------|--------|
+| **Tier 0** | None | Unverified | No access |
+| **Tier 1** | Convexo_Passport | Individual | Treasury creation + Vault investments |
+| **Tier 2** | Convexo_LPs | Limited Partner | LP pools + Vault investments |
+| **Tier 3** | Convexo_Vaults | Vault Creator | All above + Vault creation |
+
+---
+
 ## 💡 Ethereum Benefits
 
 ### Why Ethereum?
@@ -194,7 +221,7 @@ const ETHEREUM_SEPOLIA_CONFIG = {
 - **Battle-tested**: Proven track record since 2015
 
 ### Gas Cost Comparison
-| Network | Average Gas Price | Est. Cost for 10 Contracts |
+| Network | Average Gas Price | Est. Cost for 12 Contracts |
 |---------|------------------|---------------------------|
 | **Ethereum Mainnet** | **~30 gwei** | **~0.0005 ETH (~$2)** |
 | Base Mainnet | ~0.0009 gwei | ~0.000011 ETH (~$0.04) |
@@ -247,14 +274,14 @@ ECOP_ADDRESS_SEPOLIA=0x19ac2612e560b2bbedf88660a2566ef53c0a15a1
 - **Protocol Fee Collector**: `0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8`
 
 ### Compiler Settings
-- Solidity: 0.8.30
+- Solidity: 0.8.27
 - Optimizer: Enabled (200 runs)
 - EVM Version: Prague
 - Via IR: Enabled
 
 ### Verification Status
-✅ All contracts verified on Etherscan (Both networks)
+✅ All 12 contracts verified on Etherscan (Both networks)
 
 ---
 
-*Last updated: December 26, 2025*
+*Last updated: January 7, 2026 - v2.1*

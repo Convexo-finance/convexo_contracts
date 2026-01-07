@@ -182,7 +182,17 @@
             "internalType": "bytes32"
           },
           {
+            "name": "personhoodProof",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
             "name": "verifiedAt",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "zkPassportTimestamp",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -192,9 +202,24 @@
             "internalType": "bool"
           },
           {
-            "name": "nationality",
-            "type": "string",
-            "internalType": "string"
+            "name": "kycVerified",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "faceMatchPassed",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "sanctionsPassed",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "isOver18",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
       }
@@ -759,10 +784,34 @@
         "internalType": "bytes32"
       },
       {
-        "name": "nationality",
-        "type": "string",
+        "name": "personhoodProof",
+        "type": "bytes32",
         "indexed": false,
-        "internalType": "string"
+        "internalType": "bytes32"
+      },
+      {
+        "name": "kycVerified",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "name": "faceMatchPassed",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "name": "sanctionsPassed",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "name": "isOver18",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
       }
     ],
     "anonymous": false
@@ -1024,11 +1073,6 @@
   {
     "type": "error",
     "name": "IdentifierAlreadyUsed",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "MustBeOver18",
     "inputs": []
   },
   {

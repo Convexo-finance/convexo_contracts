@@ -1,12 +1,12 @@
 # ZKPassport Frontend Integration Guide
 
-**Simplified guide: Off-chain verification + On-chain minting with unique identifier**
+**Version 2.1** - Simplified off-chain verification + on-chain minting with privacy-compliant traits
 
 ---
 
 ## 📋 Overview
 
-This guide implements a **simplified two-step process**:
+This guide implements a **simplified two-step process** for individual investor verification:
 
 1. **Step 1**: Identity verification with ZKPassport (OFF-CHAIN) → Get unique identifier
 2. **Step 2**: Mint Convexo Passport NFT (ON-CHAIN) → Provide unique identifier
@@ -17,7 +17,21 @@ This guide implements a **simplified two-step process**:
 - ✅ User mints NFT by providing the unique identifier
 - ✅ Contract enforces: **1 wallet = 1 unique identifier**
 - ✅ Users pay for gas fees
-- ✅ No storage of ID images or biometric data
+- ✅ **Privacy-compliant**: Only verification traits stored (no PII)
+- ✅ Grants **Tier 1 (Passport)** access - Treasury creation + Vault investments
+
+---
+
+## 🏆 Tier System Overview (v2.1)
+
+| Tier | NFT Required | User Type | Access |
+|------|--------------|-----------|--------|
+| **Tier 0** | None | Unverified | No access |
+| **Tier 1** | Convexo_Passport | Individual | Treasury creation + Vault investments |
+| **Tier 2** | Convexo_LPs | Limited Partner | LP pools + Vault investments |
+| **Tier 3** | Convexo_Vaults | Vault Creator | All above + Vault creation |
+
+**Note:** Tier 1 (Passport) is the entry-level tier for individuals. Highest tier wins (progressive KYC).
 
 ---
 
@@ -35,8 +49,44 @@ Create `.env.local`:
 
 ```env
 NEXT_PUBLIC_APP_DOMAIN=yourdomain.com
-NEXT_PUBLIC_CONVEXO_PASSPORT_ADDRESS=0x4A164470586B7e80eEf2734d24f5F784e4f88ad0
+NEXT_PUBLIC_CONVEXO_PASSPORT_ADDRESS=0x5078300fa7e2d29c2e2145beb8a6eb5ad0d45e0c
 ```
+
+---
+
+## 📝 Contract Addresses (v2.1)
+
+### Ethereum Sepolia (Chain ID: 11155111)
+
+| Contract | Address | Verified |
+|----------|---------|----------|
+| **Convexo_Passport** | `0x259adc4917c442dd9a509cb8333a9bed88fe5c70` | ✅ |
+| **ReputationManager** | `0x82e856e70a0057fc6e26c17793a890ec38194cfc` | ✅ |
+| **TreasuryFactory** | `0x53d38e2ca13d085d14a44b0deadc47995a82eca3` | ✅ |
+
+### Base Sepolia (Chain ID: 84532)
+
+| Contract | Address | Verified |
+|----------|---------|----------|
+| **Convexo_Passport** | `0x5078300fa7e2d29c2e2145beb8a6eb5ad0d45e0c` | ✅ |
+| **ReputationManager** | `0xc8d1160e2e7719e29b34ab36402aaa0ec24d8c01` | ✅ |
+| **TreasuryFactory** | `0x68ec89e0884d05d3b4d2f9b27e4212820b1a56e5` | ✅ |
+
+### Unichain Sepolia (Chain ID: 1301)
+
+| Contract | Address | Verified |
+|----------|---------|----------|
+| **Convexo_Passport** | `0xab83ce760054c1d048d5a9de5194b05398a09d41` | ✅ |
+| **ReputationManager** | `0x62227ff7ccbdb4d72c3511290b28c3424f1500ef` | ✅ |
+| **TreasuryFactory** | `0xecde45fefb5c2ef6e5cc615291de9be9a99b46a6` | ✅ |
+
+### Mainnet Deployments
+
+| Network | Convexo_Passport | TreasuryFactory |
+|---------|------------------|-----------------|
+| **Base Mainnet** | `0x16d8a264aa305c5b0fc2551a3baf8b8602aa1710` | `0x3738d60fcb27d719fdd5113b855e1158b93a95b1` |
+| **Unichain Mainnet** | `0x04aeb36d5fa2fb0b0df8b9561d9ee88273d3bc76` | `0xd7cf4aba5b9b4877419ab8af3979da637493afb1` |
+| **Ethereum Mainnet** | `0x6b51adc34a503b23db99444048ac7c2dc735a12e` | `0xd189d95ee1a126a66fc5a84934372aa0fc0bb6d2` |
 
 ---
 
@@ -243,9 +293,14 @@ export function IdentityVerification({ onVerified }: { onVerified: (uniqueIdenti
 ```typescript
 // lib/constants.ts
 export const CONVEXO_PASSPORT_ADDRESSES = {
-  11155111: '0x2cfa02372782cf20ef8342B0193fd69E4c5B04A8', // Ethereum Sepolia
-  84532: '0x4A164470586B7e80eEf2734d24f5F784e4f88ad0', // Base Sepolia
-  1301: '0xB612DB1FE343C4B5FFa9e8C3f4dde37769F7C5B6', // Unichain Sepolia
+  // Testnets
+  11155111: '0x259adc4917c442dd9a509cb8333a9bed88fe5c70', // Ethereum Sepolia
+  84532: '0x5078300fa7e2d29c2e2145beb8a6eb5ad0d45e0c', // Base Sepolia
+  1301: '0xab83ce760054c1d048d5a9de5194b05398a09d41', // Unichain Sepolia
+  // Mainnets
+  1: '0x6b51adc34a503b23db99444048ac7c2dc735a12e', // Ethereum Mainnet
+  8453: '0x16d8a264aa305c5b0fc2551a3baf8b8602aa1710', // Base Mainnet
+  130: '0x04aeb36d5fa2fb0b0df8b9561d9ee88273d3bc76', // Unichain Mainnet
 } as const;
 ```
 
@@ -362,6 +417,7 @@ export function MintPassportNFT({ uniqueIdentifier }: MintPassportNFTProps) {
     return (
       <div className="alert alert-success">
         <p>✅ You already have an active Convexo Passport NFT</p>
+        <p className="text-sm">Tier 1 access granted - you can create treasuries and invest in vaults</p>
       </div>
     );
   }
@@ -393,14 +449,23 @@ export function MintPassportNFT({ uniqueIdentifier }: MintPassportNFTProps) {
       >
         {isMinting || isWaiting 
           ? 'Minting NFT...' 
-          : 'Mint Passport NFT'}
+          : 'Mint Passport NFT (Tier 1)'}
       </button>
+
+      <div className="info-box mt-4">
+        <p className="text-sm"><strong>Tier 1 Benefits:</strong></p>
+        <ul className="text-xs space-y-1 mt-2">
+          <li>• Create personal treasuries</li>
+          <li>• Invest in tokenized bond vaults</li>
+          <li>• Track investments in real-time</li>
+        </ul>
+      </div>
 
       <div className="info-box mt-4">
         <p className="text-sm"><strong>Gas Information:</strong></p>
         <ul className="text-xs space-y-1 mt-2">
-          <li>• Estimated: 200k - 300k gas (simpler function)</li>
-          <li>• Cost: ~$0.01 - $0.03 (Base Sepolia)</li>
+          <li>• Estimated: 200k - 300k gas</li>
+          <li>• Cost: ~$0.01 - $0.03 (Base/Unichain)</li>
           <li>• <strong>You pay for gas</strong></li>
         </ul>
       </div>
@@ -408,9 +473,10 @@ export function MintPassportNFT({ uniqueIdentifier }: MintPassportNFTProps) {
       {isSuccess && (
         <div className="alert alert-success mt-4">
           <p>🎉 Passport NFT minted successfully!</p>
+          <p className="text-sm">You now have Tier 1 access!</p>
           {mintData?.hash && (
             <a 
-              href={`https://${chain?.id === 84532 ? 'sepolia.basescan.org' : chain?.id === 11155111 ? 'sepolia.etherscan.io' : 'unichain-sepolia.blockscout.com'}/tx/${mintData.hash}`}
+              href={`https://${chain?.id === 84532 ? 'sepolia.basescan.org' : chain?.id === 11155111 ? 'sepolia.etherscan.io' : chain?.id === 8453 ? 'basescan.org' : chain?.id === 1 ? 'etherscan.io' : 'unichain-sepolia.blockscout.com'}/tx/${mintData.hash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-blue-600"
@@ -469,7 +535,7 @@ export function PassportOnboarding() {
 ```
 1. User verifies identity with ZKPassport (OFF-CHAIN)
    ↓
-2. ZKPassport returns: publicKey + scope
+2. ZKPassport returns: publicKey + scope + verification traits
    ↓
 3. Frontend calculates: uniqueIdentifier = keccak256(publicKey + scope)
    ↓
@@ -479,23 +545,43 @@ export function PassportOnboarding() {
    - User doesn't have passport? ✅
    - Identifier not used? ✅
    ↓
-6. Contract mints NFT
+6. Contract mints NFT with Tier 1 access
    ↓
-7. Contract stores: wallet → uniqueIdentifier (1:1 mapping)
+7. Contract stores: verification traits (privacy-compliant)
+   ↓
+8. User can now: Create treasuries + Invest in vaults
 ```
+
+### Privacy-Compliant Stored Traits
+
+The contract stores only **verification results** (boolean traits), **NOT personal data**:
+
+| Trait | Description | Example Value |
+|-------|-------------|---------------|
+| `kycVerified` | Overall KYC verification passed | `true` |
+| `faceMatchPassed` | Face match verification result | `true` |
+| `sanctionsPassed` | Sanctions check passed | `true` |
+| `isOver18` | Age verification result | `true` |
+
+**What is NOT stored:**
+- ❌ Name, address, birthdate
+- ❌ Passport/ID images
+- ❌ Biometric data
+- ❌ Any personally identifiable information (PII)
 
 ### Contract Enforcement
 
 The contract enforces:
 - ✅ **1 wallet = 1 passport** (checked by `balanceOf(msg.sender) > 0`)
 - ✅ **1 unique identifier = 1 passport** (checked by `passportIdentifierToAddress[identifier] != address(0)`)
-- ✅ **1 wallet = 1 unique identifier** (mapping stores identifier → wallet)
+- ✅ **Soulbound** (cannot be transferred)
+- ✅ **Privacy-compliant** (only verification traits stored)
 
 ---
 
-## 🔧 Contract Function
+## 🔧 Contract Functions
 
-### New Simplified Function
+### Self-Mint with Identifier (Simplified)
 
 ```solidity
 function safeMintWithIdentifier(bytes32 uniqueIdentifier) external returns (uint256 tokenId) {
@@ -510,13 +596,51 @@ function safeMintWithIdentifier(bytes32 uniqueIdentifier) external returns (uint
     }
 
     // Mint NFT, store identifier, emit event
+    // Stores: kycVerified=true, faceMatchPassed=true, sanctionsPassed=true, isOver18=true
     // ...
 }
 ```
 
+### Self-Mint with ZKPassport Proof (On-Chain Verification)
+
+```solidity
+function safeMintWithZKPassport(
+    ProofVerificationParams calldata params,
+    bool isIDCard
+) external returns (uint256 tokenId) {
+    // Verify proof on-chain via ZKPassport verifier
+    (bool success, DisclosedData memory disclosedData) = zkPassportVerifier.verifyProof(params, isIDCard);
+    
+    // Store actual verification results from ZKPassport
+    // Stores: kycVerified, faceMatchPassed, sanctionsPassed, isOver18
+    // ...
+}
+```
+
+### Get Verified Identity
+
+```solidity
+function getVerifiedIdentity(address holder) external view returns (VerifiedIdentity memory) {
+    return verifiedUsers[holder];
+}
+
+// Returns:
+struct VerifiedIdentity {
+    bytes32 uniqueIdentifier;      // Cryptographic identifier
+    bytes32 personhoodProof;       // Nullifier from ZKPassport
+    uint256 verifiedAt;            // Contract verification timestamp
+    uint256 zkPassportTimestamp;   // Original ZKPassport verification time
+    bool isActive;                 // Passport active status
+    bool kycVerified;              // KYC passed
+    bool faceMatchPassed;          // Face match passed
+    bool sanctionsPassed;          // Sanctions check passed
+    bool isOver18;                 // Age verification passed
+}
+```
+
 **Benefits:**
-- ✅ No on-chain proof verification (cheaper gas)
-- ✅ Simpler implementation
+- ✅ No on-chain proof verification needed (for simplified flow)
+- ✅ Privacy-compliant (only traits stored)
 - ✅ Same security (1 wallet = 1 identifier)
 - ✅ Faster transactions
 
@@ -534,9 +658,13 @@ function safeMintWithIdentifier(bytes32 uniqueIdentifier) external returns (uint
 
 ### Network Costs
 
-- **Base Sepolia**: ~$0.01 - $0.03 (much cheaper!)
-- **Ethereum Sepolia**: ~$0.30 - $0.60
-- **Unichain Sepolia**: ~$0.01 - $0.03
+| Network | Estimated Cost |
+|---------|---------------|
+| **Base Sepolia** | ~$0.01 - $0.03 |
+| **Base Mainnet** | ~$0.01 - $0.03 |
+| **Unichain** | ~$0.01 - $0.03 |
+| **Ethereum Sepolia** | ~$0.30 - $0.60 |
+| **Ethereum Mainnet** | ~$2 - $5 |
 
 **⚠️ User pays for gas - always check balance before minting**
 
@@ -549,6 +677,7 @@ function safeMintWithIdentifier(bytes32 uniqueIdentifier) external returns (uint
 ```typescript
 - 'AlreadyHasPassport' → User already has NFT
 - 'IdentifierAlreadyUsed' → This identity already minted
+- 'SoulboundTokenCannotBeTransferred' → Cannot transfer passport
 - 'insufficient funds' → Need more ETH for gas
 ```
 
@@ -579,6 +708,10 @@ Before minting, check:
 3. Ensure camera permissions are granted
 4. Try again with better lighting
 
+### Issue: "Soulbound token cannot be transferred"
+
+**Solution**: Passport NFTs are soulbound (non-transferable). This is by design.
+
 ---
 
 ## 📋 Integration Checklist
@@ -604,17 +737,40 @@ Before minting, check:
 - **ZKPassport Docs**: https://docs.zkpassport.id/
 - **Contract ABIs**: `abis/Convexo_Passport.json`
 - **Main Frontend Guide**: `FRONTEND_INTEGRATION.md`
+- **Contracts Reference**: `CONTRACTS_REFERENCE.md`
 
 ---
 
 ## 🎯 Key Advantages of This Approach
 
-1. ✅ **Simpler**: No complex on-chain proof verification
-2. ✅ **Cheaper**: Lower gas costs (~200k vs ~500k)
-3. ✅ **Faster**: No verifier contract calls
-4. ✅ **Secure**: Still enforces 1 wallet = 1 identifier
-5. ✅ **Flexible**: Verification happens off-chain, minting on-chain
+1. ✅ **Privacy-First**: Only verification traits stored, no PII
+2. ✅ **Simpler**: No complex on-chain proof verification (for simplified flow)
+3. ✅ **Cheaper**: Lower gas costs (~200k vs ~500k)
+4. ✅ **Faster**: No verifier contract calls (for simplified flow)
+5. ✅ **Secure**: Still enforces 1 wallet = 1 identifier
+6. ✅ **Soulbound**: NFT cannot be transferred
+7. ✅ **Progressive KYC**: Can upgrade to higher tiers later
 
 ---
 
-**Last Updated**: v2.1 - Simplified Identifier-Based Minting
+## 🆕 What's New in v2.1
+
+### Tier System Changes
+- **Passport is now Tier 1** (previously Tier 3)
+- **LPs is now Tier 2** (previously Tier 1)
+- **Vaults is now Tier 3** (previously Tier 2)
+- **Highest tier wins** (no mutual exclusivity)
+
+### New Features
+- ✅ **TreasuryFactory**: Tier 1+ can create treasuries
+- ✅ **Privacy-compliant traits**: Only verification results stored
+- ✅ **Progressive KYC**: Start as individual, upgrade to business
+
+### Benefits for Passport Holders (Tier 1)
+- ✅ Create personal treasuries (new!)
+- ✅ Invest in tokenized bond vaults
+- ✅ Upgrade to Tier 2/3 via Veriff verification
+
+---
+
+**Last Updated**: v2.1 - Simplified Identifier-Based Minting with Privacy-Compliant Traits

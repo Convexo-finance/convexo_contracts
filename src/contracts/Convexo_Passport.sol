@@ -10,7 +10,19 @@ import {IZKPassportVerifier, ProofVerificationParams, DisclosedData} from "../in
 
 /// @title Convexo_Passport
 /// @notice Soulbound NFT for individual investors verified via ZKPassport
-/// @dev Non-transferable ERC721 NFT that represents verified identity for Tier 3 (Passport) access
+/// @dev Non-transferable ERC721 NFT that represents verified identity for Tier 1 (Passport) access
+///      Privacy-compliant: stores only verification results (traits), no PII stored on-chain.
+///      ZKPassport verification is the source of truth - we store the boolean verification results.
+///      
+///      STORED TRAITS (non-PII):
+///      - kycVerified: Overall KYC verification passed
+///      - faceMatchPassed: Face match verification result  
+///      - sanctionsPassed: Sanctions check result (US, UK, EU, Switzerland)
+///      - isOver18: Age verification result
+///      
+///      DIFFERENT FROM:
+///      - Convexo_LPs (Tier 2): Verified via Veriff/Sumsub human KYC → VeriffVerifier contract
+///      - Convexo_Vaults (Tier 3): Verified via KYB Sumsub for businesses → allows vault creation
 contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessControl, IConvexoPassport {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant REVOKER_ROLE = keccak256("REVOKER_ROLE");
@@ -27,7 +39,7 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
     /// @notice Mapping from unique identifier to address (prevents duplicate passports)
     mapping(bytes32 => address) private passportIdentifierToAddress;
 
-    /// @notice Mapping from address to verified identity
+    /// @notice Mapping from address to verified identity (stores ZKPassport outputs)
     mapping(address => VerifiedIdentity) private verifiedUsers;
 
     /// @notice Total number of active passports
@@ -44,9 +56,6 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
 
     /// @notice Error thrown when unique identifier is already used
     error IdentifierAlreadyUsed();
-
-    /// @notice Error thrown when user doesn't meet age requirements
-    error MustBeOver18();
 
     /// @notice Error thrown when passport is not active
     error PassportNotActive();
@@ -72,6 +81,9 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
     }
 
     /// @inheritdoc IConvexoPassport
+    /// @dev Verifies ZKPassport proof and stores verification results (traits) only.
+    ///      Privacy-compliant: no PII stored, only boolean verification results.
+    ///      Stored traits: kycVerified, faceMatchPassed, sanctionsPassed, isOver18
     function safeMintWithZKPassport(
         ProofVerificationParams calldata params,
         bool isIDCard
@@ -81,21 +93,18 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
             revert AlreadyHasPassport();
         }
 
-        // Verify the ZKPassport proof
+        // Verify the ZKPassport proof - this is the ONLY validation needed
+        // ZKPassport handles all identity verification (face match, sanctions, age)
         (bool success, DisclosedData memory disclosedData) = zkPassportVerifier.verifyProof(params, isIDCard);
         if (!success) {
             revert ProofVerificationFailed();
         }
 
-        // Check age requirement
-        if (!disclosedData.isOver18) {
-            revert MustBeOver18();
-        }
-
-        // Generate unique identifier (hash of public key + scope)
+        // Generate unique identifier from ZKPassport proof params
+        // UNIQUE ID = hash(publicKey + scope) - ensures 1 person = 1 passport
         bytes32 uniqueIdentifier = keccak256(abi.encodePacked(params.publicKey, params.scope));
 
-        // Check if identifier has been used
+        // Check if identifier has been used (sybil resistance)
         if (passportIdentifierToAddress[uniqueIdentifier] != address(0)) {
             revert IdentifierAlreadyUsed();
         }
@@ -105,32 +114,38 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, string(abi.encodePacked(_baseTokenURI, "/", _toString(tokenId))));
 
-        // Store verified identity with complete ZKPassport data
-        // UNIQUE ID: uniqueIdentifier (hash of publicKey + scope)
-        // PERSONHOOD: params.nullifier (cryptographic proof of unique person)
-        // KYC: nationality, isOver18, zkPassportTimestamp
+        // Store ZKPassport verification results as traits (no PII)
         verifiedUsers[msg.sender] = VerifiedIdentity({
+            // Cryptographic identifiers (sybil resistance)
             uniqueIdentifier: uniqueIdentifier,
             personhoodProof: params.nullifier,
+            // Timestamps
             verifiedAt: block.timestamp,
             zkPassportTimestamp: disclosedData.verifiedAt,
+            // Status
             isActive: true,
-            isOver18: disclosedData.isOver18,
-            nationality: disclosedData.nationality
+            // ZKPassport verification results (boolean traits - no PII)
+            kycVerified: disclosedData.kycVerified,
+            faceMatchPassed: disclosedData.faceMatchPassed,
+            sanctionsPassed: disclosedData.sanctionsPassed,
+            isOver18: disclosedData.isOver18
         });
 
-        // Map identifier to address
+        // Map identifier to address (sybil resistance)
         passportIdentifierToAddress[uniqueIdentifier] = msg.sender;
 
         // Increment active passport count
         activePassportCount++;
 
+        // Emit privacy-compliant event (only verification traits, no PII)
         emit PassportMinted(
             msg.sender, 
             tokenId, 
             uniqueIdentifier, 
             params.nullifier,
-            disclosedData.nationality, 
+            disclosedData.kycVerified,
+            disclosedData.faceMatchPassed,
+            disclosedData.sanctionsPassed,
             disclosedData.isOver18
         );
     }
@@ -140,6 +155,7 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
     /// @return tokenId The minted token ID
     /// @dev This function allows users to mint after off-chain ZKPassport verification
     ///      The unique identifier ensures: 1 wallet = 1 unique identifier
+    ///      All verification traits assumed true for off-chain verified users
     function safeMintWithIdentifier(bytes32 uniqueIdentifier) external returns (uint256 tokenId) {
         // Check if user already has a passport
         if (balanceOf(msg.sender) > 0) {
@@ -156,15 +172,18 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, string(abi.encodePacked(_baseTokenURI, "/", _toString(tokenId))));
 
-        // Store verified identity (off-chain verification - personhood comes from off-chain)
+        // Store verified identity (off-chain verification - all traits assumed true)
         verifiedUsers[msg.sender] = VerifiedIdentity({
             uniqueIdentifier: uniqueIdentifier,
-            personhoodProof: bytes32(0), // Set from off-chain verification if available
+            personhoodProof: bytes32(0),
             verifiedAt: block.timestamp,
-            zkPassportTimestamp: 0, // Set from off-chain verification if available
+            zkPassportTimestamp: 0,
             isActive: true,
-            isOver18: true, // Assumed verified off-chain
-            nationality: "VERIFIED" // Set from off-chain verification
+            // Off-chain verified: assume all checks passed
+            kycVerified: true,
+            faceMatchPassed: true,
+            sanctionsPassed: true,
+            isOver18: true
         });
 
         // Map identifier to address (1 wallet = 1 unique identifier)
@@ -173,7 +192,8 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         // Increment active passport count
         activePassportCount++;
 
-        emit PassportMinted(msg.sender, tokenId, uniqueIdentifier, bytes32(0), "VERIFIED", true);
+        // Emit with all traits as true (off-chain verified)
+        emit PassportMinted(msg.sender, tokenId, uniqueIdentifier, bytes32(0), true, true, true, true);
     }
 
     /// @inheritdoc IConvexoPassport
@@ -194,16 +214,20 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
             uniqueIdentifier: uniqueIdentifier,
             personhoodProof: bytes32(0), // Admin mint - no ZKPassport proof
             verifiedAt: block.timestamp,
-            zkPassportTimestamp: 0, // Admin mint - no ZKPassport timestamp
+            zkPassportTimestamp: 0,
             isActive: true,
-            isOver18: true, // Assumed for admin mint
-            nationality: "ADMIN_MINT"
+            // Admin mint: assume all checks passed
+            kycVerified: true,
+            faceMatchPassed: true,
+            sanctionsPassed: true,
+            isOver18: true
         });
 
         passportIdentifierToAddress[uniqueIdentifier] = to;
         activePassportCount++;
 
-        emit PassportMinted(to, tokenId, uniqueIdentifier, bytes32(0), "ADMIN_MINT", true);
+        // Emit with all traits as true (admin verified)
+        emit PassportMinted(to, tokenId, uniqueIdentifier, bytes32(0), true, true, true, true);
     }
 
     /// @inheritdoc IConvexoPassport

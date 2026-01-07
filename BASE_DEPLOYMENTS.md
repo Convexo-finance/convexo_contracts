@@ -8,8 +8,8 @@ Complete deployment guide for all Base networks (Mainnet & Sepolia Testnet).
 
 | Network | Chain ID | Status | Contracts | Explorer |
 |---------|----------|--------|-----------|----------|
-| **Base Mainnet** | 8453 | ✅ Complete | 10/10 | [Basescan](https://basescan.org) |
-| **Base Sepolia** | 84532 | ✅ Complete | 10/10 | [Basescan](https://sepolia.basescan.org) |
+| **Base Mainnet** | 8453 | ✅ Complete | 12/12 | [Basescan](https://basescan.org) |
+| **Base Sepolia** | 84532 | ✅ Complete | 12/12 | [Basescan](https://sepolia.basescan.org) |
 
 ---
 
@@ -23,37 +23,43 @@ Complete deployment guide for all Base networks (Mainnet & Sepolia Testnet).
 - **Currency**: ETH
 
 ## Deployment Summary
-**Status**: ✅ **Complete - All 10 contracts deployed and verified**  
-**Date**: December 26, 2025  
-**Version**: 2.0 (with Convexo_Passport)
+**Status**: ✅ **Complete - All 12 contracts deployed and verified**  
+**Date**: January 7, 2026  
+**Version**: 2.1 (with Treasury & Veriff)
 
 ## Deployed Contracts
 
 ### NFT Contracts
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x24d91b11b0dd12d6520e58c72f8fcc9dc1c5b935` | [View on Basescan](https://basescan.org/address/0x24d91b11b0dd12d6520e58c72f8fcc9dc1c5b935) |
-| **Convexo_Vaults** | `0x3770bb3bbeb0102a36f51aa253e69034058e4f84` | [View on Basescan](https://basescan.org/address/0x3770bb3bbeb0102a36f51aa253e69034058e4f84) |
-| **Convexo_Passport** | `0x2fa95f79ce8c5c01581f6792acc4181282aaefb0` | [View on Basescan](https://basescan.org/address/0x2fa95f79ce8c5c01581f6792acc4181282aaefb0) |
+| **Convexo_LPs** | `0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841` | [View on Basescan](https://basescan.org/address/0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841) |
+| **Convexo_Vaults** | `0xfe381737efb123a24dc41b0e3eeffc0ccb5eee71` | [View on Basescan](https://basescan.org/address/0xfe381737efb123a24dc41b0e3eeffc0ccb5eee71) |
+| **Convexo_Passport** | `0x16d8a264aa305c5b0fc2551a3baf8b8602aa1710` | [View on Basescan](https://basescan.org/address/0x16d8a264aa305c5b0fc2551a3baf8b8602aa1710) |
 
 ### Hook System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **HookDeployer** | `0xf8dce148ab008f7ae47a26377252673438801712` | [View on Basescan](https://basescan.org/address/0xf8dce148ab008f7ae47a26377252673438801712) |
-| **CompliantLPHook** | `0x3d684ac58f25a95c107565bcffffb219b00557c7` | [View on Basescan](https://basescan.org/address/0x3d684ac58f25a95c107565bcffffb219b00557c7) |
-| **PoolRegistry** | `0x8b99bfaae6e24251017eed64536ac7df6f155c96` | [View on Basescan](https://basescan.org/address/0x8b99bfaae6e24251017eed64536ac7df6f155c96) |
+| **HookDeployer** | `0xa03e2718e0ade2d07bfd9ea5705af9a83bb2db96` | [View on Basescan](https://basescan.org/address/0xa03e2718e0ade2d07bfd9ea5705af9a83bb2db96) |
+| **CompliantLPHook** | `0x805b733cc50818dabede4847c4a775a7b1610f96` | [View on Basescan](https://basescan.org/address/0x805b733cc50818dabede4847c4a775a7b1610f96) |
+| **PoolRegistry** | `0x04aeb36d5fa2fb0b0df8b9561d9ee88273d3bc76` | [View on Basescan](https://basescan.org/address/0x04aeb36d5fa2fb0b0df8b9561d9ee88273d3bc76) |
 
 ### Core Infrastructure
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ReputationManager** | `0x6441431e6658ef7aab95f2125055ea6f0c42b06e` | [View on Basescan](https://basescan.org/address/0x6441431e6658ef7aab95f2125055ea6f0c42b06e) |
-| **PriceFeedManager** | `0x4995b505d90d59e1688a24705698953f0c460c4d` | [View on Basescan](https://basescan.org/address/0x4995b505d90d59e1688a24705698953f0c460c4d) |
+| **ReputationManager** | `0xfb0157e0f904bfa464d09235a723fc2c462d1e76` | [View on Basescan](https://basescan.org/address/0xfb0157e0f904bfa464d09235a723fc2c462d1e76) |
+| **PriceFeedManager** | `0x2a0d9da5a72dfe20b65b25e9fefc0e6e090ac194` | [View on Basescan](https://basescan.org/address/0x2a0d9da5a72dfe20b65b25e9fefc0e6e090ac194) |
 
 ### Vault System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ContractSigner** | `0x1ad4c60a50d184f16fe3cdab2a80d5fdbee405e2` | [View on Basescan](https://basescan.org/address/0x1ad4c60a50d184f16fe3cdab2a80d5fdbee405e2) |
-| **VaultFactory** | `0x7fd91438eacffe828f61737d64926ee44cf6695c` | [View on Basescan](https://basescan.org/address/0x7fd91438eacffe828f61737d64926ee44cf6695c) |
+| **ContractSigner** | `0x744e39b3eb1be014cb8d14a585c31e22b7f4a9b8` | [View on Basescan](https://basescan.org/address/0x744e39b3eb1be014cb8d14a585c31e22b7f4a9b8) |
+| **VaultFactory** | `0xb2785f4341b5bf26be07f7e2037550769ce830cd` | [View on Basescan](https://basescan.org/address/0xb2785f4341b5bf26be07f7e2037550769ce830cd) |
+
+### Treasury & Verification (NEW in v2.1)
+| Contract | Address | Explorer |
+|----------|---------|----------|
+| **TreasuryFactory** | `0x3738d60fcb27d719fdd5113b855e1158b93a95b1` | [View on Basescan](https://basescan.org/address/0x3738d60fcb27d719fdd5113b855e1158b93a95b1) |
+| **VeriffVerifier** | `0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff` | [View on Basescan](https://basescan.org/address/0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff) |
 
 ## Network Dependencies
 
@@ -76,16 +82,18 @@ const BASE_MAINNET_CONFIG = {
   chainId: 8453,
   name: "Base Mainnet",
   contracts: {
-    convexoLPs: "0x24d91b11b0dd12d6520e58c72f8fcc9dc1c5b935",
-    convexoVaults: "0x3770bb3bbeb0102a36f51aa253e69034058e4f84",
-    convexoPassport: "0x2fa95f79ce8c5c01581f6792acc4181282aaefb0",
-    hookDeployer: "0xf8dce148ab008f7ae47a26377252673438801712",
-    compliantLPHook: "0x3d684ac58f25a95c107565bcffffb219b00557c7",
-    poolRegistry: "0x8b99bfaae6e24251017eed64536ac7df6f155c96",
-    reputationManager: "0x6441431e6658ef7aab95f2125055ea6f0c42b06e",
-    priceFeedManager: "0x4995b505d90d59e1688a24705698953f0c460c4d",
-    contractSigner: "0x1ad4c60a50d184f16fe3cdab2a80d5fdbee405e2",
-    vaultFactory: "0x7fd91438eacffe828f61737d64926ee44cf6695c"
+    convexoLPs: "0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841",
+    convexoVaults: "0xfe381737efb123a24dc41b0e3eeffc0ccb5eee71",
+    convexoPassport: "0x16d8a264aa305c5b0fc2551a3baf8b8602aa1710",
+    hookDeployer: "0xa03e2718e0ade2d07bfd9ea5705af9a83bb2db96",
+    compliantLPHook: "0x805b733cc50818dabede4847c4a775a7b1610f96",
+    poolRegistry: "0x04aeb36d5fa2fb0b0df8b9561d9ee88273d3bc76",
+    reputationManager: "0xfb0157e0f904bfa464d09235a723fc2c462d1e76",
+    priceFeedManager: "0x2a0d9da5a72dfe20b65b25e9fefc0e6e090ac194",
+    contractSigner: "0x744e39b3eb1be014cb8d14a585c31e22b7f4a9b8",
+    vaultFactory: "0xb2785f4341b5bf26be07f7e2037550769ce830cd",
+    treasuryFactory: "0x3738d60fcb27d719fdd5113b855e1158b93a95b1",
+    veriffVerifier: "0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff"
   },
   usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   poolManager: "0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829",
@@ -105,37 +113,43 @@ const BASE_MAINNET_CONFIG = {
 - **Currency**: ETH (Testnet)
 
 ## Deployment Summary
-**Status**: ✅ Complete - All 10 contracts deployed and verified  
-**Date**: December 26, 2025  
-**Version**: 2.0 (with Convexo_Passport)
+**Status**: ✅ Complete - All 12 contracts deployed and verified  
+**Date**: January 7, 2026  
+**Version**: 2.1 (with Treasury & Veriff)
 
 ## Deployed Contracts
 
 ### NFT Contracts
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **Convexo_LPs** | `0x45723f029ed2bd61c5a34ba17eed92219e867513` | [View](https://sepolia.basescan.org/address/0x45723f029ed2bd61c5a34ba17eed92219e867513) |
-| **Convexo_Vaults** | `0x15a2bde93252ab0bbca9eefeb83f1e489f6ac770` | [View](https://sepolia.basescan.org/address/0x15a2bde93252ab0bbca9eefeb83f1e489f6ac770) |
-| **Convexo_Passport** | `0xaaf4c852636731005a3d194c3f543a70d9bbcce4` | [View](https://sepolia.basescan.org/address/0xaaf4c852636731005a3d194c3f543a70d9bbcce4) |
+| **Convexo_LPs** | `0xf048da86da99a76856c02a83fb53e72277acacdf` | [View](https://sepolia.basescan.org/address/0xf048da86da99a76856c02a83fb53e72277acacdf) |
+| **Convexo_Vaults** | `0xe9309e75f168b5c98c37a5465e539a0fdbf33eb9` | [View](https://sepolia.basescan.org/address/0xe9309e75f168b5c98c37a5465e539a0fdbf33eb9) |
+| **Convexo_Passport** | `0x5078300fa7e2d29c2e2145beb8a6eb5ad0d45e0c` | [View](https://sepolia.basescan.org/address/0x5078300fa7e2d29c2e2145beb8a6eb5ad0d45e0c) |
 
 ### Hook System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **HookDeployer** | `0xb35a6c66aa8f9fb3abd5f85158b98961d07e39d3` | [View](https://sepolia.basescan.org/address/0xb35a6c66aa8f9fb3abd5f85158b98961d07e39d3) |
-| **CompliantLPHook** | `0xbceeb5aef8905671846ffd187e482a729b5587de` | [View](https://sepolia.basescan.org/address/0xbceeb5aef8905671846ffd187e482a729b5587de) |
-| **PoolRegistry** | `0x3e192a3c3834fbdaef437efef005dadd1f04d8db` | [View](https://sepolia.basescan.org/address/0x3e192a3c3834fbdaef437efef005dadd1f04d8db) |
+| **HookDeployer** | `0x26379c326108d66734d9265dbbf1c09b20dbd2b9` | [View](https://sepolia.basescan.org/address/0x26379c326108d66734d9265dbbf1c09b20dbd2b9) |
+| **CompliantLPHook** | `0x058faa5e95b3deb41e6ecabe4dd870b8e3d90475` | [View](https://sepolia.basescan.org/address/0x058faa5e95b3deb41e6ecabe4dd870b8e3d90475) |
+| **PoolRegistry** | `0x6ad2b7bd52d6382bc7ba37687be5533eb2cf4cd2` | [View](https://sepolia.basescan.org/address/0x6ad2b7bd52d6382bc7ba37687be5533eb2cf4cd2) |
 
 ### Core Infrastructure
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ReputationManager** | `0x17fb3ef8ddcd1b1afe64665fed589e8b56a1085f` | [View](https://sepolia.basescan.org/address/0x17fb3ef8ddcd1b1afe64665fed589e8b56a1085f) |
-| **PriceFeedManager** | `0x8a28297cb1a778010a571f20d0a5df4450a061c0` | [View](https://sepolia.basescan.org/address/0x8a28297cb1a778010a571f20d0a5df4450a061c0) |
+| **ReputationManager** | `0xc8d1160e2e7719e29b34ab36402aaa0ec24d8c01` | [View](https://sepolia.basescan.org/address/0xc8d1160e2e7719e29b34ab36402aaa0ec24d8c01) |
+| **PriceFeedManager** | `0x653bcfc6ea735fb67d73ff537746b804c75cd1f4` | [View](https://sepolia.basescan.org/address/0x653bcfc6ea735fb67d73ff537746b804c75cd1f4) |
 
 ### Vault System
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **ContractSigner** | `0x9b300ebf48b9fbf6a1489ae663194d62f2b35525` | [View](https://sepolia.basescan.org/address/0x9b300ebf48b9fbf6a1489ae663194d62f2b35525) |
-| **VaultFactory** | `0x87982c6485452efea111b0babb212a604635c94d` | [View](https://sepolia.basescan.org/address/0x87982c6485452efea111b0babb212a604635c94d) |
+| **ContractSigner** | `0x437e0a14a515fa5dc5655a11856fe28c7bb78477` | [View](https://sepolia.basescan.org/address/0x437e0a14a515fa5dc5655a11856fe28c7bb78477) |
+| **VaultFactory** | `0xb987dd28a350d0d88765ac7310c0895b76fa0828` | [View](https://sepolia.basescan.org/address/0xb987dd28a350d0d88765ac7310c0895b76fa0828) |
+
+### Treasury & Verification (NEW in v2.1)
+| Contract | Address | Explorer |
+|----------|---------|----------|
+| **TreasuryFactory** | `0x68ec89e0884d05d3b4d2f9b27e4212820b1a56e5` | [View](https://sepolia.basescan.org/address/0x68ec89e0884d05d3b4d2f9b27e4212820b1a56e5) |
+| **VeriffVerifier** | `0x6f7413e36ffed4bde41b4521cf240aef0668201f` | [View](https://sepolia.basescan.org/address/0x6f7413e36ffed4bde41b4521cf240aef0668201f) |
 
 ## Network Dependencies (Sepolia)
 
@@ -151,16 +165,18 @@ const BASE_SEPOLIA_CONFIG = {
   chainId: 84532,
   name: "Base Sepolia",
   contracts: {
-    convexoLPs: "0x45723f029ed2bd61c5a34ba17eed92219e867513",
-    convexoVaults: "0x15a2bde93252ab0bbca9eefeb83f1e489f6ac770",
-    convexoPassport: "0xaaf4c852636731005a3d194c3f543a70d9bbcce4",
-    hookDeployer: "0xb35a6c66aa8f9fb3abd5f85158b98961d07e39d3",
-    compliantLPHook: "0xbceeb5aef8905671846ffd187e482a729b5587de",
-    poolRegistry: "0x3e192a3c3834fbdaef437efef005dadd1f04d8db",
-    reputationManager: "0x17fb3ef8ddcd1b1afe64665fed589e8b56a1085f",
-    priceFeedManager: "0x8a28297cb1a778010a571f20d0a5df4450a061c0",
-    contractSigner: "0x9b300ebf48b9fbf6a1489ae663194d62f2b35525",
-    vaultFactory: "0x87982c6485452efea111b0babb212a604635c94d"
+    convexoLPs: "0xf048da86da99a76856c02a83fb53e72277acacdf",
+    convexoVaults: "0xe9309e75f168b5c98c37a5465e539a0fdbf33eb9",
+    convexoPassport: "0x5078300fa7e2d29c2e2145beb8a6eb5ad0d45e0c",
+    hookDeployer: "0x26379c326108d66734d9265dbbf1c09b20dbd2b9",
+    compliantLPHook: "0x058faa5e95b3deb41e6ecabe4dd870b8e3d90475",
+    poolRegistry: "0x6ad2b7bd52d6382bc7ba37687be5533eb2cf4cd2",
+    reputationManager: "0xc8d1160e2e7719e29b34ab36402aaa0ec24d8c01",
+    priceFeedManager: "0x653bcfc6ea735fb67d73ff537746b804c75cd1f4",
+    contractSigner: "0x437e0a14a515fa5dc5655a11856fe28c7bb78477",
+    vaultFactory: "0xb987dd28a350d0d88765ac7310c0895b76fa0828",
+    treasuryFactory: "0x68ec89e0884d05d3b4d2f9b27e4212820b1a56e5",
+    veriffVerifier: "0x6f7413e36ffed4bde41b4521cf240aef0668201f"
   },
   usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
   ecop: "0xb934dcb57fb0673b7bc0fca590c5508f1cde955d",
@@ -185,6 +201,17 @@ const BASE_SEPOLIA_CONFIG = {
 
 ---
 
+## 🏆 Tier System (v2.1)
+
+| Tier | NFT | User Type | Access |
+|------|-----|-----------|--------|
+| **Tier 0** | None | Unverified | No access |
+| **Tier 1** | Convexo_Passport | Individual | Treasury creation + Vault investments |
+| **Tier 2** | Convexo_LPs | Limited Partner | LP pools + Vault investments |
+| **Tier 3** | Convexo_Vaults | Vault Creator | All above + Vault creation |
+
+---
+
 ## 💡 Base Benefits
 
 ### Why Base?
@@ -194,7 +221,7 @@ const BASE_SEPOLIA_CONFIG = {
 - **Growing ecosystem**: Strong developer community
 
 ### Gas Cost Comparison
-| Network | Average Gas Price | Est. Cost for 10 Contracts |
+| Network | Average Gas Price | Est. Cost for 12 Contracts |
 |---------|------------------|---------------------------|
 | Ethereum Mainnet | ~50 gwei | ~0.0008 ETH |
 | **Base Mainnet** | **~0.0009 gwei** | **~0.000011 ETH** |
@@ -249,14 +276,14 @@ ECOP_ADDRESS_BASESEPOLIA=0xb934dcb57fb0673b7bc0fca590c5508f1cde955d
 - **Protocol Fee Collector**: `0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8`
 
 ### Compiler Settings
-- Solidity: 0.8.30
+- Solidity: 0.8.27
 - Optimizer: Enabled (200 runs)
 - EVM Version: Prague
 - Via IR: Enabled
 
 ### Verification Status
-✅ All contracts verified on Basescan (Both networks)
+✅ All 12 contracts verified on Basescan (Both networks)
 
 ---
 
-*Last updated: December 26, 2025*
+*Last updated: January 7, 2026 - v2.1*

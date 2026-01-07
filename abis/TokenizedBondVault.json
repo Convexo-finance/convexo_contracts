@@ -58,6 +58,11 @@
         "internalType": "address"
       },
       {
+        "name": "_reputationManager",
+        "type": "address",
+        "internalType": "contract ReputationManager"
+      },
+      {
         "name": "_name",
         "type": "string",
         "internalType": "string"
@@ -691,6 +696,19 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "reputationManager",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract ReputationManager"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",

@@ -21,11 +21,16 @@ struct BoundData {
     bytes32 scope;
 }
 
-/// @notice Data that is disclosed in the proof (not all data is disclosed)
+/// @notice Verification results from ZKPassport (boolean traits only, no PII)
+/// @dev Privacy-compliant: stores only verification status, not personal data
 struct DisclosedData {
-    string nationality;
-    bool isOver18;
-    uint256 verifiedAt;
+    // Verification results (boolean traits)
+    bool kycVerified;           // Overall KYC verification passed
+    bool faceMatchPassed;       // Face match verification result
+    bool sanctionsPassed;       // Sanctions check result (US, UK, EU, Switzerland)
+    bool isOver18;              // Age verification result
+    // Timestamp
+    uint256 verifiedAt;         // When ZKPassport verification occurred
 }
 
 /// @title IZKPassportVerifier

@@ -1,16 +1,20 @@
 # Convexo Contracts Reference Guide
 
+**Version 2.1** - Complete contract reference with 12 smart contracts
+
 ## Overview
 
-This comprehensive reference guide documents all 10 Convexo Protocol smart contracts deployed on Ethereum Sepolia, Base Sepolia, and Unichain Sepolia.
+This comprehensive reference guide documents all **12 Convexo Protocol smart contracts** deployed on Ethereum, Base, and Unichain (mainnet + testnets).
 
 ### 📚 What's Inside
 
 This guide provides detailed documentation for:
-- **10 Smart Contracts** with complete function signatures
+- **12 Smart Contracts** with complete function signatures
 - **NFT-Gated Access System** (Tier 1, Tier 2 & Tier 3)
 - **Vault System** for investor staking
+- **Treasury System** for multi-sig USDC management (NEW)
 - **Uniswap V4 Integration** with compliant hooks
+- **Dual Verification Paths** (ZKPassport + Veriff)
 - **Reputation & Price Feed Management**
 
 ### 🎯 Quick Navigation
@@ -19,16 +23,23 @@ This guide provides detailed documentation for:
 |---------------|-----------|---------|
 | **NFT System** | Convexo_LPs, Convexo_Vaults, Convexo_Passport | Access control and compliance |
 | **Vault System** | VaultFactory, TokenizedBondVault | Tokenized bond vaults for SME financing |
+| **Treasury System** | TreasuryFactory, TreasuryVault | Multi-sig USDC treasury (NEW) |
 | **Hook System** | CompliantLPHook, HookDeployer, PoolRegistry | Uniswap V4 integration |
+| **Verification** | VeriffVerifier | Human-approved KYC/KYB (NEW) |
 | **Infrastructure** | ReputationManager, PriceFeedManager, ContractSigner | Core protocol services |
 
 ### 🔑 Key Concepts
 
-**Tier System:**
-- **Tier 0**: No NFT - No access
-- **Tier 1**: Convexo_LPs NFT - Can use liquidity pools (Business)
-- **Tier 2**: Both NFTs (LPs + Vaults) - Can create vaults for financing (Business)
-- **Tier 3**: Convexo_Passport NFT - Can invest in vaults (Individual Investor)
+**Tier System (v2.1 - UPDATED):**
+
+| Tier | NFT Required | User Type | Access |
+|------|--------------|-----------|--------|
+| **Tier 0** | None | Unverified | No access |
+| **Tier 1** | Convexo_Passport | Individual | Treasury creation + Vault investments |
+| **Tier 2** | Convexo_LPs | Limited Partner | LP pools + Vault investments |
+| **Tier 3** | Convexo_Vaults | Vault Creator | Vault creation + All Tier 2 benefits |
+
+**Key Change:** Tier hierarchy is now **reversed** - Passport is Tier 1 (entry-level), Vaults is Tier 3 (highest).
 
 **Vault States:**
 - **Pending**: Accepting investments from lenders
@@ -39,8 +50,8 @@ This guide provides detailed documentation for:
 - **Defaulted**: Borrower failed to repay by maturity date
 
 **New Vault Flow:**
-1. **Borrower** creates vault (requires Tier 2 NFT - Business)
-2. **Investors** fund the vault (requires Tier 2 NFT - Business OR Tier 3 NFT - Individual) → State: `Funded`
+1. **Borrower** creates vault (requires Tier 3 NFT - VaultCreator)
+2. **Investors** fund the vault (requires Tier 1+ NFT) → State: `Funded`
 3. **Admin** creates contract with all parties as signers
 4. **All parties** sign the contract
 5. **Admin** executes contract
@@ -55,20 +66,18 @@ This guide provides detailed documentation for:
 
 ## 📖 Contract Documentation
 
-This guide explains **every function** in all Convexo contracts, with special focus on the **vault system** for SME financing.
-
 ---
 
 ## 💰 TOKENIZED BOND VAULT - Complete Reference
 
 ### Purpose
-**Core vault for investor staking with USDC**. Shows real-time returns like Aave, allows entity to withdraw and repay anytime with 12% interest.
+**Core vault contract for tokenized bonds with ERC20 share tokens**. Shows real-time returns like Aave, allows entity to withdraw and repay anytime with 12% interest.
 
 ### Vault States
 ```
-Pending → Active → Repaying → Completed
-                          ↓
-                      Defaulted
+Pending → Funded → Active → Repaying → Completed
+                                    ↓
+                                Defaulted
 ```
 
 ### For Investors: Staking & Returns
@@ -79,15 +88,15 @@ function purchaseShares(uint256 amount) external
 ```
 
 **Requirements:**
-- Investor must have **Tier 2 NFT (Business)** OR **Tier 3 NFT (Individual Passport)**
+- Investor must have **Tier 1+ NFT** (Passport, LPs, or Vaults)
 - Vault must be in `Pending` state
 - Amount must be > 0 and not exceed remaining funding target
 
 **Example:**
 ```typescript
-// Check investor tier (Tier 2 or Tier 3 required)
-const tier = await reputationManager.getReputationTier(userAddress);
-require(tier === 2 || tier === 3, "Must have Tier 2 or Tier 3 NFT");
+// Check investor can invest (Tier 1+ required)
+const canInvest = await reputationManager.canInvestInVaults(userAddress);
+require(canInvest, "Must have Tier 1+ NFT");
 
 // Investor stakes 1,000 USDC
 await usdc.approve(vaultAddress, 1000e6);
@@ -161,14 +170,6 @@ console.log(`TVL: ${tvl / 1e6} USDC`);
 console.log(`Target: ${target / 1e6} USDC`);
 console.log(`Progress: ${progress / 100}%`);
 console.log(`APY: ${apy / 100}%`);
-
-// Output:
-// Total Shares: 50,000
-// Share Price: 1.025 USDC (value increased!)
-// TVL: 51,250 USDC
-// Target: 50,000 USDC
-// Progress: 100%
-// APY: 12%
 ```
 
 #### 4. Check Accrued Interest (Real-time)
@@ -180,60 +181,33 @@ function getAccruedInterest()
     )
 ```
 
-**Example:**
-```typescript
-const [accrued, remaining] = await vault.getAccruedInterest();
-
-console.log(`Accrued Interest: ${accrued / 1e6} USDC`);
-console.log(`Remaining Interest: ${remaining / 1e6} USDC`);
-
-// Output:
-// Accrued Interest: 2,500 USDC (paid so far)
-// Remaining Interest: 3,500 USDC (still coming)
-// Total will be: 6,000 USDC (12% of 50,000)
-```
-
 #### 5. Redeem Shares (Withdraw)
 ```solidity
 function redeemShares(uint256 shares) external
 ```
 
-**Example:**
+**Important (v2.1):** Redemption is only allowed when debt is fully repaid:
 ```typescript
-// Wait until vault is Completed
-const state = await vault.vaultInfo().state;
-if (state === VaultState.Completed) {
-    // Redeem all shares
-    const myShares = await vault.balanceOf(userAddress);
-    await vault.redeemShares(myShares);
-    
-    // Receives: initial investment + 12% returns
-    // Example: 1,000 USDC → 1,120 USDC
+// Redemption requires full repayment in Repaying state
+const state = await vault.getVaultState();
+if (state === VaultState.Repaying) {
+    // Must wait for full repayment before redeeming
 }
 ```
 
 ### For Borrowers: Withdraw & Repay
 
-#### 1. Disburse Loan (Withdraw Funds)
+#### 1. Withdraw Funds (After Contract Signed)
 ```solidity
-function disburseLoan() external // Admin only
+function withdrawFunds() external // Borrower only
 ```
 
 **What Happens:**
 - Vault must be fully funded (100% of target)
+- Contract must be attached and fully signed
 - All USDC transferred to borrower
 - State changes: Active → Repaying
-- Borrower can now use funds
-
-**Example:**
-```typescript
-// Admin checks vault is funded
-const metrics = await vault.getVaultMetrics();
-if (metrics.fundingProgress === 10000) { // 100%
-    await vault.disburseLoan();
-    // Borrower receives 50,000 USDC
-}
-```
+- `fundsWithdrawnAt` timestamp recorded
 
 #### 2. Make Repayment (Pay Back Anytime)
 ```solidity
@@ -252,16 +226,7 @@ await vault.makeRepayment(5000e6);
 // Check vault info
 const vaultInfo = await vault.vaultInfo();
 console.log(`Total Repaid: ${vaultInfo.totalRepaid / 1e6} USDC`);
-console.log(`State: ${vaultInfo.state}`); // 3 = Repaying
-
-// When fully repaid (57,000 USDC), state changes to Completed (4)
 ```
-
-**What Happens:**
-- Borrower can make partial or full payments anytime
-- Total Due = Principal + Interest (12%) + Protocol Fee (2%)
-- Funds stay in vault until withdrawn by each party
-- When fully repaid → State changes to `Completed`
 
 #### 3. Check Repayment Status
 ```solidity
@@ -299,132 +264,115 @@ Summary:
 - Investors receive: 56,000 USDC (12% return)
 ```
 
-**Important Notes:**
-- Borrower's total payment = Principal + Interest + Protocol Fee
-- Investors get Principal + Interest (12% return)
-- Protocol gets 2% fee on principal
-- Vault state changes to `Completed` only when all funds are withdrawn
-
-**Current Contract Logic:**
-```
-Borrower pays: 50,000 * (1 + 12%) = 56,000 USDC
-Protocol fee: 50,000 * 2% = 1,000 USDC
-Investors receive: 56,000 - 1,000 = 55,000 USDC
-Investor return: 10% net (55k on 50k invested)
-```
-
 ### Protocol Fee Protection
 
-**NEW in v2.2:** Protocol fees are now protected from investor withdrawals.
+Protocol fees are protected from investor withdrawals:
 
-#### Get Available Funds for Investors
 ```solidity
-// Get funds available for investor redemptions (excluding reserved protocol fees)
+// Get funds available for investors (excluding reserved protocol fees)
 function getAvailableForInvestors() public view returns (uint256)
 ```
 
 **Example:**
 ```typescript
-// Check how much is available for investors
 const availableForInvestors = await vault.getAvailableForInvestors();
 
 // This amount EXCLUDES protocol fees that haven't been withdrawn yet
 console.log(`Available for investors: ${formatUnits(availableForInvestors, 6)} USDC`);
-
-// Example scenario:
-// - Vault balance: $57,000
-// - Protocol fees not withdrawn: $1,000
-// - Available for investors: $56,000 ✅
-```
-
-**Why This Matters:**
-- ✅ **Security**: Investors cannot accidentally or maliciously withdraw protocol fees
-- ✅ **Transparency**: Frontend can show exact amounts available
-- ✅ **Fairness**: Protocol always gets their 2% fee
-- ✅ **Compliance**: Clear separation of funds
-
-**How It Works:**
-```
-Total Vault Balance: $57,000
-- Reserved Protocol Fees: $1,000 (earned but not withdrawn)
-= Available for Investors: $56,000
-
-When investors redeem shares:
-- They split the $56,000 proportionally
-- Protocol fee of $1,000 remains protected
-- Protocol collector can withdraw anytime
 ```
 
 ### Vault Timeline & Timestamps
 
-**NEW in v2.1:** Track important vault milestones with timestamps.
+Track important vault milestones with timestamps:
 
-#### Get Vault Timestamps
 ```solidity
-// Get vault creation timestamp
+// Get vault timestamps
 function getVaultCreatedAt() external view returns (uint256)
-
-// Get timestamp when vault was fully funded
 function getVaultFundedAt() external view returns (uint256)
-// Returns 0 if not yet funded
-
-// Get timestamp when contract was attached
 function getVaultContractAttachedAt() external view returns (uint256)
-// Returns 0 if no contract attached
-
-// Get timestamp when borrower withdrew funds
 function getVaultFundsWithdrawnAt() external view returns (uint256)
-// Returns 0 if funds not yet withdrawn
 
 // Calculate actual due date based on withdrawal time
 function getActualDueDate() external view returns (uint256)
-// Returns 0 if funds not withdrawn yet
-// Otherwise: fundsWithdrawnAt + loan duration
-```
-
-**Example Usage:**
-```typescript
-// Get all vault timestamps
-const createdAt = await vault.getVaultCreatedAt();
-const fundedAt = await vault.getVaultFundedAt();
-const contractAttachedAt = await vault.getVaultContractAttachedAt();
-const fundsWithdrawnAt = await vault.getVaultFundsWithdrawnAt();
-const actualDueDate = await vault.getActualDueDate();
-
-// Display timeline
-console.log(`Created: ${new Date(createdAt * 1000)}`);
-console.log(`Funded: ${new Date(fundedAt * 1000)}`);
-console.log(`Contract Attached: ${new Date(contractAttachedAt * 1000)}`);
-console.log(`Funds Withdrawn: ${new Date(fundsWithdrawnAt * 1000)}`);
-console.log(`Due Date: ${new Date(actualDueDate * 1000)}`);
-
-// Calculate days remaining
-const now = Math.floor(Date.now() / 1000);
-const daysRemaining = Math.floor((actualDueDate - now) / 86400);
-console.log(`Days remaining: ${daysRemaining}`);
 ```
 
 **Why This Matters:**
-- **Accurate Due Dates**: The due date is calculated from when funds are withdrawn, not when the vault is created
-- **Timeline Tracking**: Frontend can show a complete timeline of vault milestones
-- **Compliance**: Timestamps provide an immutable audit trail
-- **User Experience**: Borrowers and investors can see exact dates for all events
-
-**Vault State Completion Logic:**
-The vault state changes to `Completed` **only** when:
-1. ✅ All debt is repaid (principal + interest + protocol fee)
-2. ✅ **AND** all funds have been withdrawn by:
-   - Protocol fee collector (via `withdrawProtocolFees()`)
-   - All investors (via `redeemShares()`)
-3. ✅ Vault balance < 0.0001 USDC (dust)
-
-This ensures the vault isn't marked as complete until everyone has received their funds.
+- **Accurate Due Dates**: Due date calculated from when funds are withdrawn, not when vault is created
+- **Timeline Tracking**: Frontend can show complete timeline of vault milestones
+- **Compliance**: Timestamps provide immutable audit trail
 
 ---
 
-## 🔐 NFT Contracts (Already Deployed)
+## 🏦 TREASURY SYSTEM - NEW in v2.1
 
-### Convexo_LPs (Compliant NFT)
+### TreasuryFactory
+
+**Purpose:** Factory for creating TreasuryVault instances. Requires Tier 1+ (Passport or higher).
+
+```solidity
+// Create a new treasury (requires Tier 1+)
+function createTreasury(
+    address[] memory signers,      // Authorized signers (empty for single-sig)
+    uint256 signaturesRequired     // Required signatures for withdrawals
+) external returns (uint256 treasuryId, address treasuryAddress)
+
+// Get treasury by ID
+function getTreasury(uint256 treasuryId) external view returns (address)
+
+// Get total number of treasuries
+function getTreasuryCount() external view returns (uint256)
+
+// Get all treasury IDs owned by an address
+function getTreasuriesByOwner(address owner) external view returns (uint256[] memory)
+```
+
+**Example:**
+```typescript
+// Individual with Passport NFT creates a treasury
+const canCreate = await reputationManager.canCreateTreasury(userAddress);
+require(canCreate, "Must have Tier 1+ NFT");
+
+// Create single-sig treasury
+const [treasuryId, treasuryAddress] = await treasuryFactory.createTreasury([], 1);
+
+// Create multi-sig treasury (2 of 3)
+const signers = [signer1, signer2, signer3];
+const [treasuryId, treasuryAddress] = await treasuryFactory.createTreasury(signers, 2);
+```
+
+### TreasuryVault
+
+**Purpose:** Multi-sig USDC treasury for individuals and businesses.
+
+```solidity
+// Deposit USDC
+function deposit(uint256 amount) external
+
+// Propose a withdrawal (any signer)
+function proposeWithdrawal(
+    address recipient,
+    uint256 amount,
+    string calldata reason
+) external returns (uint256 proposalId)
+
+// Approve a withdrawal proposal (signer)
+function approveWithdrawal(uint256 proposalId) external
+
+// Execute withdrawal after enough approvals
+function executeWithdrawal(uint256 proposalId) external
+
+// Get treasury balance
+function getBalance() external view returns (uint256)
+
+// Get proposal details
+function getProposal(uint256 proposalId) external view returns (Proposal memory)
+```
+
+---
+
+## 🔐 NFT Contracts
+
+### Convexo_LPs (Limited Partner NFT - Tier 2)
 
 **Purpose:** Gate access to Uniswap V4 pools. Only holders can trade.
 
@@ -446,25 +394,39 @@ function getTokenState(uint256 tokenId) returns (bool)
 function getCompanyId(uint256 tokenId) returns (string)
 ```
 
-### Convexo_Vaults (Creditscore NFT)
+### Convexo_Vaults (Vault Creator NFT - Tier 3)
 
 **Same functions as Convexo_LPs.** Grants vault creation privileges.
 
-### Convexo_Passport (Individual Investor NFT)
+### Convexo_Passport (Individual Investor NFT - Tier 1)
 
-**Purpose:** Soulbound NFT for individual investors verified via ZKPassport. Grants Tier 3 access to invest in vaults.
+**Purpose:** Soulbound NFT for individual investors verified via ZKPassport. Grants Tier 1 access.
 
 **Key Features:**
 - **Soulbound**: Non-transferable NFT (cannot be sold or transferred)
 - **ZKPassport Verified**: Uses zero-knowledge proofs for privacy-preserving identity verification
-- **Age Verification**: Requires user to be over 18
+- **Privacy-Compliant**: Only verification traits stored, no PII
 - **One Per Address**: Each address can only hold one active passport
 
+**Stored Verification Traits (non-PII):**
+
+| Trait | Description |
+|-------|-------------|
+| `kycVerified` | Overall KYC verification passed |
+| `faceMatchPassed` | Face match verification result |
+| `sanctionsPassed` | Sanctions check passed |
+| `isOver18` | Age verification passed |
+
 ```solidity
-// Self-mint with ZKPassport proof (Individual investor)
+// Self-mint with ZKPassport proof (on-chain verification)
 function safeMintWithZKPassport(
     ProofVerificationParams calldata params,
     bool isIDCard  // true for ID card, false for passport
+) returns (uint256 tokenId)
+
+// Self-mint with unique identifier (off-chain verification)
+function safeMintWithIdentifier(
+    bytes32 uniqueIdentifier
 ) returns (uint256 tokenId)
 
 // Admin mint (for special cases)
@@ -479,10 +441,11 @@ function revokePassport(uint256 tokenId)
 // Check if address holds active passport
 function holdsActivePassport(address holder) returns (bool)
 
-// Get verified identity details
+// Get verified identity details (privacy-compliant traits)
 function getVerifiedIdentity(address holder) 
     returns (VerifiedIdentity memory)
-    // Returns: uniqueIdentifier, verifiedAt, isActive, nationality
+    // Returns: uniqueIdentifier, verifiedAt, isActive, 
+    //          kycVerified, faceMatchPassed, sanctionsPassed, isOver18
 
 // Check if identifier already used (prevents duplicate passports)
 function isIdentifierUsed(bytes32 uniqueIdentifier) returns (bool)
@@ -493,32 +456,85 @@ function getActivePassportCount() returns (uint256)
 
 **Example Usage:**
 ```typescript
-// Individual investor mints passport with ZKPassport proof
-const proofParams = {
-    a: [...],
-    b: [[...], [...]],
-    c: [...],
-    input: [...],
-    publicKey: "0x...",
-    scope: "0x..."
-};
-
-const tokenId = await convexoPassport.safeMintWithZKPassport(proofParams, false);
+// Individual mints passport with off-chain ZKPassport verification
+const uniqueIdentifier = keccak256(publicKey + scope);
+const tokenId = await convexoPassport.safeMintWithIdentifier(uniqueIdentifier);
 
 // Check if user has passport
 const hasPassport = await convexoPassport.holdsActivePassport(userAddress);
 
-// Get identity details
+// Get identity traits (privacy-compliant)
 const identity = await convexoPassport.getVerifiedIdentity(userAddress);
-console.log(`Nationality: ${identity.nationality}`);
-console.log(`Verified at: ${new Date(identity.verifiedAt * 1000)}`);
+console.log(`KYC Verified: ${identity.kycVerified}`);
+console.log(`Face Match: ${identity.faceMatchPassed}`);
+console.log(`Sanctions: ${identity.sanctionsPassed}`);
+console.log(`Over 18: ${identity.isOver18}`);
 ```
 
-**Important Notes:**
-- Passport holders (Tier 3) can **only invest** in vaults, not create them
-- Business NFTs (Tier 1 & 2) and Passport NFT (Tier 3) are **mutually exclusive**
-- Passport is **soulbound** - cannot be transferred or sold
-- Each passport is tied to a unique identifier (public key + scope hash)
+---
+
+## 🔍 VERIFF VERIFIER - NEW in v2.1
+
+### Purpose
+
+Human-approved KYC/KYB verification system for Limited Partner (Tier 2) access. Admin submits verification results from Veriff platform, then approves/rejects to mint Convexo_LPs NFT.
+
+### Verification Flow
+
+```
+1. User completes Veriff verification (off-chain)
+   ↓
+2. Admin submits verification result (submitVerification)
+   ↓
+3. Admin reviews and approves/rejects
+   ↓
+4. If approved: Convexo_LPs NFT minted automatically
+   ↓
+5. User now has Tier 2 (Limited Partner) access
+```
+
+### Functions
+
+```solidity
+// Submit verification result from Veriff (Admin only)
+function submitVerification(
+    address user,
+    string calldata sessionId
+) external
+
+// Approve verification and mint Convexo_LPs NFT
+function approveVerification(address user) external
+
+// Reject verification with reason
+function rejectVerification(
+    address user,
+    string calldata reason
+) external
+
+// Get verification status
+function getVerificationStatus(address user) 
+    returns (VerificationRecord memory)
+
+// Check if user has approved verification
+function isVerified(address user) returns (bool)
+
+// Reset rejected verification (Admin only)
+function resetVerification(address user) external
+```
+
+**Example:**
+```typescript
+// Admin submits Veriff session result
+await veriffVerifier.submitVerification(userAddress, "session_12345");
+
+// Admin approves (automatically mints Convexo_LPs NFT)
+await veriffVerifier.approveVerification(userAddress);
+
+// Check verification status
+const record = await veriffVerifier.getVerificationStatus(userAddress);
+console.log(`Status: ${record.status}`); // 0=None, 1=Pending, 2=Approved, 3=Rejected
+console.log(`NFT Token ID: ${record.nftTokenId}`);
+```
 
 ---
 
@@ -526,14 +542,14 @@ console.log(`Verified at: ${new Date(identity.verifiedAt * 1000)}`);
 
 ### CompliantLPHook
 
-**Purpose:** Automatically checks if user holds Convexo_LPs NFT before allowing pool access.
+**Purpose:** Automatically checks if user holds Convexo_LPs NFT (Tier 2+) before allowing pool access.
 
 **How It Works:**
 1. User tries to swap in USDC/ECOP pool
 2. Uniswap V4 calls hook's `beforeSwap()` function
-3. Hook checks: `convexoLPs.balanceOf(user) > 0`
+3. Hook checks: `reputationManager.canAccessLPPools(user)`
 4. If yes → Allow swap
-5. If no → Revert with "Must hold Convexo_LPs NFT"
+5. If no → Revert with "Must have LimitedPartner tier or higher"
 
 **Functions:**
 ```solidity
@@ -562,8 +578,6 @@ function beforeRemoveLiquidity(
 ) returns (bytes4)
 ```
 
-**Frontend doesn't call these directly.** Uniswap V4 calls them automatically.
-
 ### PoolRegistry
 
 **Purpose:** Track which pools are gated.
@@ -579,13 +593,11 @@ function registerPool(
 ) returns (bytes32 poolId)
 
 // Get pool info
-function getPool(bytes32 poolId) 
-    returns (PoolInfo memory)
+function getPool(bytes32 poolId) returns (PoolInfo memory)
 
 // Get all pools
 function getPoolCount() returns (uint256)
-function getPoolIdAtIndex(uint256 index) 
-    returns (bytes32)
+function getPoolIdAtIndex(uint256 index) returns (bytes32)
 ```
 
 ---
@@ -621,16 +633,6 @@ function convertLocalToUSDC(
 ) returns (uint256 usdcAmount)
 ```
 
-**Example:**
-```typescript
-// Convert 1,000 USDC to Colombian Pesos
-const cop = await priceFeedManager.convertUSDCToLocal(
-    CurrencyPair.USDC_COP,
-    1000e6
-);
-console.log(`1,000 USDC = ${cop} COP`);
-```
-
 ---
 
 ## 📝 Contract Signing System
@@ -663,8 +665,7 @@ function executeContract(
 )
 
 // Check if fully signed
-function isFullySigned(bytes32 documentHash) 
-    returns (bool)
+function isFullySigned(bytes32 documentHash) returns (bool)
 
 // Get contract info
 function getContract(bytes32 documentHash) 
@@ -677,13 +678,10 @@ function getContract(bytes32 documentHash)
 
 ### VaultFactory
 
-**Purpose:** Create vaults for borrowers with Tier 2 NFT (Convexo_Vaults).
+**Purpose:** Create vaults for borrowers with Tier 3 NFT (Convexo_Vaults).
 
-#### New Vault Flow (Borrower-Initiated)
-
-**Step 1: Borrower Creates Vault**
 ```solidity
-// Create vault (Borrower with Tier 2 NFT)
+// Create vault (Borrower with Tier 3 NFT)
 function createVault(
     uint256 principalAmount,
     uint256 interestRate,     // 1200 = 12%
@@ -695,77 +693,60 @@ function createVault(
 ```
 
 **Requirements:**
-- Caller must have Tier 2 NFT (Convexo_Vaults)
+- Caller must have Tier 3 NFT (Convexo_Vaults)
 - Principal amount > 0
 - Maturity date in the future
 - Interest rate between 0.01% and 100%
 - Protocol fee ≤ 10%
 
-**Step 2: Investors Fund Vault**
-- Vault state: `Pending`
-- Investors (Tier 2 - Business OR Tier 3 - Individual) call `purchaseShares()` on the vault
-- When fully funded → State changes to `Funded`
-
-**Step 3: Create and Sign Contract**
-- Admin creates contract with borrower + all investors as signers
-- All parties sign the contract
-- Admin calls `attachContractToVault(vaultId, contractHash)`
-- Vault state changes to `Active`
-
-**Step 4: Borrower Withdraws Funds**
-- Borrower calls `withdrawFunds()` on vault
-- Vault verifies contract is fully signed
-- Funds transferred to borrower
-- Vault state changes to `Repaying`
-
-#### Additional Functions
-
-```solidity
-// Attach contract to funded vault (Admin)
-function attachContractToVault(
-    uint256 vaultId,
-    bytes32 contractHash
-) external
-
-// Get vault by ID
-function getVault(uint256 vaultId) 
-    returns (address)
-
-// Get vault by contract hash
-function getVaultByContractHash(bytes32 hash) 
-    returns (address)
-```
-
 ---
 
 ## 🎭 Reputation System
 
-### ReputationManager
+### ReputationManager (v2.1 - UPDATED)
 
 **Purpose:** Calculate user reputation tier based on NFT ownership.
 
+**New Tier Hierarchy:**
+```
+Tier 0: No NFTs → No access
+Tier 1: Convexo_Passport → Individual: Treasury + Vault investments
+Tier 2: Convexo_LPs → Limited Partner: LP pools + Vault investments
+Tier 3: Convexo_Vaults → Vault Creator: All above + Vault creation
+
+Note: Highest tier wins (progressive KYC - no mutual exclusivity)
+```
+
 ```solidity
 // Get user's tier
-function getReputationTier(address user) 
-    returns (ReputationTier)
-    // Returns: None (0), Compliant (1), Creditscore (2), Passport (3)
+function getReputationTier(address user) returns (ReputationTier)
+// Returns: None (0), Passport (1), LimitedPartner (2), VaultCreator (3)
 
 // Get numeric tier
-function getReputationTierNumeric(address user) 
-    returns (uint256)
-    // Returns: 0, 1, 2, or 3
+function getReputationTierNumeric(address user) returns (uint256)
 
-// Check if has Compliant access (Tier 1+)
-function hasCompliantAccess(address user) 
-    returns (bool)
+// NEW: Check if can create treasuries (Tier 1+)
+function canCreateTreasury(address user) returns (bool)
 
-// Check if has Creditscore access (Tier 2)
-function hasCreditscoreAccess(address user) 
-    returns (bool)
+// NEW: Check if can invest in vaults (Tier 1+)
+function canInvestInVaults(address user) returns (bool)
 
-// Check if holds Convexo_Passport NFT
-function holdsConvexoPassport(address user) 
-    returns (bool)
+// NEW: Check if can access LP pools (Tier 2+)
+function canAccessLPPools(address user) returns (bool)
+
+// NEW: Check if can create vaults (Tier 3)
+function canCreateVaults(address user) returns (bool)
+
+// Check if has LimitedPartner access (Tier 2+)
+function hasLimitedPartnerAccess(address user) returns (bool)
+
+// Check if has VaultCreator access (Tier 3)
+function hasVaultCreatorAccess(address user) returns (bool)
+
+// Check NFT ownership
+function holdsConvexoLPs(address user) returns (bool)
+function holdsConvexoVaults(address user) returns (bool)
+function holdsConvexoPassport(address user) returns (bool)
 
 // Get detailed info
 function getReputationDetails(address user) 
@@ -777,94 +758,123 @@ function getReputationDetails(address user)
     )
 ```
 
-**Tier Calculation:**
-```
-Tier 0: No NFTs → No access
-Tier 1: Convexo_LPs NFT → Can access pools, create invoices (Business)
-Tier 2: Both NFTs (LPs + Vaults) → Can create bond credits, full access (Business)
-Tier 3: Convexo_Passport NFT → Can invest in vaults (Individual Investor)
-
-Note: Business NFTs (Tier 1 & 2) and Passport NFT (Tier 3) are mutually exclusive.
-```
+**Deprecated Functions (kept for backward compatibility):**
+- `hasCompliantAccess()` → Use `hasLimitedPartnerAccess()`
+- `hasCreditscoreAccess()` → Use `hasVaultCreatorAccess()`
 
 ---
 
 ## 🎯 Quick Reference
 
-### For Investors:
-1. Check reputation: `reputationManager.getReputationTier()`
-2. Browse vaults: `vaultFactory.getVaultCount()`
-3. Stake USDC: `vault.purchaseShares(amount)`
-4. Check returns: `vault.getInvestorReturn(address)`
-5. Monitor progress: `vault.getVaultMetrics()`
-6. Redeem: `vault.redeemShares(shares)`
+### For Individual Investors (Tier 1 - Passport):
+1. Verify identity: ZKPassport → `convexoPassport.safeMintWithIdentifier()`
+2. Create treasury: `treasuryFactory.createTreasury()`
+3. Invest in vaults: `vault.purchaseShares(amount)`
+4. Track returns: `vault.getInvestorReturn(address)`
+5. Redeem: `vault.redeemShares(shares)` (after full repayment)
 
-### For Borrowers:
-1. Sign contract: `contractSigner.signContract()`
-2. Wait for vault creation: `vaultFactory.createVault()`
+### For Limited Partners (Tier 2 - LPs):
+1. Verify business: Veriff → `veriffVerifier.approveVerification()` → Convexo_LPs NFT
+2. Access LP pools: Trade USDC/ECOP, USDC/ARS, etc.
+3. Invest in vaults: `vault.purchaseShares(amount)`
+4. All Tier 1 benefits included
+
+### For Vault Creators (Tier 3 - Vaults):
+1. Submit financials: AI scoring → Admin mints Convexo_Vaults NFT
+2. Create vault: `vaultFactory.createVault()`
 3. Wait for funding: `vault.getVaultMetrics().fundingProgress`
-4. Withdraw loan: `vault.disburseLoan()` (admin calls)
-5. Check debt: `vault.getRepaymentStatus()`
+4. Attach contract: `vault.attachContract(contractHash)`
+5. Withdraw loan: `vault.withdrawFunds()`
 6. Repay anytime: `vault.makeRepayment(amount)`
+7. All Tier 2 benefits included
 
 ### For Admins:
-1. Mint NFTs: `convexoLPs.safeMint()`
-2. Deploy hooks: `hookDeployer.deploy()`
-3. Register pools: `poolRegistry.registerPool()`
-4. Configure prices: `priceFeedManager.setPriceFeed()`
-5. Verify signatures: `contractSigner.isFullySigned()`
-6. Create vaults: `vaultFactory.createVault()`
+1. Mint NFTs: `convexoLPs.safeMint()`, `convexoVaults.safeMint()`
+2. Approve Veriff: `veriffVerifier.approveVerification()`
+3. Deploy hooks: `hookDeployer.deploy()`
+4. Register pools: `poolRegistry.registerPool()`
+5. Configure prices: `priceFeedManager.setPriceFeed()`
+6. Attach contracts: `vault.attachContract(contractHash)`
 
 ---
 
-## 🔍 Dashboard Requirements
+## 📊 Dashboard Requirements
 
-### Investor Dashboard Needs:
+### Investor Dashboard Needs (Tier 1+):
 ```typescript
+// Check tier and access
+const tier = await reputationManager.getReputationTierNumeric(userAddress);
+const canInvest = await reputationManager.canInvestInVaults(userAddress);
+
 // Main metrics
 const metrics = await vault.getVaultMetrics();
-// Shows: TVL, share price, funding progress, APY
 
 // User's position
 const returns = await vault.getInvestorReturn(userAddress);
-// Shows: invested, current value, profit, APY
 
 // Interest tracking
 const [accrued, remaining] = await vault.getAccruedInterest();
-// Shows: interest earned, interest to come
 
 // Share balance
 const shares = await vault.balanceOf(userAddress);
 ```
 
-### Borrower Dashboard Needs:
+### Borrower Dashboard Needs (Tier 3):
 ```typescript
 // Repayment status
-const [due, paid, remaining, fee] = 
-    await vault.getRepaymentStatus();
-// Shows: total due, paid so far, remaining, protocol fee
+const [due, paid, remaining, fee] = await vault.getRepaymentStatus();
+
+// Vault timeline
+const createdAt = await vault.getVaultCreatedAt();
+const fundedAt = await vault.getVaultFundedAt();
+const fundsWithdrawnAt = await vault.getVaultFundsWithdrawnAt();
+const actualDueDate = await vault.getActualDueDate();
 
 // Vault state
-const state = await vault.vaultInfo().state;
-// Shows: Pending, Active, Repaying, Completed, Defaulted
+const state = await vault.getVaultState();
 ```
 
-### Pool Access Dashboard Needs:
+### Treasury Dashboard Needs (Tier 1+):
 ```typescript
-// Check if can access pools
-const tier = await reputationManager.getReputationTier(user);
-const canAccess = tier >= 1;
+// List treasuries
+const treasuryIds = await treasuryFactory.getTreasuriesByOwner(userAddress);
 
-// List available pools
-const count = await poolRegistry.getPoolCount();
-for (let i = 0; i < count; i++) {
-    const poolId = await poolRegistry.getPoolIdAtIndex(i);
-    const info = await poolRegistry.getPool(poolId);
-    // Show pool if user has access
-}
+// Treasury balance
+const balance = await treasury.getBalance();
+
+// Pending proposals
+const proposal = await treasury.getProposal(proposalId);
 ```
 
 ---
 
-**This reference covers all core functions. For deployment details, see `DEPLOYMENT_GUIDE.md`.**
+## 🆕 What's New in v2.1
 
+### New Contracts (12 total)
+1. **TreasuryFactory** - Create multi-sig treasuries (Tier 1+)
+2. **TreasuryVault** - Multi-sig USDC treasury management
+3. **VeriffVerifier** - Human-approved KYC/KYB for Tier 2
+
+### Tier System Changes
+- **Tier 1**: Passport (Individual) - Treasury creation + Vault investments
+- **Tier 2**: LPs (Limited Partner) - LP pools + Vault investments
+- **Tier 3**: Vaults (Vault Creator) - Vault creation + All benefits
+- **Progressive KYC**: Highest tier wins (no mutual exclusivity)
+
+### New ReputationManager Functions
+- `canCreateTreasury()` - Tier 1+
+- `canInvestInVaults()` - Tier 1+
+- `canAccessLPPools()` - Tier 2+
+- `canCreateVaults()` - Tier 3
+
+### Privacy-Compliant Passport
+- Only verification traits stored (no PII)
+- Traits: `kycVerified`, `faceMatchPassed`, `sanctionsPassed`, `isOver18`
+
+### Vault Redemption Update
+- Redemption now requires **full repayment** when in Repaying state
+- Early exit allowed when vault is Funded/Active (before borrower withdrawal)
+
+---
+
+**This reference covers all core functions for the 12 Convexo contracts. For deployment details, see `FRONTEND_INTEGRATION.md`.**

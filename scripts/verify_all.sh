@@ -86,6 +86,7 @@ get_address() {
 # Get all contract addresses
 CONVEXO_LPS=$(get_address "convexo_lps")
 CONVEXO_VAULTS=$(get_address "convexo_vaults")
+CONVEXO_PASSPORT=$(get_address "convexo_passport")
 HOOK_DEPLOYER=$(get_address "hook_deployer")
 COMPLIANT_LP_HOOK=$(get_address "compliant_lp_hook")
 POOL_REGISTRY=$(get_address "pool_registry")
@@ -93,6 +94,8 @@ REPUTATION_MANAGER=$(get_address "reputation_manager")
 PRICE_FEED_MANAGER=$(get_address "price_feed_manager")
 CONTRACT_SIGNER=$(get_address "contract_signer")
 VAULT_FACTORY=$(get_address "vault_factory")
+TREASURY_FACTORY=$(get_address "treasury_factory")
+VERIFF_VERIFIER=$(get_address "veriff_verifier")
 
 # Function to verify a contract
 verify_contract() {
@@ -130,18 +133,23 @@ verify_contract() {
     sleep 3
 }
 
+# ZKPassport Verifier address (same on all chains)
+ZKPASSPORT_VERIFIER="0x1D000001000EFD9a6371f4d90bB8920D5431c0D8"
+CONVEXO_PASSPORT_URI="https://metadata.convexo.finance/passport"
+ADMIN_ADDRESS="0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8"
+
 # Verify all contracts
 VERIFIED=0
 FAILED=0
 
 echo -e "${BLUE}═══════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}Starting verification of 9 contracts on $NETWORK${NC}"
+echo -e "${BLUE}Starting verification of 12 contracts on $NETWORK${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════${NC}\n"
 
 # 1. Convexo_LPs
 if verify_contract "Convexo_LPs" "$CONVEXO_LPS" \
     "src/convexolps.sol" "Convexo_LPs" \
-    "$(cast abi-encode "constructor(address,address)" $MINTER_ADDRESS $MINTER_ADDRESS)"; then
+    "$(cast abi-encode "constructor(address,address)" $ADMIN_ADDRESS $MINTER_ADDRESS)"; then
     ((VERIFIED++))
 else
     ((FAILED++))
@@ -150,86 +158,122 @@ fi
 # 2. Convexo_Vaults
 if verify_contract "Convexo_Vaults" "$CONVEXO_VAULTS" \
     "src/convexovaults.sol" "Convexo_Vaults" \
-    "$(cast abi-encode "constructor(address,address)" $MINTER_ADDRESS $MINTER_ADDRESS)"; then
+    "$(cast abi-encode "constructor(address,address)" $ADMIN_ADDRESS $MINTER_ADDRESS)"; then
     ((VERIFIED++))
 else
     ((FAILED++))
 fi
 
-# 3. HookDeployer
+# 3. Convexo_Passport
+if verify_contract "Convexo_Passport" "$CONVEXO_PASSPORT" \
+    "src/contracts/Convexo_Passport.sol" "Convexo_Passport" \
+    "$(cast abi-encode "constructor(address,address,string)" $ADMIN_ADDRESS $ZKPASSPORT_VERIFIER $CONVEXO_PASSPORT_URI)"; then
+    ((VERIFIED++))
+else
+    ((FAILED++))
+fi
+
+# 4. HookDeployer
 if verify_contract "HookDeployer" "$HOOK_DEPLOYER" \
     "src/hooks/HookDeployer.sol" "HookDeployer" \
-    "$(cast abi-encode "constructor()")"; then
+    ""; then
     ((VERIFIED++))
 else
     ((FAILED++))
 fi
 
-# 4. CompliantLPHook
+# 5. CompliantLPHook
 if verify_contract "CompliantLPHook" "$COMPLIANT_LP_HOOK" \
     "src/hooks/CompliantLPHook.sol" "CompliantLPHook" \
-    "$(cast abi-encode "constructor(address,address)" $POOL_MANAGER $CONVEXO_LPS)"; then
+    "$(cast abi-encode "constructor(address,address)" $POOL_MANAGER $CONVEXO_PASSPORT)"; then
     ((VERIFIED++))
 else
     ((FAILED++))
 fi
 
-# 5. PoolRegistry
+# 6. PoolRegistry
 if verify_contract "PoolRegistry" "$POOL_REGISTRY" \
     "src/contracts/PoolRegistry.sol" "PoolRegistry" \
-    "$(cast abi-encode "constructor()")"; then
+    "$(cast abi-encode "constructor(address)" $ADMIN_ADDRESS)"; then
     ((VERIFIED++))
 else
     ((FAILED++))
 fi
 
-# 6. ReputationManager
+# 7. ReputationManager
 if verify_contract "ReputationManager" "$REPUTATION_MANAGER" \
     "src/contracts/ReputationManager.sol" "ReputationManager" \
-    "$(cast abi-encode "constructor()")"; then
+    "$(cast abi-encode "constructor(address,address,address)" $CONVEXO_LPS $CONVEXO_VAULTS $CONVEXO_PASSPORT)"; then
     ((VERIFIED++))
 else
     ((FAILED++))
 fi
 
-# 7. PriceFeedManager
+# 8. PriceFeedManager
 if verify_contract "PriceFeedManager" "$PRICE_FEED_MANAGER" \
     "src/contracts/PriceFeedManager.sol" "PriceFeedManager" \
-    "$(cast abi-encode "constructor()")"; then
+    "$(cast abi-encode "constructor(address)" $ADMIN_ADDRESS)"; then
     ((VERIFIED++))
 else
     ((FAILED++))
 fi
 
-# 8. ContractSigner
+# 9. ContractSigner
 if verify_contract "ContractSigner" "$CONTRACT_SIGNER" \
     "src/contracts/ContractSigner.sol" "ContractSigner" \
-    "$(cast abi-encode "constructor()")"; then
+    "$(cast abi-encode "constructor(address)" $ADMIN_ADDRESS)"; then
     ((VERIFIED++))
 else
     ((FAILED++))
 fi
 
-# 9. VaultFactory
+# 10. VaultFactory
 if verify_contract "VaultFactory" "$VAULT_FACTORY" \
     "src/contracts/VaultFactory.sol" "VaultFactory" \
-    "$(cast abi-encode "constructor(address,address,address,address,address)" $MINTER_ADDRESS $USDC $MINTER_ADDRESS $CONTRACT_SIGNER $REPUTATION_MANAGER)"; then
+    "$(cast abi-encode "constructor(address,address,address,address,address)" $ADMIN_ADDRESS $USDC $ADMIN_ADDRESS $CONTRACT_SIGNER $REPUTATION_MANAGER)"; then
     ((VERIFIED++))
 else
     ((FAILED++))
+fi
+
+# 11. TreasuryFactory
+if [ ! -z "$TREASURY_FACTORY" ] && [ "$TREASURY_FACTORY" != "null" ]; then
+    if verify_contract "TreasuryFactory" "$TREASURY_FACTORY" \
+        "src/contracts/TreasuryFactory.sol" "TreasuryFactory" \
+        "$(cast abi-encode "constructor(address,address)" $USDC $REPUTATION_MANAGER)"; then
+        ((VERIFIED++))
+    else
+        ((FAILED++))
+    fi
+else
+    echo -e "${YELLOW}⚠️  Skipping TreasuryFactory (not deployed)${NC}\n"
+fi
+
+# 12. VeriffVerifier
+if [ ! -z "$VERIFF_VERIFIER" ] && [ "$VERIFF_VERIFIER" != "null" ]; then
+    if verify_contract "VeriffVerifier" "$VERIFF_VERIFIER" \
+        "src/contracts/VeriffVerifier.sol" "VeriffVerifier" \
+        "$(cast abi-encode "constructor(address,address)" $ADMIN_ADDRESS $CONVEXO_LPS)"; then
+        ((VERIFIED++))
+    else
+        ((FAILED++))
+    fi
+else
+    echo -e "${YELLOW}⚠️  Skipping VeriffVerifier (not deployed)${NC}\n"
 fi
 
 # Summary
+TOTAL=$((VERIFIED + FAILED))
 echo -e "\n${BLUE}═══════════════════════════════════════════════════${NC}"
 echo -e "${BLUE}Verification Summary for $NETWORK${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}✅ Verified: $VERIFIED/9${NC}"
+echo -e "${GREEN}✅ Verified: $VERIFIED/$TOTAL${NC}"
 if [ $FAILED -gt 0 ]; then
-    echo -e "${RED}❌ Failed: $FAILED/9${NC}"
+    echo -e "${RED}❌ Failed: $FAILED/$TOTAL${NC}"
 fi
 echo -e "${BLUE}═══════════════════════════════════════════════════${NC}\n"
 
-if [ $VERIFIED -eq 9 ]; then
+if [ $FAILED -eq 0 ]; then
     echo -e "${GREEN}🎉 All contracts verified successfully on $NETWORK!${NC}"
     exit 0
 else

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import {
-    IHooks, BeforeSwapDelta, PoolKey, BalanceDelta, ModifyLiquidityParams, SwapParams
-} from "../interfaces/IHooks.sol";
+import {IHooks, PoolKey, BeforeSwapDelta, BalanceDelta, ModifyLiquidityParams, SwapParams} from "../interfaces/IHooks.sol";
 import {IPoolManager} from "../interfaces/IPoolManager.sol";
 
+/// @title BaseHook
 /// @notice Base contract for Uniswap V4 hooks
-/// @dev Provides default implementations that revert for all hook functions
+/// @dev Provides default implementations that revert for all hook functions.
+///      Based on Uniswap V4: https://docs.uniswap.org/contracts/v4/quickstart/hooks/swap
 abstract contract BaseHook is IHooks {
     error HookNotImplemented();
 
@@ -17,9 +17,6 @@ abstract contract BaseHook is IHooks {
     constructor(IPoolManager _poolManager) {
         poolManager = _poolManager;
     }
-
-    /// @notice Helper function to get hook permissions from address
-    function getHookPermissions() public pure virtual returns (Permissions memory);
 
     /// @notice Struct to define which hooks are implemented
     struct Permissions {
@@ -34,6 +31,11 @@ abstract contract BaseHook is IHooks {
         bool beforeDonate;
         bool afterDonate;
     }
+
+    /// @notice Returns the hook permissions - must be overridden
+    function getHookPermissions() public pure virtual returns (Permissions memory);
+
+    // ============ Default Implementations (revert if not overridden) ============
 
     function beforeInitialize(address, PoolKey calldata, uint160) external virtual returns (bytes4) {
         revert HookNotImplemented();

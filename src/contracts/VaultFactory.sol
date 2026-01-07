@@ -60,7 +60,7 @@ contract VaultFactory is AccessControl {
         reputationManager = _reputationManager;
     }
 
-    /// @notice Create a new vault (borrower must have Tier 2 NFT)
+    /// @notice Create a new vault (borrower must have Tier 3 NFT)
     /// @param principalAmount The principal amount in USDC
     /// @param interestRate The interest rate in basis points (e.g., 1200 = 12%)
     /// @param protocolFeeRate The protocol fee rate in basis points (e.g., 200 = 2%)
@@ -77,10 +77,10 @@ contract VaultFactory is AccessControl {
         string memory name,
         string memory symbol
     ) external returns (uint256 vaultId, address vaultAddress) {
-        // Verify borrower has Tier 2 NFT (Creditscore)
+        // Verify borrower has Tier 3 NFT (VaultCreator)
         require(
-            reputationManager.getReputationTier(msg.sender) == ReputationManager.ReputationTier.Creditscore,
-            "Must have Tier 2 NFT (Convexo_Vaults)"
+            reputationManager.canCreateVaults(msg.sender),
+            "Must have Tier 3 NFT (Convexo_Vaults)"
         );
         require(principalAmount > 0, "Principal amount must be greater than 0");
         require(maturityDate > block.timestamp, "Maturity date must be in the future");
@@ -102,6 +102,7 @@ contract VaultFactory is AccessControl {
             address(contractSigner),
             msg.sender, // Borrower gets admin role initially
             protocolFeeCollector,
+            reputationManager,
             name,
             symbol
         );

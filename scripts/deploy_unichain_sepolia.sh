@@ -12,13 +12,10 @@ echo "=================================="
 # Source environment variables
 source .env
 
-# Check if RPC URL is set
-if [ -z "$UNICHAIN_SEPOLIA_RPC_URL" ]; then
-    echo "❌ Error: UNICHAIN_SEPOLIA_RPC_URL not set in .env"
-    exit 1
-fi
+# Use public Unichain Sepolia RPC if not set in .env
+UNICHAIN_RPC="${UNICHAIN_SEPOLIA_RPC_URL:-https://unichain-sepolia-rpc.publicnode.com}"
 
-echo "Using RPC: $UNICHAIN_SEPOLIA_RPC_URL"
+echo "Using RPC: $UNICHAIN_RPC"
 echo ""
 
 # Set environment variables to bypass macOS proxy detection bug
@@ -28,7 +25,7 @@ export HTTPS_PROXY=""
 
 # Deploy all contracts with Blockscout verification
 forge script script/DeployAll.s.sol:DeployAll \
-    --rpc-url "$UNICHAIN_SEPOLIA_RPC_URL" \
+    --rpc-url "$UNICHAIN_RPC" \
     --broadcast \
     --verify \
     --verifier blockscout \

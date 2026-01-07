@@ -8,9 +8,9 @@
         "internalType": "contract IPoolManager"
       },
       {
-        "name": "_convexoLPs",
+        "name": "_convexoPassport",
         "type": "address",
-        "internalType": "contract IConvexoLPs"
+        "internalType": "contract IConvexoPassport"
       }
     ],
     "stateMutability": "nonpayable"
@@ -436,7 +436,7 @@
         "internalType": "address"
       },
       {
-        "name": "key",
+        "name": "",
         "type": "tuple",
         "internalType": "struct PoolKey",
         "components": [
@@ -468,7 +468,7 @@
         ]
       },
       {
-        "name": "params",
+        "name": "",
         "type": "tuple",
         "internalType": "struct ModifyLiquidityParams",
         "components": [
@@ -495,7 +495,7 @@
         ]
       },
       {
-        "name": "hookData",
+        "name": "",
         "type": "bytes",
         "internalType": "bytes"
       }
@@ -641,7 +641,7 @@
         "internalType": "address"
       },
       {
-        "name": "key",
+        "name": "",
         "type": "tuple",
         "internalType": "struct PoolKey",
         "components": [
@@ -673,7 +673,7 @@
         ]
       },
       {
-        "name": "params",
+        "name": "",
         "type": "tuple",
         "internalType": "struct ModifyLiquidityParams",
         "components": [
@@ -700,7 +700,7 @@
         ]
       },
       {
-        "name": "hookData",
+        "name": "",
         "type": "bytes",
         "internalType": "bytes"
       }
@@ -724,7 +724,7 @@
         "internalType": "address"
       },
       {
-        "name": "key",
+        "name": "",
         "type": "tuple",
         "internalType": "struct PoolKey",
         "components": [
@@ -756,7 +756,7 @@
         ]
       },
       {
-        "name": "params",
+        "name": "",
         "type": "tuple",
         "internalType": "struct SwapParams",
         "components": [
@@ -778,7 +778,7 @@
         ]
       },
       {
-        "name": "hookData",
+        "name": "",
         "type": "bytes",
         "internalType": "bytes"
       }
@@ -804,13 +804,13 @@
   },
   {
     "type": "function",
-    "name": "convexoLPs",
+    "name": "convexoPassport",
     "inputs": [],
     "outputs": [
       {
         "name": "",
         "type": "address",
-        "internalType": "contract IConvexoLPs"
+        "internalType": "contract IConvexoPassport"
       }
     ],
     "stateMutability": "view"
@@ -882,6 +882,25 @@
   },
   {
     "type": "function",
+    "name": "hasPassportAccess",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "hasAccess",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "poolManager",
     "inputs": [],
     "outputs": [
@@ -895,25 +914,6 @@
   },
   {
     "type": "event",
-    "name": "AccessDenied",
-    "inputs": [
-      {
-        "name": "user",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "reason",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "AccessGranted",
     "inputs": [
       {
@@ -923,10 +923,10 @@
         "internalType": "address"
       },
       {
-        "name": "nftBalance",
-        "type": "uint256",
+        "name": "operation",
+        "type": "string",
         "indexed": false,
-        "internalType": "uint256"
+        "internalType": "string"
       }
     ],
     "anonymous": false
@@ -938,12 +938,12 @@
   },
   {
     "type": "error",
-    "name": "MustHoldConvexoLPsNFT",
+    "name": "InvalidPassportContract",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "NFTNotActive",
+    "name": "MustHoldActivePassport",
     "inputs": []
   }
 ]

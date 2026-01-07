@@ -55,16 +55,9 @@ contract ReputationManager {
     /// @param user The address to check
     /// @return The reputation tier
     function getReputationTier(address user) public view returns (ReputationTier) {
-        // Handle case where NFT contracts are not deployed (address(0))
-        uint256 lpsBalance = address(convexoLPs) != address(0) 
-            ? convexoLPs.balanceOf(user) 
-            : 0;
-        uint256 vaultsBalance = address(convexoVaults) != address(0) 
-            ? convexoVaults.balanceOf(user) 
-            : 0;
-        uint256 passportBalance = address(convexoPassport) != address(0) 
-            ? IERC721(address(convexoPassport)).balanceOf(user) 
-            : 0;
+        uint256 lpsBalance = convexoLPs.balanceOf(user);
+        uint256 vaultsBalance = convexoVaults.balanceOf(user);
+        uint256 passportBalance = IERC721(address(convexoPassport)).balanceOf(user);
 
         // NEW APPROACH: Highest tier wins (no mutual exclusivity)
         // This allows users to upgrade from individual (Passport) to business (LPs/Vaults)
@@ -153,9 +146,6 @@ contract ReputationManager {
     /// @param user The address to check
     /// @return True if user holds at least one Convexo_LPs NFT
     function holdsConvexoLPs(address user) external view returns (bool) {
-        if (address(convexoLPs) == address(0)) {
-            return false;
-        }
         return convexoLPs.balanceOf(user) > 0;
     }
 
@@ -163,9 +153,6 @@ contract ReputationManager {
     /// @param user The address to check
     /// @return True if user holds at least one Convexo_Vaults NFT
     function holdsConvexoVaults(address user) external view returns (bool) {
-        if (address(convexoVaults) == address(0)) {
-            return false;
-        }
         return convexoVaults.balanceOf(user) > 0;
     }
 
@@ -173,9 +160,6 @@ contract ReputationManager {
     /// @param user The address to check
     /// @return True if user holds at least one Convexo_Passport NFT
     function holdsConvexoPassport(address user) external view returns (bool) {
-        if (address(convexoPassport) == address(0)) {
-            return false;
-        }
         return IERC721(address(convexoPassport)).balanceOf(user) > 0;
     }
 
@@ -202,15 +186,9 @@ contract ReputationManager {
             uint256 passportBalance
         )
     {
-        lpsBalance = address(convexoLPs) != address(0) 
-            ? convexoLPs.balanceOf(user) 
-            : 0;
-        vaultsBalance = address(convexoVaults) != address(0) 
-            ? convexoVaults.balanceOf(user) 
-            : 0;
-        passportBalance = address(convexoPassport) != address(0) 
-            ? IERC721(address(convexoPassport)).balanceOf(user) 
-            : 0;
+        lpsBalance = convexoLPs.balanceOf(user);
+        vaultsBalance = convexoVaults.balanceOf(user);
+        passportBalance = IERC721(address(convexoPassport)).balanceOf(user);
         tier = getReputationTier(user);
 
         return (tier, lpsBalance, vaultsBalance, passportBalance);
@@ -220,15 +198,9 @@ contract ReputationManager {
     /// @param user The address to check
     /// @return tier The reputation tier
     function checkReputationWithEvent(address user) external returns (ReputationTier tier) {
-        uint256 lpsBalance = address(convexoLPs) != address(0) 
-            ? convexoLPs.balanceOf(user) 
-            : 0;
-        uint256 vaultsBalance = address(convexoVaults) != address(0) 
-            ? convexoVaults.balanceOf(user) 
-            : 0;
-        uint256 passportBalance = address(convexoPassport) != address(0) 
-            ? IERC721(address(convexoPassport)).balanceOf(user) 
-            : 0;
+        uint256 lpsBalance = convexoLPs.balanceOf(user);
+        uint256 vaultsBalance = convexoVaults.balanceOf(user);
+        uint256 passportBalance = IERC721(address(convexoPassport)).balanceOf(user);
         tier = getReputationTier(user);
 
         emit ReputationChecked(user, tier, lpsBalance, vaultsBalance, passportBalance);

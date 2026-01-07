@@ -9,9 +9,9 @@
         "internalType": "contract IPoolManager"
       },
       {
-        "name": "convexoLPs",
+        "name": "convexoPassport",
         "type": "address",
-        "internalType": "contract IConvexoLPs"
+        "internalType": "contract IConvexoPassport"
       },
       {
         "name": "salt",
@@ -38,9 +38,9 @@
         "internalType": "contract IPoolManager"
       },
       {
-        "name": "convexoLPs",
+        "name": "convexoPassport",
         "type": "address",
-        "internalType": "contract IConvexoLPs"
+        "internalType": "contract IConvexoPassport"
       },
       {
         "name": "salt",
@@ -67,9 +67,9 @@
         "internalType": "contract IPoolManager"
       },
       {
-        "name": "convexoLPs",
+        "name": "convexoPassport",
         "type": "address",
-        "internalType": "contract IConvexoLPs"
+        "internalType": "contract IConvexoPassport"
       },
       {
         "name": "startingSalt",
@@ -97,6 +97,25 @@
     "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "isValidHookAddress",
+    "inputs": [
+      {
+        "name": "hookAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "isValid",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
     "type": "event",
     "name": "HookDeployed",
     "inputs": [
@@ -113,7 +132,7 @@
         "internalType": "address"
       },
       {
-        "name": "convexoLPs",
+        "name": "convexoPassport",
         "type": "address",
         "indexed": true,
         "internalType": "address"

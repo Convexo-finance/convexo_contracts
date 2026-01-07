@@ -13,6 +13,9 @@ struct PoolKey {
 /// @notice Balance delta type
 type BalanceDelta is int256;
 
+/// @notice Before swap delta type
+type BeforeSwapDelta is int256;
+
 /// @notice Parameters for modifying liquidity
 struct ModifyLiquidityParams {
     int24 tickLower;
@@ -29,16 +32,14 @@ struct SwapParams {
 }
 
 /// @notice Interface for Uniswap V4 Hooks
+/// @dev Based on: https://docs.uniswap.org/contracts/v4/quickstart/hooks/swap
 interface IHooks {
-    /// @notice Hook called before initializing a pool
     function beforeInitialize(address sender, PoolKey calldata key, uint160 sqrtPriceX96) external returns (bytes4);
 
-    /// @notice Hook called after initializing a pool
     function afterInitialize(address sender, PoolKey calldata key, uint160 sqrtPriceX96, int24 tick)
         external
         returns (bytes4);
 
-    /// @notice Hook called before adding liquidity to a pool
     function beforeAddLiquidity(
         address sender,
         PoolKey calldata key,
@@ -46,7 +47,6 @@ interface IHooks {
         bytes calldata hookData
     ) external returns (bytes4);
 
-    /// @notice Hook called after adding liquidity to a pool
     function afterAddLiquidity(
         address sender,
         PoolKey calldata key,
@@ -56,7 +56,6 @@ interface IHooks {
         bytes calldata hookData
     ) external returns (bytes4, BalanceDelta);
 
-    /// @notice Hook called before removing liquidity from a pool
     function beforeRemoveLiquidity(
         address sender,
         PoolKey calldata key,
@@ -64,7 +63,6 @@ interface IHooks {
         bytes calldata hookData
     ) external returns (bytes4);
 
-    /// @notice Hook called after removing liquidity from a pool
     function afterRemoveLiquidity(
         address sender,
         PoolKey calldata key,
@@ -74,12 +72,10 @@ interface IHooks {
         bytes calldata hookData
     ) external returns (bytes4, BalanceDelta);
 
-    /// @notice Hook called before a swap is executed
     function beforeSwap(address sender, PoolKey calldata key, SwapParams calldata params, bytes calldata hookData)
         external
         returns (bytes4, BeforeSwapDelta, uint24);
 
-    /// @notice Hook called after a swap is executed
     function afterSwap(
         address sender,
         PoolKey calldata key,
@@ -88,7 +84,6 @@ interface IHooks {
         bytes calldata hookData
     ) external returns (bytes4, int128);
 
-    /// @notice Hook called before donating to a pool
     function beforeDonate(
         address sender,
         PoolKey calldata key,
@@ -97,7 +92,6 @@ interface IHooks {
         bytes calldata hookData
     ) external returns (bytes4);
 
-    /// @notice Hook called after donating to a pool
     function afterDonate(
         address sender,
         PoolKey calldata key,
@@ -106,6 +100,3 @@ interface IHooks {
         bytes calldata hookData
     ) external returns (bytes4);
 }
-
-/// @notice Delta for beforeSwap hook
-type BeforeSwapDelta is int256;

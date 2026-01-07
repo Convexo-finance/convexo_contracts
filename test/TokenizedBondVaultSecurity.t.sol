@@ -7,21 +7,12 @@ import {ReputationManager} from "../src/contracts/ReputationManager.sol";
 import {IConvexoLPs} from "../src/interfaces/IConvexoLPs.sol";
 import {IConvexoVaults} from "../src/interfaces/IConvexoVaults.sol";
 import {IConvexoPassport} from "../src/interfaces/IConvexoPassport.sol";
+import {ProofVerificationParams} from "../src/interfaces/IZKPassportVerifier.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract MockERC20 is ERC20 {
-    constructor() ERC20("Mock", "MCK") {}
-    
-    function initialize(string memory, string memory, uint8) public {} // dummy
-    
-    function mint(address to, uint256 amount) public {
-        _mint(to, amount);
-    }
-}
-
-// Mock NFT contract for testing - allows setting balances
-contract MockNFT {
+/// @notice Mock Passport for security testing - gives users Tier 1 access
+contract MockPassport is IConvexoPassport {
     mapping(address => uint256) private _balances;
     
     function balanceOf(address owner) external view returns (uint256) {
@@ -30,6 +21,70 @@ contract MockNFT {
     
     function setBalance(address owner, uint256 balance) external {
         _balances[owner] = balance;
+    }
+    
+    function safeMintWithZKPassport(ProofVerificationParams calldata, bool) external pure returns (uint256) {
+        revert("Not implemented");
+    }
+    function safeMintWithIdentifier(bytes32) external pure returns (uint256) {
+        revert("Not implemented");
+    }
+    function safeMint(address, string memory) external pure returns (uint256) {
+        revert("Not implemented");
+    }
+    function revokePassport(uint256) external pure {
+        revert("Not implemented");
+    }
+    function holdsActivePassport(address) external pure returns (bool) {
+        return false;
+    }
+    function getVerifiedIdentity(address) external pure returns (VerifiedIdentity memory) {
+        revert("Not implemented");
+    }
+    function isIdentifierUsed(bytes32) external pure returns (bool) {
+        return false;
+    }
+    function getActivePassportCount() external pure returns (uint256) {
+        return 0;
+    }
+}
+
+/// @notice Mock LPs contract that returns 0 balance for all users
+contract MockLPs is IConvexoLPs {
+    function balanceOf(address) external pure returns (uint256) {
+        return 0;
+    }
+    function ownerOf(uint256) external pure returns (address) {
+        return address(0);
+    }
+    function getTokenState(uint256) external pure returns (bool) {
+        return false;
+    }
+    function safeMint(address, string memory, string memory) external pure returns (uint256) {
+        return 0;
+    }
+}
+
+/// @notice Mock Vaults contract that returns 0 balance for all users
+contract MockVaults is IConvexoVaults {
+    function balanceOf(address) external pure returns (uint256) {
+        return 0;
+    }
+    function ownerOf(uint256) external pure returns (address) {
+        return address(0);
+    }
+    function getTokenState(uint256) external pure returns (bool) {
+        return false;
+    }
+}
+
+contract MockERC20 is ERC20 {
+    constructor() ERC20("Mock", "MCK") {}
+    
+    function initialize(string memory, string memory, uint8) public {} // dummy
+    
+    function mint(address to, uint256 amount) public {
+        _mint(to, amount);
     }
 }
 
@@ -63,7 +118,9 @@ contract TokenizedBondVaultSecurityTest is Test {
     MockERC20 usdc;
     MockContractSigner signer;
     ReputationManager reputationManager;
-    MockNFT mockPassport;
+    MockPassport mockPassport;
+    MockLPs mockLPs;
+    MockVaults mockVaults;
 
     address admin = address(1);
     address borrower = address(2);
@@ -84,13 +141,15 @@ contract TokenizedBondVaultSecurityTest is Test {
 
         signer = new MockContractSigner();
 
-        // Deploy mock passport NFT for Tier 1 access
-        mockPassport = new MockNFT();
-        
-        // Deploy ReputationManager with mock passport
+        // Deploy mock contracts for all NFT types (return 0 balance by default)
+        mockPassport = new MockPassport();
+        mockLPs = new MockLPs();
+        mockVaults = new MockVaults();
+
+        // Deploy ReputationManager with all mock contracts
         reputationManager = new ReputationManager(
-            IConvexoLPs(address(0)),
-            IConvexoVaults(address(0)),
+            IConvexoLPs(address(mockLPs)),
+            IConvexoVaults(address(mockVaults)),
             IConvexoPassport(address(mockPassport))
         );
 
@@ -113,7 +172,7 @@ contract TokenizedBondVaultSecurityTest is Test {
         
         vm.stopPrank();
         
-        // Give investors Tier 1 access (Passport) so they can invest
+        // Give investors Tier 1 access via passport
         mockPassport.setBalance(investor1, 1);
         mockPassport.setBalance(investor2, 1);
         
@@ -160,7 +219,7 @@ contract TokenizedBondVaultSecurityTest is Test {
         vm.stopPrank();
         
         // Verify:
-        // - Investor 1 got money back (started with principal, invested principal/2, got it back)
+        // - Investor 1 got money back (started with 100k, invested 50k, redeemed 50k = 100k total)
         assertEq(usdc.balanceOf(investor1), principal);
         // - Vault state reverted to Pending
         assertEq(uint(vault.getVaultState()), uint(TokenizedBondVault.VaultState.Pending));

@@ -6,27 +6,37 @@ import {ProofVerificationParams} from "./IZKPassportVerifier.sol";
 /// @title IConvexoPassport
 /// @notice Interface for Convexo_Passport NFT contract
 /// @dev Soulbound NFT for individual investors verified via ZKPassport
+///      Privacy-compliant: stores only verification results (traits), no PII
 interface IConvexoPassport {
     /// @notice Verified identity information stored for each passport holder
-    /// @dev Stores complete ZKPassport verification data: Unique ID + Personhood + KYC result
+    /// @dev Stores verification results as "traits" - no sensitive PII stored on-chain
     struct VerifiedIdentity {
-        bytes32 uniqueIdentifier;      // Hash of publicKey + scope (UNIQUE ID)
-        bytes32 personhoodProof;       // Nullifier from ZKPassport (PERSONHOOD PROOF)
-        uint256 verifiedAt;            // Contract verification timestamp
-        uint256 zkPassportTimestamp;   // Original ZKPassport verification timestamp
-        bool isActive;                 // Whether passport is currently active
-        bool isOver18;                 // Age verification result (KYC)
-        string nationality;            // Nationality from passport/ID (KYC)
+        // Cryptographic identifiers (sybil resistance)
+        bytes32 uniqueIdentifier;       // Hash of publicKey + scope
+        bytes32 personhoodProof;        // Nullifier from ZKPassport
+        // Timestamps
+        uint256 verifiedAt;             // Contract verification timestamp
+        uint256 zkPassportTimestamp;    // Original ZKPassport verification time
+        // Status
+        bool isActive;                  // Whether passport is currently active
+        // ZKPassport verification results (boolean traits - no PII)
+        bool kycVerified;               // Overall KYC verification passed
+        bool faceMatchPassed;           // Face match verification result
+        bool sanctionsPassed;           // Sanctions check result
+        bool isOver18;                  // Age verification result
     }
 
     /// @notice Emitted when a new passport is minted
+    /// @dev Privacy-compliant: emits only non-PII verification traits
     event PassportMinted(
         address indexed holder,
         uint256 indexed tokenId,
-        bytes32 uniqueIdentifier,
-        bytes32 personhoodProof,
-        string nationality,
-        bool isOver18
+        bytes32 uniqueIdentifier,       // Cryptographic identifier (not PII)
+        bytes32 personhoodProof,        // Nullifier (not PII)
+        bool kycVerified,               // Verification trait
+        bool faceMatchPassed,           // Verification trait
+        bool sanctionsPassed,           // Verification trait
+        bool isOver18                   // Verification trait
     );
 
     /// @notice Emitted when a passport is revoked

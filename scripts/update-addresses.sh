@@ -82,7 +82,9 @@ update_chain_addresses() {
         "ReputationManager:reputation_manager" \
         "PriceFeedManager:price_feed_manager" \
         "ContractSigner:contract_signer" \
-        "VaultFactory:vault_factory"; do
+        "VaultFactory:vault_factory" \
+        "TreasuryFactory:treasury_factory" \
+        "VeriffVerifier:veriff_verifier"; do
         
         local contract_name=$(echo "$contract_pair" | cut -d':' -f1)
         local json_key=$(echo "$contract_pair" | cut -d':' -f2)
@@ -115,7 +117,7 @@ update_chain_addresses() {
     
     # Update deployment status
     jq --arg chain_id "$chain_id" \
-       '.[$chain_id].notes.deployment_status = "Complete - All 10 contracts deployed and verified ✅ (v2.0)"' \
+       '.[$chain_id].notes.deployment_status = "Complete - All 12 contracts deployed and verified ✅ (v2.1)"' \
        "$temp_json" > "${temp_json}.tmp" && mv "${temp_json}.tmp" "$temp_json"
     
     # Validate JSON before moving

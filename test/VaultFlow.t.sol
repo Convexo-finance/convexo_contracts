@@ -137,15 +137,15 @@ contract VaultFlowTest is Test {
         );
 
 
-        // Mint NFTs to borrower (Tier 3 - VaultCreator)
+        // Mint NFTs to borrower (Tier 2)
         vm.startPrank(admin);
         convexoLPs.safeMint(borrower, "COMPANY001", "ipfs://lp-nft");
         convexoVaults.safeMint(borrower, "COMPANY001", "ipfs://vault-nft");
         vm.stopPrank();
 
-        // Give investors Tier 1 access (Passport) so they can invest
-        MockConvexoPassport(address(mockPassport)).setBalance(investor1, 1);
-        MockConvexoPassport(address(mockPassport)).setBalance(investor2, 1);
+        // Give investors Tier 1 access (passport) so they can invest
+        mockPassport.setBalance(investor1, 1);
+        mockPassport.setBalance(investor2, 1);
 
         // Give USDC to investors
         usdc.mint(investor1, 30000 * 1e6);

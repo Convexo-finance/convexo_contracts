@@ -19,7 +19,9 @@ contract MockZKPassportVerifier is IZKPassportVerifier {
     ) external view returns (bool success, DisclosedData memory disclosedData) {
         success = true;
         disclosedData = DisclosedData({
-            nationality: "US",
+            kycVerified: true,
+            faceMatchPassed: true,
+            sanctionsPassed: true,
             isOver18: true,
             verifiedAt: block.timestamp
         });
@@ -61,35 +63,10 @@ contract ReputationManagerPassportTest is Test {
     function test_TierNone_NoNFTs() public view {
         ReputationManager.ReputationTier tier = reputationManager.getReputationTier(user1);
         assertEq(uint256(tier), uint256(ReputationManager.ReputationTier.None));
-        assertFalse(reputationManager.hasCompliantAccess(user1));
-        assertFalse(reputationManager.hasCreditscoreAccess(user1));
-        assertFalse(reputationManager.hasPassportAccess(user1));
-    }
-
-    function test_TierCompliant_OnlyLPs() public {
-        // Mint LPs NFT
-        vm.prank(minter);
-        convexoLPs.safeMint(user1, "https://uri.com/1", "");
-
-        ReputationManager.ReputationTier tier = reputationManager.getReputationTier(user1);
-        assertEq(uint256(tier), uint256(ReputationManager.ReputationTier.Compliant));
-        assertTrue(reputationManager.hasCompliantAccess(user1));
-        assertFalse(reputationManager.hasCreditscoreAccess(user1));
-        assertFalse(reputationManager.hasPassportAccess(user1));
-    }
-
-    function test_TierCreditscore_BothBusinessNFTs() public {
-        // Mint both business NFTs
-        vm.startPrank(minter);
-        convexoLPs.safeMint(user1, "https://uri.com/1", "");
-        convexoVaults.safeMint(user1, "https://uri.com/2", "");
-        vm.stopPrank();
-
-        ReputationManager.ReputationTier tier = reputationManager.getReputationTier(user1);
-        assertEq(uint256(tier), uint256(ReputationManager.ReputationTier.Creditscore));
-        assertTrue(reputationManager.hasCompliantAccess(user1));
-        assertTrue(reputationManager.hasCreditscoreAccess(user1));
-        assertFalse(reputationManager.hasPassportAccess(user1));
+        assertFalse(reputationManager.canCreateTreasury(user1));
+        assertFalse(reputationManager.canInvestInVaults(user1));
+        assertFalse(reputationManager.canAccessLPPools(user1));
+        assertFalse(reputationManager.canCreateVaults(user1));
     }
 
     function test_TierPassport_OnlyPassportNFT() public {
@@ -107,15 +84,48 @@ contract ReputationManagerPassportTest is Test {
         convexoPassport.safeMintWithZKPassport(params, false);
 
         ReputationManager.ReputationTier tier = reputationManager.getReputationTier(user1);
-        assertEq(uint256(tier), uint256(ReputationManager.ReputationTier.Passport));
-        assertFalse(reputationManager.hasCompliantAccess(user1));
-        assertFalse(reputationManager.hasCreditscoreAccess(user1));
+        assertEq(uint256(tier), uint256(ReputationManager.ReputationTier.Passport)); // Tier 1
+        assertTrue(reputationManager.canCreateTreasury(user1));
+        assertTrue(reputationManager.canInvestInVaults(user1));
+        assertFalse(reputationManager.canAccessLPPools(user1)); // Cannot access LP pools
+        assertFalse(reputationManager.canCreateVaults(user1)); // Cannot create vaults
         assertTrue(reputationManager.hasPassportAccess(user1));
         assertTrue(reputationManager.holdsConvexoPassport(user1));
     }
 
-    function test_MutuallyExclusive_PassportAndBusinessNFTs() public {
-        // Mint Passport NFT first
+    function test_TierLimitedPartner_OnlyLPs() public {
+        // Mint LPs NFT
+        vm.prank(minter);
+        convexoLPs.safeMint(user1, "https://uri.com/1", "");
+
+        ReputationManager.ReputationTier tier = reputationManager.getReputationTier(user1);
+        assertEq(uint256(tier), uint256(ReputationManager.ReputationTier.LimitedPartner)); // Tier 2
+        assertTrue(reputationManager.canCreateTreasury(user1)); // Tier 2 includes Tier 1 benefits
+        assertTrue(reputationManager.canInvestInVaults(user1));
+        assertTrue(reputationManager.canAccessLPPools(user1));
+        assertFalse(reputationManager.canCreateVaults(user1)); // Cannot create vaults yet
+        assertTrue(reputationManager.hasLimitedPartnerAccess(user1));
+        assertFalse(reputationManager.hasVaultCreatorAccess(user1));
+        assertFalse(reputationManager.hasPassportAccess(user1));
+    }
+
+    function test_TierVaultCreator_OnlyVaultsNFT() public {
+        // Mint Vaults NFT only (highest tier wins, even without LPs)
+        vm.prank(minter);
+        convexoVaults.safeMint(user1, "https://uri.com/1", "");
+
+        ReputationManager.ReputationTier tier = reputationManager.getReputationTier(user1);
+        assertEq(uint256(tier), uint256(ReputationManager.ReputationTier.VaultCreator)); // Tier 3
+        assertTrue(reputationManager.canCreateTreasury(user1));
+        assertTrue(reputationManager.canInvestInVaults(user1));
+        assertTrue(reputationManager.canAccessLPPools(user1)); // Tier 3 includes Tier 2 benefits
+        assertTrue(reputationManager.canCreateVaults(user1));
+        assertTrue(reputationManager.hasVaultCreatorAccess(user1));
+        assertFalse(reputationManager.hasPassportAccess(user1));
+    }
+
+    function test_HighestTierWins_VaultsWithPassport() public {
+        // User has both Passport and Vaults NFT - highest tier (Vaults = Tier 3) wins
         ProofVerificationParams memory params = ProofVerificationParams({
             publicKey: bytes32(uint256(1)),
             nullifier: bytes32(uint256(2)),
@@ -128,13 +138,69 @@ contract ReputationManagerPassportTest is Test {
         vm.prank(user1);
         convexoPassport.safeMintWithZKPassport(params, false);
 
-        // Try to mint business NFT
+        // Mint Vaults NFT
         vm.prank(minter);
-        convexoLPs.safeMint(user1, "https://uri.com/1", "");
+        convexoVaults.safeMint(user1, "https://uri.com/1", "");
 
-        // Should revert when checking reputation
-        vm.expectRevert("Cannot hold both business and individual NFTs");
-        reputationManager.getReputationTier(user1);
+        // Should return Tier 3 (VaultCreator) - highest tier wins
+        ReputationManager.ReputationTier tier = reputationManager.getReputationTier(user1);
+        assertEq(uint256(tier), uint256(ReputationManager.ReputationTier.VaultCreator));
+        assertTrue(reputationManager.canCreateVaults(user1));
+        assertTrue(reputationManager.hasVaultCreatorAccess(user1));
+    }
+
+    function test_HighestTierWins_LPsWithPassport() public {
+        // User has both Passport and LPs NFT - highest tier (LPs = Tier 2) wins
+        ProofVerificationParams memory params = ProofVerificationParams({
+            publicKey: bytes32(uint256(1)),
+            nullifier: bytes32(uint256(2)),
+            proof: hex"1234",
+            attestationId: 1,
+            scope: bytes32(uint256(3)),
+            currentDate: block.timestamp
+        });
+
+        vm.prank(user1);
+        convexoPassport.safeMintWithZKPassport(params, false);
+
+        // Mint LPs NFT
+        vm.prank(minter);
+        convexoLPs.safeMint(user1, "https://uri.com/2", "");
+
+        // Should return Tier 2 (LimitedPartner) - highest tier wins
+        ReputationManager.ReputationTier tier = reputationManager.getReputationTier(user1);
+        assertEq(uint256(tier), uint256(ReputationManager.ReputationTier.LimitedPartner));
+        assertTrue(reputationManager.canAccessLPPools(user1));
+        assertTrue(reputationManager.hasLimitedPartnerAccess(user1));
+    }
+
+    function test_HighestTierWins_AllThreeNFTs() public {
+        // User has all three NFTs - highest tier (Vaults = Tier 3) wins
+        ProofVerificationParams memory params = ProofVerificationParams({
+            publicKey: bytes32(uint256(1)),
+            nullifier: bytes32(uint256(2)),
+            proof: hex"1234",
+            attestationId: 1,
+            scope: bytes32(uint256(3)),
+            currentDate: block.timestamp
+        });
+
+        vm.prank(user1);
+        convexoPassport.safeMintWithZKPassport(params, false);
+
+        // Mint both business NFTs
+        vm.startPrank(minter);
+        convexoLPs.safeMint(user1, "https://uri.com/1", "");
+        convexoVaults.safeMint(user1, "https://uri.com/2", "");
+        vm.stopPrank();
+
+        // Should return Tier 3 (VaultCreator) - highest tier wins
+        ReputationManager.ReputationTier tier = reputationManager.getReputationTier(user1);
+        assertEq(uint256(tier), uint256(ReputationManager.ReputationTier.VaultCreator));
+        assertTrue(reputationManager.canCreateVaults(user1));
+        assertTrue(reputationManager.canAccessLPPools(user1));
+        assertTrue(reputationManager.canInvestInVaults(user1));
+        assertTrue(reputationManager.canCreateTreasury(user1));
     }
 
     function test_GetReputationDetails_WithPassport() public {
@@ -164,12 +230,10 @@ contract ReputationManagerPassportTest is Test {
         assertEq(passportBalance, 1);
     }
 
-    function test_GetReputationDetails_WithBusinessNFTs() public {
-        // Mint both business NFTs
-        vm.startPrank(minter);
-        convexoLPs.safeMint(user1, "https://uri.com/1", "");
-        convexoVaults.safeMint(user1, "https://uri.com/2", "");
-        vm.stopPrank();
+    function test_GetReputationDetails_WithVaultsNFT() public {
+        // Mint Vaults NFT (Tier 3)
+        vm.prank(minter);
+        convexoVaults.safeMint(user1, "https://uri.com/1", "");
 
         (
             ReputationManager.ReputationTier tier,
@@ -178,8 +242,8 @@ contract ReputationManagerPassportTest is Test {
             uint256 passportBalance
         ) = reputationManager.getReputationDetails(user1);
 
-        assertEq(uint256(tier), uint256(ReputationManager.ReputationTier.Creditscore));
-        assertEq(lpsBalance, 1);
+        assertEq(uint256(tier), uint256(ReputationManager.ReputationTier.VaultCreator));
+        assertEq(lpsBalance, 0);
         assertEq(vaultsBalance, 1);
         assertEq(passportBalance, 0);
     }
@@ -215,34 +279,32 @@ contract ReputationManagerPassportTest is Test {
         // User1: No NFTs (Tier 0)
         assertEq(uint256(reputationManager.getReputationTier(user1)), uint256(ReputationManager.ReputationTier.None));
 
-        // User2: LPs only (Tier 1)
+        // User2: Passport (Tier 1)
+        ProofVerificationParams memory params = ProofVerificationParams({
+            publicKey: bytes32(uint256(1)),
+            nullifier: bytes32(uint256(2)),
+            proof: hex"1234",
+            attestationId: 1,
+            scope: bytes32(uint256(3)),
+            currentDate: block.timestamp
+        });
+        vm.prank(user2);
+        convexoPassport.safeMintWithZKPassport(params, false);
+        assertEq(uint256(reputationManager.getReputationTier(user2)), uint256(ReputationManager.ReputationTier.Passport));
+
+        // User3: LPs only (Tier 2)
         vm.prank(minter);
-        convexoLPs.safeMint(user2, "https://uri.com/1", "");
-        assertEq(uint256(reputationManager.getReputationTier(user2)), uint256(ReputationManager.ReputationTier.Compliant));
+        convexoLPs.safeMint(user3, "https://uri.com/1", "");
+        assertEq(uint256(reputationManager.getReputationTier(user3)), uint256(ReputationManager.ReputationTier.LimitedPartner));
 
-        // User3: LPs + Vaults (Tier 2)
-        vm.startPrank(minter);
-        convexoLPs.safeMint(user3, "https://uri.com/2", "");
-        convexoVaults.safeMint(user3, "https://uri.com/3", "");
-        vm.stopPrank();
-        assertEq(uint256(reputationManager.getReputationTier(user3)), uint256(ReputationManager.ReputationTier.Creditscore));
-
-        // User4: Passport (Tier 3)
-        ProofVerificationParams memory params = ProofVerificationParams({
-            publicKey: bytes32(uint256(1)),
-            nullifier: bytes32(uint256(2)),
-            proof: hex"1234",
-            attestationId: 1,
-            scope: bytes32(uint256(3)),
-            currentDate: block.timestamp
-        });
-        vm.prank(user4);
-        convexoPassport.safeMintWithZKPassport(params, false);
-        assertEq(uint256(reputationManager.getReputationTier(user4)), uint256(ReputationManager.ReputationTier.Passport));
+        // User4: Vaults (Tier 3)
+        vm.prank(minter);
+        convexoVaults.safeMint(user4, "https://uri.com/2", "");
+        assertEq(uint256(reputationManager.getReputationTier(user4)), uint256(ReputationManager.ReputationTier.VaultCreator));
     }
 
-    function test_RequireCompliantAccess_FailsForPassport() public {
-        // Mint Passport NFT
+    function test_RequireLimitedPartnerAccess_FailsForPassport() public {
+        // Mint Passport NFT (Tier 1)
         ProofVerificationParams memory params = ProofVerificationParams({
             publicKey: bytes32(uint256(1)),
             nullifier: bytes32(uint256(2)),
@@ -255,13 +317,13 @@ contract ReputationManagerPassportTest is Test {
         vm.prank(user1);
         convexoPassport.safeMintWithZKPassport(params, false);
 
-        // Passport tier (3) is not >= Compliant tier (1) in business path
-        vm.expectRevert("Must have Compliant tier or higher");
-        reputationManager.requireCompliantAccess(user1);
+        // Passport tier (1) is not >= LimitedPartner tier (2)
+        vm.expectRevert("Must have LimitedPartner tier or higher");
+        reputationManager.requireLimitedPartnerAccess(user1);
     }
 
-    function test_RequireCreditscoreAccess_FailsForPassport() public {
-        // Mint Passport NFT
+    function test_RequireVaultCreatorAccess_FailsForPassport() public {
+        // Mint Passport NFT (Tier 1)
         ProofVerificationParams memory params = ProofVerificationParams({
             publicKey: bytes32(uint256(1)),
             nullifier: bytes32(uint256(2)),
@@ -274,8 +336,26 @@ contract ReputationManagerPassportTest is Test {
         vm.prank(user1);
         convexoPassport.safeMintWithZKPassport(params, false);
 
-        vm.expectRevert("Must have Creditscore tier");
-        reputationManager.requireCreditscoreAccess(user1);
+        vm.expectRevert("Must have VaultCreator tier");
+        reputationManager.requireVaultCreatorAccess(user1);
+    }
+
+    function test_RequireLimitedPartnerAccess_PassesForLPs() public {
+        // This test verifies LPs holders can pass LimitedPartner access check
+        vm.prank(minter);
+        convexoLPs.safeMint(user1, "https://uri.com/1", "");
+
+        // Should not revert
+        reputationManager.requireLimitedPartnerAccess(user1);
+    }
+
+    function test_RequireVaultCreatorAccess_PassesForVaults() public {
+        // This test verifies Vaults holders can pass VaultCreator access check
+        vm.prank(minter);
+        convexoVaults.safeMint(user1, "https://uri.com/1", "");
+
+        // Should not revert
+        reputationManager.requireVaultCreatorAccess(user1);
     }
 
     event ReputationChecked(

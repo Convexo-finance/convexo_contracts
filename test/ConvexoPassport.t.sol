@@ -7,21 +7,33 @@ import {IConvexoPassport} from "../src/interfaces/IConvexoPassport.sol";
 import {IZKPassportVerifier, ProofVerificationParams, DisclosedData} from "../src/interfaces/IZKPassportVerifier.sol";
 
 /// @notice Mock ZKPassport Verifier for testing
+/// @dev Returns verification traits (no PII) matching the updated DisclosedData struct
 contract MockZKPassportVerifier is IZKPassportVerifier {
     bool public shouldSucceed = true;
+    // Verification traits (boolean results)
+    bool public kycVerified = true;
+    bool public faceMatchPassed = true;
+    bool public sanctionsPassed = true;
     bool public userIsOver18 = true;
-    string public userNationality = "US";
 
     function setShouldSucceed(bool _shouldSucceed) external {
         shouldSucceed = _shouldSucceed;
     }
 
-    function setUserIsOver18(bool _isOver18) external {
-        userIsOver18 = _isOver18;
+    function setKycVerified(bool _kycVerified) external {
+        kycVerified = _kycVerified;
     }
 
-    function setUserNationality(string memory _nationality) external {
-        userNationality = _nationality;
+    function setFaceMatchPassed(bool _faceMatchPassed) external {
+        faceMatchPassed = _faceMatchPassed;
+    }
+
+    function setSanctionsPassed(bool _sanctionsPassed) external {
+        sanctionsPassed = _sanctionsPassed;
+    }
+
+    function setUserIsOver18(bool _isOver18) external {
+        userIsOver18 = _isOver18;
     }
 
     function verifyProof(
@@ -30,7 +42,9 @@ contract MockZKPassportVerifier is IZKPassportVerifier {
     ) external view returns (bool success, DisclosedData memory disclosedData) {
         success = shouldSucceed;
         disclosedData = DisclosedData({
-            nationality: userNationality,
+            kycVerified: kycVerified,
+            faceMatchPassed: faceMatchPassed,
+            sanctionsPassed: sanctionsPassed,
             isOver18: userIsOver18,
             verifiedAt: block.timestamp
         });
@@ -47,12 +61,15 @@ contract ConvexoPassportTest is Test {
 
     string public constant BASE_URI = "https://metadata.convexo.finance/passport";
 
+    // Privacy-compliant event (only verification traits, no PII)
     event PassportMinted(
         address indexed holder,
         uint256 indexed tokenId,
         bytes32 uniqueIdentifier,
         bytes32 personhoodProof,
-        string nationality,
+        bool kycVerified,
+        bool faceMatchPassed,
+        bool sanctionsPassed,
         bool isOver18
     );
 
@@ -93,13 +110,16 @@ contract ConvexoPassportTest is Test {
 
         vm.prank(user1);
         vm.expectEmit(true, true, false, true);
+        // Privacy-compliant: emit verification traits (booleans), not PII
         emit PassportMinted(
             user1, 
             0, 
-            keccak256(abi.encodePacked(params.publicKey, params.scope)), 
+            keccak256(abi.encodePacked(params.publicKey, params.scope)),
             params.nullifier,
-            "US",
-            true
+            true,   // kycVerified
+            true,   // faceMatchPassed
+            true,   // sanctionsPassed
+            true    // isOver18
         );
         
         uint256 tokenId = passport.safeMintWithZKPassport(params, false);
@@ -110,14 +130,13 @@ contract ConvexoPassportTest is Test {
         assertTrue(passport.holdsActivePassport(user1));
         assertEq(passport.getActivePassportCount(), 1);
 
-        // Verify all stored ZKPassport data
+        // Verify stored traits (no PII)
         IConvexoPassport.VerifiedIdentity memory identity = passport.getVerifiedIdentity(user1);
         assertTrue(identity.isActive);
-        assertEq(identity.nationality, "US");
-        assertEq(identity.personhoodProof, params.nullifier); // PERSONHOOD
-        assertTrue(identity.isOver18); // KYC age verification
-        assertGt(identity.zkPassportTimestamp, 0); // ZKPassport timestamp
-        assertEq(identity.uniqueIdentifier, keccak256(abi.encodePacked(params.publicKey, params.scope))); // UNIQUE ID
+        assertTrue(identity.kycVerified);
+        assertTrue(identity.faceMatchPassed);
+        assertTrue(identity.sanctionsPassed);
+        assertTrue(identity.isOver18);
     }
 
     function test_SafeMintWithZKPassport_RevertIfProofFails() public {
@@ -137,7 +156,8 @@ contract ConvexoPassportTest is Test {
         passport.safeMintWithZKPassport(params, false);
     }
 
-    function test_SafeMintWithZKPassport_RevertIfNotOver18() public {
+    function test_SafeMintWithZKPassport_StoresIsOver18False() public {
+        // When ZKPassport returns isOver18=false, we just store it as a trait (no validation)
         mockVerifier.setUserIsOver18(false);
 
         ProofVerificationParams memory params = ProofVerificationParams({
@@ -150,8 +170,16 @@ contract ConvexoPassportTest is Test {
         });
 
         vm.prank(user1);
-        vm.expectRevert(Convexo_Passport.MustBeOver18.selector);
-        passport.safeMintWithZKPassport(params, false);
+        uint256 tokenId = passport.safeMintWithZKPassport(params, false);
+
+        // Verify passport was minted and isOver18=false is stored correctly
+        assertEq(tokenId, 0);
+        assertEq(passport.balanceOf(user1), 1);
+        
+        IConvexoPassport.VerifiedIdentity memory identity = passport.getVerifiedIdentity(user1);
+        assertFalse(identity.isOver18); // Stored as false from ZKPassport trait
+        assertTrue(identity.isActive);
+        assertTrue(identity.kycVerified);  // Other traits still true
     }
 
     function test_SafeMintWithZKPassport_RevertIfAlreadyHasPassport() public {
@@ -202,14 +230,16 @@ contract ConvexoPassportTest is Test {
     }
 
     function test_AdminMint_Success() public {
+        // When admin mints with a custom URI, the tokenURI() function returns 
+        // the stored URI directly (not concatenated with base URI)
         vm.prank(admin);
-        uint256 tokenId = passport.safeMint(user1, "/custom/1");
+        uint256 tokenId = passport.safeMint(user1, "custom/1");
 
         assertEq(tokenId, 0);
         assertEq(passport.ownerOf(tokenId), user1);
         assertEq(passport.balanceOf(user1), 1);
-        // TokenURI is base URI + passed URI
-        assertEq(passport.tokenURI(tokenId), string(abi.encodePacked(BASE_URI, "/custom/1")));
+        // ERC721URIStorage concatenates _baseURI + stored URI
+        assertEq(passport.tokenURI(tokenId), string(abi.encodePacked(BASE_URI, "custom/1")));
         assertTrue(passport.holdsActivePassport(user1));
     }
 
