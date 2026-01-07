@@ -3,19 +3,24 @@
     "type": "constructor",
     "inputs": [
       {
-        "name": "_convexoLPs",
-        "type": "address",
-        "internalType": "contract IConvexoLPs"
-      },
-      {
-        "name": "_convexoVaults",
-        "type": "address",
-        "internalType": "contract IConvexoVaults"
-      },
-      {
         "name": "_convexoPassport",
         "type": "address",
-        "internalType": "contract IConvexoPassport"
+        "internalType": "contract IERC721"
+      },
+      {
+        "name": "_lpIndividuals",
+        "type": "address",
+        "internalType": "contract IERC721"
+      },
+      {
+        "name": "_lpBusiness",
+        "type": "address",
+        "internalType": "contract IERC721"
+      },
+      {
+        "name": "_ecreditscoring",
+        "type": "address",
+        "internalType": "contract IERC721"
       }
     ],
     "stateMutability": "nonpayable"
@@ -98,6 +103,25 @@
   },
   {
     "type": "function",
+    "name": "canRequestCreditScore",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "checkReputationWithEvent",
     "inputs": [
       {
@@ -117,39 +141,26 @@
   },
   {
     "type": "function",
-    "name": "convexoLPs",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract IConvexoLPs"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "convexoPassport",
     "inputs": [],
     "outputs": [
       {
         "name": "",
         "type": "address",
-        "internalType": "contract IConvexoPassport"
+        "internalType": "contract IERC721"
       }
     ],
     "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "convexoVaults",
+    "name": "ecreditscoring",
     "inputs": [],
     "outputs": [
       {
         "name": "",
         "type": "address",
-        "internalType": "contract IConvexoVaults"
+        "internalType": "contract IERC721"
       }
     ],
     "stateMutability": "view"
@@ -171,17 +182,22 @@
         "internalType": "enum ReputationManager.ReputationTier"
       },
       {
-        "name": "lpsBalance",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "vaultsBalance",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
         "name": "passportBalance",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "lpIndividualsBalance",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "lpBusinessBalance",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "ecreditscoringBalance",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -323,7 +339,7 @@
   },
   {
     "type": "function",
-    "name": "holdsConvexoLPs",
+    "name": "holdsAnyLP",
     "inputs": [
       {
         "name": "user",
@@ -342,7 +358,7 @@
   },
   {
     "type": "function",
-    "name": "holdsConvexoPassport",
+    "name": "holdsEcreditscoring",
     "inputs": [
       {
         "name": "user",
@@ -361,7 +377,7 @@
   },
   {
     "type": "function",
-    "name": "holdsConvexoVaults",
+    "name": "holdsLPBusiness",
     "inputs": [
       {
         "name": "user",
@@ -374,6 +390,70 @@
         "name": "",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "holdsLPIndividuals",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "holdsPassport",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "lpBusiness",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IERC721"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "lpIndividuals",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IERC721"
       }
     ],
     "stateMutability": "view"
@@ -419,6 +499,19 @@
   },
   {
     "type": "function",
+    "name": "requirePassportAccess",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "requireVaultCreatorAccess",
     "inputs": [
       {
@@ -447,19 +540,25 @@
         "internalType": "enum ReputationManager.ReputationTier"
       },
       {
-        "name": "lpsBalance",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "vaultsBalance",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
         "name": "passportBalance",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "lpIndividualsBalance",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "lpBusinessBalance",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "ecreditscoringBalance",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"

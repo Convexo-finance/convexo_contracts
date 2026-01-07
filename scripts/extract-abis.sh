@@ -1,7 +1,8 @@
 #!/bin/bash
-
-# ABI Extraction Script for Convexo Protocol
-# This script extracts ABIs from all compiled contracts for frontend integration
+# ═══════════════════════════════════════════════════════════════
+# ABI Extraction Script for Convexo Protocol v3.0
+# Extracts ABIs only for existing contracts
+# ═══════════════════════════════════════════════════════════════
 
 set -e
 
@@ -9,113 +10,136 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 ABI_OUTPUT_DIR="$PROJECT_DIR/abis"
 
-echo "🔨 Building contracts..."
+echo "╔═══════════════════════════════════════════════════════════╗"
+echo "║              Convexo ABI Extraction v3.0                  ║"
+echo "╚═══════════════════════════════════════════════════════════╝"
+echo ""
+
 cd "$PROJECT_DIR"
-forge build
 
-echo "📦 Extracting ABIs..."
-
-# Create abis directory if it doesn't exist
+# Clean old ABIs
+echo "🧹 Cleaning old ABIs..."
+rm -rf "$ABI_OUTPUT_DIR"
 mkdir -p "$ABI_OUTPUT_DIR"
 
-# Function to extract ABI
+# Build contracts
+echo "🔨 Building contracts..."
+forge build --silent
+
+# Extract ABI function
 extract_abi() {
     local contract_name=$1
     local source_file=$2
-    local output_name=${3:-$contract_name}
     
     local abi_path="$PROJECT_DIR/out/$source_file/$contract_name.json"
     
     if [ -f "$abi_path" ]; then
-        jq '.abi' "$abi_path" > "$ABI_OUTPUT_DIR/$output_name.json"
-        echo "✅ Extracted $contract_name ABI to abis/$output_name.json"
+        jq '.abi' "$abi_path" > "$ABI_OUTPUT_DIR/$contract_name.json"
+        echo "  ✅ $contract_name"
         return 0
     else
-        echo "⚠️  Warning: $contract_name.json not found at $abi_path"
+        echo "  ⚠️  $contract_name (not found at $abi_path)"
         return 1
     fi
 }
 
-# Extract all contract ABIs
 echo ""
-echo "Extracting NFT Contracts..."
-extract_abi "Convexo_LPs" "convexolps.sol"
-extract_abi "Convexo_Vaults" "convexovaults.sol"
+echo "📦 Extracting ABIs..."
+
+# ═══════════════════════════════════════════════════════════════
+# DEPLOYED CONTRACTS (14 total)
+# ═══════════════════════════════════════════════════════════════
+
+echo ""
+echo "NFT Contracts (Tier 1-3):"
 extract_abi "Convexo_Passport" "Convexo_Passport.sol"
+extract_abi "Limited_Partners_Individuals" "Limited_Partners_Individuals.sol"
+extract_abi "Limited_Partners_Business" "Limited_Partners_Business.sol"
+extract_abi "Ecreditscoring" "Ecreditscoring.sol"
 
 echo ""
-echo "Extracting Core Contracts..."
-extract_abi "VaultFactory" "VaultFactory.sol"
-extract_abi "TokenizedBondVault" "TokenizedBondVault.sol"
-extract_abi "ContractSigner" "ContractSigner.sol"
+echo "Core Infrastructure:"
 extract_abi "ReputationManager" "ReputationManager.sol"
-extract_abi "PriceFeedManager" "PriceFeedManager.sol"
-extract_abi "PoolRegistry" "PoolRegistry.sol"
-extract_abi "TreasuryFactory" "TreasuryFactory.sol"
-extract_abi "TreasuryVault" "TreasuryVault.sol"
-extract_abi "VeriffVerifier" "VeriffVerifier.sol"
 
 echo ""
-echo "Extracting Hook Contracts..."
+echo "Hook System:"
 extract_abi "HookDeployer" "HookDeployer.sol"
-extract_abi "CompliantLPHook" "CompliantLPHook.sol"
-
-# Create a combined ABI file for convenience
-echo ""
-echo "📋 Creating combined ABI file..."
-jq -s '{
-    "Convexo_LPs": .[0],
-    "Convexo_Vaults": .[1],
-    "Convexo_Passport": .[2],
-    "VaultFactory": .[3],
-    "TokenizedBondVault": .[4],
-    "ContractSigner": .[5],
-    "ReputationManager": .[6],
-    "PriceFeedManager": .[7],
-    "PoolRegistry": .[8],
-    "HookDeployer": .[9],
-    "CompliantLPHook": .[10],
-    "TreasuryFactory": .[11],
-    "TreasuryVault": .[12],
-    "VeriffVerifier": .[13]
-}' \
-    "$ABI_OUTPUT_DIR/Convexo_LPs.json" \
-    "$ABI_OUTPUT_DIR/Convexo_Vaults.json" \
-    "$ABI_OUTPUT_DIR/Convexo_Passport.json" \
-    "$ABI_OUTPUT_DIR/VaultFactory.json" \
-    "$ABI_OUTPUT_DIR/TokenizedBondVault.json" \
-    "$ABI_OUTPUT_DIR/ContractSigner.json" \
-    "$ABI_OUTPUT_DIR/ReputationManager.json" \
-    "$ABI_OUTPUT_DIR/PriceFeedManager.json" \
-    "$ABI_OUTPUT_DIR/PoolRegistry.json" \
-    "$ABI_OUTPUT_DIR/HookDeployer.json" \
-    "$ABI_OUTPUT_DIR/CompliantLPHook.json" \
-    "$ABI_OUTPUT_DIR/TreasuryFactory.json" \
-    "$ABI_OUTPUT_DIR/TreasuryVault.json" \
-    "$ABI_OUTPUT_DIR/VeriffVerifier.json" \
-    > "$ABI_OUTPUT_DIR/combined.json"
-echo "✅ Created combined ABI file at abis/combined.json"
+extract_abi "PassportGatedHook" "PassportGatedHook.sol"
+extract_abi "PoolRegistry" "PoolRegistry.sol"
+extract_abi "PriceFeedManager" "PriceFeedManager.sol"
 
 echo ""
-echo "✨ ABI extraction complete!"
-echo "📁 ABIs saved to: $ABI_OUTPUT_DIR"
-echo ""
-echo "Files created:"
-echo "  - abis/Convexo_LPs.json"
-echo "  - abis/Convexo_Vaults.json"
-echo "  - abis/Convexo_Passport.json"
-echo "  - abis/VaultFactory.json"
-echo "  - abis/TokenizedBondVault.json"
-echo "  - abis/ContractSigner.json"
-echo "  - abis/ReputationManager.json"
-echo "  - abis/PriceFeedManager.json"
-echo "  - abis/PoolRegistry.json"
-echo "  - abis/HookDeployer.json"
-echo "  - abis/CompliantLPHook.json"
-echo "  - abis/TreasuryFactory.json"
-echo "  - abis/TreasuryVault.json"
-echo "  - abis/VeriffVerifier.json"
-echo "  - abis/combined.json"
-echo ""
-echo "🎯 Total: 15 ABI files ready for frontend integration!"
+echo "Vault System:"
+extract_abi "ContractSigner" "ContractSigner.sol"
+extract_abi "VaultFactory" "VaultFactory.sol"
 
+echo ""
+echo "Treasury System:"
+extract_abi "TreasuryFactory" "TreasuryFactory.sol"
+
+echo ""
+echo "Verification System:"
+extract_abi "VeriffVerifier" "VeriffVerifier.sol"
+extract_abi "SumsubVerifier" "SumsubVerifier.sol"
+
+# ═══════════════════════════════════════════════════════════════
+# FACTORY-CREATED CONTRACTS (for frontend interaction)
+# ═══════════════════════════════════════════════════════════════
+
+echo ""
+echo "Factory Templates (not deployed, created by factories):"
+extract_abi "TokenizedBondVault" "TokenizedBondVault.sol"
+extract_abi "TreasuryVault" "TreasuryVault.sol"
+
+# ═══════════════════════════════════════════════════════════════
+# CREATE COMBINED JSON
+# ═══════════════════════════════════════════════════════════════
+
+echo ""
+echo "📋 Creating combined.json..."
+
+cat > "$ABI_OUTPUT_DIR/combined.json" << 'EOF'
+{
+  "version": "3.0",
+  "description": "Convexo Protocol ABIs",
+  "contracts": {}
+}
+EOF
+
+# Add each ABI to combined.json
+for file in "$ABI_OUTPUT_DIR"/*.json; do
+    filename=$(basename "$file" .json)
+    if [ "$filename" != "combined" ]; then
+        # Add contract ABI to combined.json
+        jq --arg name "$filename" --slurpfile abi "$file" \
+           '.contracts[$name] = $abi[0]' \
+           "$ABI_OUTPUT_DIR/combined.json" > "$ABI_OUTPUT_DIR/combined.tmp.json"
+        mv "$ABI_OUTPUT_DIR/combined.tmp.json" "$ABI_OUTPUT_DIR/combined.json"
+    fi
+done
+
+echo "✅ Created combined.json"
+
+# Count files
+ABI_COUNT=$(ls -1 "$ABI_OUTPUT_DIR"/*.json 2>/dev/null | wc -l | tr -d ' ')
+
+echo ""
+echo "╔═══════════════════════════════════════════════════════════╗"
+echo "║              ✅ ABI Extraction Complete!                  ║"
+echo "╚═══════════════════════════════════════════════════════════╝"
+echo ""
+echo "📁 Output: $ABI_OUTPUT_DIR"
+echo "📄 Files: $ABI_COUNT ABIs extracted"
+echo ""
+echo "Contracts:"
+echo "  Deployed (14):"
+echo "    - Convexo_Passport, Limited_Partners_Individuals"
+echo "    - Limited_Partners_Business, Ecreditscoring"
+echo "    - ReputationManager, HookDeployer, PassportGatedHook"
+echo "    - PoolRegistry, PriceFeedManager, ContractSigner"
+echo "    - VaultFactory, TreasuryFactory"
+echo "    - VeriffVerifier, SumsubVerifier"
+echo ""
+echo "  Templates (2):"
+echo "    - TokenizedBondVault, TreasuryVault"
+echo ""

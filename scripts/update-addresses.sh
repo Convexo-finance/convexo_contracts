@@ -1,7 +1,7 @@
 #!/bin/bash
 # scripts/update-addresses.sh
-# Automatically updates addresses.json from broadcast deployment files
-# Simple, reliable version
+# Updates addresses.json from broadcast deployment files
+# Updated for 14-contract system (v3.0)
 
 set -e
 
@@ -16,7 +16,7 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
-# Function to get chain info
+# Chain configuration
 get_chain_info() {
     case "$1" in
         "11155111") echo "Ethereum Sepolia|https://sepolia.etherscan.io/address|etherscan" ;;
@@ -29,7 +29,31 @@ get_chain_info() {
     esac
 }
 
-# Function to update addresses.json for a specific chain
+# Contract mapping (contractName:jsonKey)
+# 14 contracts in total
+CONTRACTS=(
+    # NFT Contracts (Tier 1-3)
+    "Convexo_Passport:convexo_passport"
+    "Limited_Partners_Individuals:lp_individuals"
+    "Limited_Partners_Business:lp_business"
+    "Ecreditscoring:ecreditscoring"
+    # Core Infrastructure
+    "ReputationManager:reputation_manager"
+    # Hook System
+    "HookDeployer:hook_deployer"
+    "PassportGatedHook:passport_gated_hook"
+    "PoolRegistry:pool_registry"
+    "PriceFeedManager:price_feed_manager"
+    # Vault System
+    "ContractSigner:contract_signer"
+    "VaultFactory:vault_factory"
+    # Treasury System
+    "TreasuryFactory:treasury_factory"
+    # Verifiers
+    "VeriffVerifier:veriff_verifier"
+    "SumsubVerifier:sumsub_verifier"
+)
+
 update_chain_addresses() {
     local chain_id=$1
     local broadcast_file="$BROADCAST_DIR/$chain_id/run-latest.json"
@@ -44,7 +68,7 @@ update_chain_addresses() {
     local explorer_base=$(echo "$chain_info" | cut -d'|' -f2)
     local explorer_key=$(echo "$chain_info" | cut -d'|' -f3)
     
-    echo "📝 Updating addresses for chain ID: $chain_id ($chain_name)"
+    echo "📝 Updating addresses for $chain_name (Chain ID: $chain_id)"
     
     # Initialize addresses.json if it doesn't exist
     if [ ! -f "$ADDRESSES_FILE" ]; then
@@ -63,29 +87,19 @@ update_chain_addresses() {
        'if .[$chain_id] == null then
             .[$chain_id] = {
                 "name": $chain_name,
-                "version": "2.0",
+                "version": "3.0",
+                "contracts": {},
                 "notes": {}
             }
         else
             .[$chain_id].name = $chain_name |
-            .[$chain_id].version = "2.0"
+            .[$chain_id].version = "3.0"
         end' "$temp_json" > "${temp_json}.tmp" && mv "${temp_json}.tmp" "$temp_json"
     
-    # Update each contract one by one
-    for contract_pair in \
-        "Convexo_LPs:convexo_lps" \
-        "Convexo_Vaults:convexo_vaults" \
-        "Convexo_Passport:convexo_passport" \
-        "HookDeployer:hook_deployer" \
-        "CompliantLPHook:compliant_lp_hook" \
-        "PoolRegistry:pool_registry" \
-        "ReputationManager:reputation_manager" \
-        "PriceFeedManager:price_feed_manager" \
-        "ContractSigner:contract_signer" \
-        "VaultFactory:vault_factory" \
-        "TreasuryFactory:treasury_factory" \
-        "VeriffVerifier:veriff_verifier"; do
-        
+    local found_count=0
+    local total_count=${#CONTRACTS[@]}
+    
+    for contract_pair in "${CONTRACTS[@]}"; do
         local contract_name=$(echo "$contract_pair" | cut -d':' -f1)
         local json_key=$(echo "$contract_pair" | cut -d':' -f2)
         
@@ -95,7 +109,6 @@ update_chain_addresses() {
         if [ -n "$addr" ] && [ "$addr" != "null" ] && [ "$addr" != "" ]; then
             local explorer_url="${explorer_base}/${addr}"
             
-            # Update the contract address in JSON
             jq --arg chain_id "$chain_id" \
                --arg json_key "$json_key" \
                --arg addr "$addr" \
@@ -110,20 +123,20 @@ update_chain_addresses() {
                }' "$temp_json" > "${temp_json}.tmp" && mv "${temp_json}.tmp" "$temp_json"
             
             echo "  ✅ $contract_name: $addr"
-        else
-            echo "  ⚠️  $contract_name: Not found in broadcast file"
+            ((found_count++))
         fi
     done
     
     # Update deployment status
     jq --arg chain_id "$chain_id" \
-       '.[$chain_id].notes.deployment_status = "Complete - All 12 contracts deployed and verified ✅ (v2.1)"' \
+       --arg status "Complete - $found_count/$total_count contracts deployed ✅ (v3.0)" \
+       '.[$chain_id].notes.deployment_status = $status' \
        "$temp_json" > "${temp_json}.tmp" && mv "${temp_json}.tmp" "$temp_json"
     
     # Validate JSON before moving
     if jq empty "$temp_json" 2>/dev/null; then
         mv "$temp_json" "$ADDRESSES_FILE"
-        echo "✅ Updated addresses.json for $chain_name"
+        echo "✅ Updated addresses.json for $chain_name ($found_count/$total_count contracts)"
     else
         echo "❌ Error: Invalid JSON generated"
         rm -f "$temp_json"
@@ -133,10 +146,11 @@ update_chain_addresses() {
 
 # Main execution
 if [ $# -eq 0 ]; then
-    echo "📋 Updating addresses.json from all available broadcast files..."
+    echo "╔═══════════════════════════════════════════════════════════╗"
+    echo "║        Updating addresses.json from broadcasts           ║"
+    echo "╚═══════════════════════════════════════════════════════════╝"
     echo ""
     
-    # Find all chain IDs with broadcast files
     for chain_dir in "$BROADCAST_DIR"/*/; do
         if [ -d "$chain_dir" ]; then
             chain_id=$(basename "$chain_dir")
@@ -147,9 +161,7 @@ if [ $# -eq 0 ]; then
         fi
     done
 else
-    # Update specific chain ID
-    chain_id=$1
-    update_chain_addresses "$chain_id"
+    update_chain_addresses "$1"
 fi
 
-echo "✨ Done! Updated addresses.json"
+echo "✨ Done!"

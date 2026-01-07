@@ -1,223 +1,148 @@
-# Convexo Frontend Integration Guide
+# 🎨 Frontend Integration Guide
 
-**Version 2.1** - Updated with Treasury system, Veriff verification, and new tier hierarchy
+Complete guide for integrating Convexo Protocol smart contracts into your frontend application.
 
-## 🎯 Quick Start for Frontend Development
-
-All **12 contracts** are deployed, tested, and verified on **6 networks**:
-
-### Testnets
-- ✅ Ethereum Sepolia (Chain ID: 11155111)
-- ✅ Base Sepolia (Chain ID: 84532)
-- ✅ Unichain Sepolia (Chain ID: 1301)
-
-### Mainnets
-- ✅ Ethereum Mainnet (Chain ID: 1)
-- ✅ Base Mainnet (Chain ID: 8453)
-- ✅ Unichain Mainnet (Chain ID: 130)
+**Version**: 2.2  
+**Framework**: React + Viem + Wagmi + RainbowKit  
+**Last Updated**: January 2026
 
 ---
 
-## 📝 Deployed Contract Addresses (v2.1)
+## 📋 Table of Contents
 
-### Ethereum Sepolia (Chain ID: 11155111)
-
-| Contract | Address | Verified |
-|----------|---------|----------|
-| **Convexo_LPs** | `0x6d2101b853e80ea873d2c7c0ec6138c837779c6a` | ✅ |
-| **Convexo_Vaults** | `0xd1ff2d103a864ccb150602dedc09804037b8ce85` | ✅ |
-| **Convexo_Passport** | `0x259adc4917c442dd9a509cb8333a9bed88fe5c70` | ✅ |
-| **HookDeployer** | `0xec97706ca992d571c17c3ac895e9317656d29a25` | ✅ |
-| **CompliantLPHook** | `0xb1697c34cc15cb1fba579f94693e9ab53292b51b` | ✅ |
-| **PoolRegistry** | `0x710299e39b130db198dd2a6973c2ccd7bcc2d093` | ✅ |
-| **ReputationManager** | `0x82e856e70a0057fc6e26c17793a890ec38194cfc` | ✅ |
-| **PriceFeedManager** | `0xebb59c7e14ea002924bf34eedf548836c25a3440` | ✅ |
-| **ContractSigner** | `0x59b0f14ac23cd3b0a6a926a302ac01e4221785bf` | ✅ |
-| **VaultFactory** | `0x4fc5ca49812b0c312046b000d234a96e9084effb` | ✅ |
-| **TreasuryFactory** | `0x53d38e2ca13d085d14a44b0deadc47995a82eca3` | ✅ |
-| **VeriffVerifier** | `0xb11f1c681b8719e6d82098e1316d2573477834ab` | ✅ |
-
-### Base Sepolia (Chain ID: 84532)
-
-| Contract | Address | Verified |
-|----------|---------|----------|
-| **Convexo_LPs** | `0xf048da86da99a76856c02a83fb53e72277acacdf` | ✅ |
-| **Convexo_Vaults** | `0xe9309e75f168b5c98c37a5465e539a0fdbf33eb9` | ✅ |
-| **Convexo_Passport** | `0x5078300fa7e2d29c2e2145beb8a6eb5ad0d45e0c` | ✅ |
-| **HookDeployer** | `0x26379c326108d66734d9265dbbf1c09b20dbd2b9` | ✅ |
-| **CompliantLPHook** | `0x058faa5e95b3deb41e6ecabe4dd870b8e3d90475` | ✅ |
-| **PoolRegistry** | `0x6ad2b7bd52d6382bc7ba37687be5533eb2cf4cd2` | ✅ |
-| **ReputationManager** | `0xc8d1160e2e7719e29b34ab36402aaa0ec24d8c01` | ✅ |
-| **PriceFeedManager** | `0x653bcfc6ea735fb67d73ff537746b804c75cd1f4` | ✅ |
-| **ContractSigner** | `0x437e0a14a515fa5dc5655a11856fe28c7bb78477` | ✅ |
-| **VaultFactory** | `0xb987dd28a350d0d88765ac7310c0895b76fa0828` | ✅ |
-| **TreasuryFactory** | `0x68ec89e0884d05d3b4d2f9b27e4212820b1a56e5` | ✅ |
-| **VeriffVerifier** | `0x6f7413e36ffed4bde41b4521cf240aef0668201f` | ✅ |
-
-### Unichain Sepolia (Chain ID: 1301)
-
-| Contract | Address | Verified |
-|----------|---------|----------|
-| **Convexo_LPs** | `0xfb965542aa0b58538a9b50fe020314dd687eb128` | ✅ |
-| **Convexo_Vaults** | `0x503f203ce6d6462f433cd04c7ad2b05d61b56548` | ✅ |
-| **Convexo_Passport** | `0xab83ce760054c1d048d5a9de5194b05398a09d41` | ✅ |
-| **HookDeployer** | `0x18fb358bc74054b0c2530c48ef23f8a8d464cb18` | ✅ |
-| **CompliantLPHook** | `0x50ace0dce54df668477adee4e9d6a6c0df4fedee` | ✅ |
-| **PoolRegistry** | `0xa46629011e0b8561a45ea03b822d28c0b2432c3a` | ✅ |
-| **ReputationManager** | `0x62227ff7ccbdb4d72c3511290b28c3424f1500ef` | ✅ |
-| **PriceFeedManager** | `0x8efc7e25c12a815329331da5f0e96affb4014472` | ✅ |
-| **ContractSigner** | `0xa932e3eaa0a5e5e65f0567405207603266937618` | ✅ |
-| **VaultFactory** | `0x2cfa02372782cf20ef8342b0193fd69e4c5b04a8` | ✅ |
-| **TreasuryFactory** | `0xecde45fefb5c2ef6e5cc615291de9be9a99b46a6` | ✅ |
-| **VeriffVerifier** | `0xe99a49bd81bbe61cdf7f6b7d247f76cacc2e5776` | ✅ |
-
-### Base Mainnet (Chain ID: 8453)
-
-| Contract | Address | Verified |
-|----------|---------|----------|
-| **Convexo_LPs** | `0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841` | ✅ |
-| **Convexo_Vaults** | `0xfe381737efb123a24dc41b0e3eeffc0ccb5eee71` | ✅ |
-| **Convexo_Passport** | `0x16d8a264aa305c5b0fc2551a3baf8b8602aa1710` | ✅ |
-| **ReputationManager** | `0xfb0157e0f904bfa464d09235a723fc2c462d1e76` | ✅ |
-| **VaultFactory** | `0xb2785f4341b5bf26be07f7e2037550769ce830cd` | ✅ |
-| **TreasuryFactory** | `0x3738d60fcb27d719fdd5113b855e1158b93a95b1` | ✅ |
-| **VeriffVerifier** | `0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff` | ✅ |
-
-### Unichain Mainnet (Chain ID: 130)
-
-| Contract | Address | Verified |
-|----------|---------|----------|
-| **Convexo_LPs** | `0xa03e2718e0ade2d07bfd9ea5705af9a83bb2db96` | ✅ |
-| **Convexo_Vaults** | `0x805b733cc50818dabede4847c4a775a7b1610f96` | ✅ |
-| **Convexo_Passport** | `0x04aeb36d5fa2fb0b0df8b9561d9ee88273d3bc76` | ✅ |
-| **ReputationManager** | `0xb2785f4341b5bf26be07f7e2037550769ce830cd` | ✅ |
-| **VaultFactory** | `0xe4a58592171cd0770e6792600ea3098060a42d46` | ✅ |
-| **TreasuryFactory** | `0xd7cf4aba5b9b4877419ab8af3979da637493afb1` | ✅ |
-| **VeriffVerifier** | `0x99e9880a08e14112a18c091bd49a2b1713133687` | ✅ |
-
-### Ethereum Mainnet (Chain ID: 1)
-
-| Contract | Address | Verified |
-|----------|---------|----------|
-| **Convexo_LPs** | `0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7` | ✅ |
-| **Convexo_Vaults** | `0x5a1f415986a189d79d19d65cb6e3d6dd7b807268` | ✅ |
-| **Convexo_Passport** | `0x6b51adc34a503b23db99444048ac7c2dc735a12e` | ✅ |
-| **ReputationManager** | `0xc5e04ab886025b3fe3d99249d1db069e0b599d8e` | ✅ |
-| **VaultFactory** | `0xbabee8acecc117c1295f8950f51db59f7a881646` | ✅ |
-| **TreasuryFactory** | `0xd189d95ee1a126a66fc5a84934372aa0fc0bb6d2` | ✅ |
-| **VeriffVerifier** | `0xe0c0d95701558ef10768a13a944f56311ead4649` | ✅ |
-
-> **📖 See chain-specific deployment docs: [Ethereum](./ETHEREUM_DEPLOYMENTS.md) | [Base](./BASE_DEPLOYMENTS.md) | [Unichain](./UNICHAIN_DEPLOYMENTS.md)**
+1. [Quick Setup](#quick-setup)
+2. [Contract Configuration](#contract-configuration)
+3. [NFT & Reputation System](#nft--reputation-system)
+4. [User Authentication Flow](#user-authentication-flow)
+5. [Vault Operations](#vault-operations)
+6. [Treasury Operations](#treasury-operations)
+7. [React Hooks](#react-hooks)
+8. [Complete Examples](#complete-examples)
 
 ---
 
-## 📦 ABIs Location
+## ⚡ Quick Setup
 
-All contract ABIs are available in the `abis/` directory:
-
-```
-abis/
-├── Convexo_LPs.json          # Tier 2 NFT (Limited Partner)
-├── Convexo_Vaults.json       # Tier 3 NFT (Vault Creator)
-├── Convexo_Passport.json     # Tier 1 NFT (Individual - ZKPassport)
-├── HookDeployer.json         # Hook deployment helper
-├── CompliantLPHook.json      # Uniswap V4 hook
-├── PoolRegistry.json         # Pool tracking
-├── ReputationManager.json    # User tier calculation
-├── PriceFeedManager.json     # Price feeds
-├── ContractSigner.json       # Multi-sig contracts
-├── VaultFactory.json         # Vault creation
-├── TokenizedBondVault.json   # Individual vault (ERC20 shares)
-├── TreasuryFactory.json      # Treasury creation (NEW)
-├── TreasuryVault.json        # Treasury management (NEW)
-├── VeriffVerifier.json       # KYB verification (NEW)
-└── combined.json             # All ABIs combined
-```
-
-**Total: 15 ABIs** - All contracts ready for frontend integration
-
----
-
-## 🔧 Frontend Setup
-
-### 1. Install Dependencies
+### Install Dependencies
 
 ```bash
-npm install viem wagmi @rainbow-me/rainbowkit
-# or
-yarn add viem wagmi @rainbow-me/rainbowkit
+npm install viem wagmi @rainbow-me/rainbowkit @tanstack/react-query
 ```
 
-### 2. Import Contract Addresses
+### Configure Chains
 
 ```typescript
-// contracts/addresses.ts
+// config/wagmi.ts
+import { createConfig, http } from 'wagmi';
+import { mainnet, sepolia, base, baseSepolia } from 'wagmi/chains';
+import { connectorsForWallets } from '@rainbow-me/rainbowkit';
+import { 
+  rainbowWallet, 
+  walletConnectWallet,
+  metaMaskWallet,
+  coinbaseWallet 
+} from '@rainbow-me/rainbowkit/wallets';
+
+// Define Unichain
+const unichain = {
+  id: 130,
+  name: 'Unichain',
+  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://mainnet.unichain.org'] },
+  },
+  blockExplorers: {
+    default: { name: 'Blockscout', url: 'https://unichain.blockscout.com' },
+  },
+};
+
+const unichainSepolia = {
+  id: 1301,
+  name: 'Unichain Sepolia',
+  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://sepolia.unichain.org'] },
+  },
+  blockExplorers: {
+    default: { name: 'Blockscout', url: 'https://unichain-sepolia.blockscout.com' },
+  },
+  testnet: true,
+};
+
+export const config = createConfig({
+  chains: [mainnet, base, unichain, sepolia, baseSepolia, unichainSepolia],
+  transports: {
+    [mainnet.id]: http(),
+    [base.id]: http(),
+    [unichain.id]: http(),
+    [sepolia.id]: http(),
+    [baseSepolia.id]: http(),
+    [unichainSepolia.id]: http(),
+  },
+});
+```
+
+---
+
+## 📍 Contract Configuration
+
+### Contract Addresses
+
+```typescript
+// config/contracts.ts
 export const CONTRACTS = {
+  // Ethereum Sepolia (11155111)
   ETHEREUM_SEPOLIA: {
     CHAIN_ID: 11155111,
-    CONVEXO_LPS: '0x6d2101b853e80ea873d2c7c0ec6138c837779c6a',
-    CONVEXO_VAULTS: '0xd1ff2d103a864ccb150602dedc09804037b8ce85',
     CONVEXO_PASSPORT: '0x259adc4917c442dd9a509cb8333a9bed88fe5c70',
+    LP_INDIVIDUALS: '0x6d2101b853e80ea873d2c7c0ec6138c837779c6a',    // Limited_Partners_Individuals
+    LP_BUSINESS: '0xd1ff2d103a864ccb150602dedc09804037b8ce85',       // Limited_Partners_Business
+    ECREDITSCORING: '0x...',  // Ecreditscoring NFT (TBD)
     REPUTATION_MANAGER: '0x82e856e70a0057fc6e26c17793a890ec38194cfc',
     VAULT_FACTORY: '0x4fc5ca49812b0c312046b000d234a96e9084effb',
     TREASURY_FACTORY: '0x53d38e2ca13d085d14a44b0deadc47995a82eca3',
-    VERIFF_VERIFIER: '0xb11f1c681b8719e6d82098e1316d2573477834ab',
-    POOL_REGISTRY: '0x710299e39b130db198dd2a6973c2ccd7bcc2d093',
     CONTRACT_SIGNER: '0x59b0f14ac23cd3b0a6a926a302ac01e4221785bf',
+    VERIFF_VERIFIER: '0xb11f1c681b8719e6d82098e1316d2573477834ab',
+    COMPLIANT_LP_HOOK: '0xb1697c34cc15cb1fba579f94693e9ab53292b51b',
+    POOL_REGISTRY: '0x710299e39b130db198dd2a6973c2ccd7bcc2d093',
+    PRICE_FEED_MANAGER: '0xebb59c7e14ea002924bf34eedf548836c25a3440',
+    USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
   },
+
+  // Base Sepolia (84532)
   BASE_SEPOLIA: {
     CHAIN_ID: 84532,
-    CONVEXO_LPS: '0xf048da86da99a76856c02a83fb53e72277acacdf',
-    CONVEXO_VAULTS: '0xe9309e75f168b5c98c37a5465e539a0fdbf33eb9',
     CONVEXO_PASSPORT: '0x5078300fa7e2d29c2e2145beb8a6eb5ad0d45e0c',
+    LP_INDIVIDUALS: '0xf048da86da99a76856c02a83fb53e72277acacdf',
+    LP_BUSINESS: '0xe9309e75f168b5c98c37a5465e539a0fdbf33eb9',
+    ECREDITSCORING: '0x...',
     REPUTATION_MANAGER: '0xc8d1160e2e7719e29b34ab36402aaa0ec24d8c01',
     VAULT_FACTORY: '0xb987dd28a350d0d88765ac7310c0895b76fa0828',
     TREASURY_FACTORY: '0x68ec89e0884d05d3b4d2f9b27e4212820b1a56e5',
-    VERIFF_VERIFIER: '0x6f7413e36ffed4bde41b4521cf240aef0668201f',
-    POOL_REGISTRY: '0x6ad2b7bd52d6382bc7ba37687be5533eb2cf4cd2',
     CONTRACT_SIGNER: '0x437e0a14a515fa5dc5655a11856fe28c7bb78477',
+    VERIFF_VERIFIER: '0x6f7413e36ffed4bde41b4521cf240aef0668201f',
+    COMPLIANT_LP_HOOK: '0x058faa5e95b3deb41e6ecabe4dd870b8e3d90475',
+    POOL_REGISTRY: '0x6ad2b7bd52d6382bc7ba37687be5533eb2cf4cd2',
+    PRICE_FEED_MANAGER: '0x653bcfc6ea735fb67d73ff537746b804c75cd1f4',
+    USDC: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
   },
+
+  // Unichain Sepolia (1301)
   UNICHAIN_SEPOLIA: {
     CHAIN_ID: 1301,
-    CONVEXO_LPS: '0xfb965542aa0b58538a9b50fe020314dd687eb128',
-    CONVEXO_VAULTS: '0x503f203ce6d6462f433cd04c7ad2b05d61b56548',
     CONVEXO_PASSPORT: '0xab83ce760054c1d048d5a9de5194b05398a09d41',
+    LP_INDIVIDUALS: '0xfb965542aa0b58538a9b50fe020314dd687eb128',
+    LP_BUSINESS: '0x503f203ce6d6462f433cd04c7ad2b05d61b56548',
+    ECREDITSCORING: '0x...',
     REPUTATION_MANAGER: '0x62227ff7ccbdb4d72c3511290b28c3424f1500ef',
     VAULT_FACTORY: '0x2cfa02372782cf20ef8342b0193fd69e4c5b04a8',
     TREASURY_FACTORY: '0xecde45fefb5c2ef6e5cc615291de9be9a99b46a6',
-    VERIFF_VERIFIER: '0xe99a49bd81bbe61cdf7f6b7d247f76cacc2e5776',
-    POOL_REGISTRY: '0xa46629011e0b8561a45ea03b822d28c0b2432c3a',
     CONTRACT_SIGNER: '0xa932e3eaa0a5e5e65f0567405207603266937618',
-  },
-  BASE_MAINNET: {
-    CHAIN_ID: 8453,
-    CONVEXO_LPS: '0x5e252bb1642cfa13d4ad93cdfdbabcb9c64ac841',
-    CONVEXO_VAULTS: '0xfe381737efb123a24dc41b0e3eeffc0ccb5eee71',
-    CONVEXO_PASSPORT: '0x16d8a264aa305c5b0fc2551a3baf8b8602aa1710',
-    REPUTATION_MANAGER: '0xfb0157e0f904bfa464d09235a723fc2c462d1e76',
-    VAULT_FACTORY: '0xb2785f4341b5bf26be07f7e2037550769ce830cd',
-    TREASURY_FACTORY: '0x3738d60fcb27d719fdd5113b855e1158b93a95b1',
-    VERIFF_VERIFIER: '0x7ffbee85cb513753fe6ca4f476c7206ad1b3fbff',
-  },
-  UNICHAIN_MAINNET: {
-    CHAIN_ID: 130,
-    CONVEXO_LPS: '0xa03e2718e0ade2d07bfd9ea5705af9a83bb2db96',
-    CONVEXO_VAULTS: '0x805b733cc50818dabede4847c4a775a7b1610f96',
-    CONVEXO_PASSPORT: '0x04aeb36d5fa2fb0b0df8b9561d9ee88273d3bc76',
-    REPUTATION_MANAGER: '0xb2785f4341b5bf26be07f7e2037550769ce830cd',
-    VAULT_FACTORY: '0xe4a58592171cd0770e6792600ea3098060a42d46',
-    TREASURY_FACTORY: '0xd7cf4aba5b9b4877419ab8af3979da637493afb1',
-    VERIFF_VERIFIER: '0x99e9880a08e14112a18c091bd49a2b1713133687',
-  },
-  ETHEREUM_MAINNET: {
-    CHAIN_ID: 1,
-    CONVEXO_LPS: '0x85c795fdc63a106fa6c6922d0bfd6cefd04a29d7',
-    CONVEXO_VAULTS: '0x5a1f415986a189d79d19d65cb6e3d6dd7b807268',
-    CONVEXO_PASSPORT: '0x6b51adc34a503b23db99444048ac7c2dc735a12e',
-    REPUTATION_MANAGER: '0xc5e04ab886025b3fe3d99249d1db069e0b599d8e',
-    VAULT_FACTORY: '0xbabee8acecc117c1295f8950f51db59f7a881646',
-    TREASURY_FACTORY: '0xd189d95ee1a126a66fc5a84934372aa0fc0bb6d2',
-    VERIFF_VERIFIER: '0xe0c0d95701558ef10768a13a944f56311ead4649',
+    VERIFF_VERIFIER: '0xe99a49bd81bbe61cdf7f6b7d247f76cacc2e5776',
+    COMPLIANT_LP_HOOK: '0x50ace0dce54df668477adee4e9d6a6c0df4fedee',
+    POOL_REGISTRY: '0xa46629011e0b8561a45ea03b822d28c0b2432c3a',
+    PRICE_FEED_MANAGER: '0x8efc7e25c12a815329331da5f0e96affb4014472',
+    USDC: '0x31d0220469e10c4E71834a79b1f276d740d3768F',
   },
 } as const;
 
@@ -227,291 +152,386 @@ export function getContracts(chainId: number) {
     case 11155111: return CONTRACTS.ETHEREUM_SEPOLIA;
     case 84532: return CONTRACTS.BASE_SEPOLIA;
     case 1301: return CONTRACTS.UNICHAIN_SEPOLIA;
-    case 8453: return CONTRACTS.BASE_MAINNET;
-    case 130: return CONTRACTS.UNICHAIN_MAINNET;
-    case 1: return CONTRACTS.ETHEREUM_MAINNET;
-    default: throw new Error(`Unsupported chain ID: ${chainId}`);
+    default: return CONTRACTS.BASE_SEPOLIA;
   }
 }
 ```
 
-### 3. Import ABIs
+### Import ABIs
 
 ```typescript
-// contracts/abis.ts
-import ConvexoLPsABI from '../abis/Convexo_LPs.json';
-import ConvexoVaultsABI from '../abis/Convexo_Vaults.json';
+// config/abis.ts
 import ConvexoPassportABI from '../abis/Convexo_Passport.json';
 import ReputationManagerABI from '../abis/ReputationManager.json';
-import VaultFactoryABI from '../abis/VaultFactory.json';
 import TokenizedBondVaultABI from '../abis/TokenizedBondVault.json';
+import VaultFactoryABI from '../abis/VaultFactory.json';
 import TreasuryFactoryABI from '../abis/TreasuryFactory.json';
-import TreasuryVaultABI from '../abis/TreasuryVault.json';
+import ContractSignerABI from '../abis/ContractSigner.json';
 import VeriffVerifierABI from '../abis/VeriffVerifier.json';
+import ERC20ABI from '../abis/ERC20.json';
 
 export {
-  ConvexoLPsABI,
-  ConvexoVaultsABI,
   ConvexoPassportABI,
   ReputationManagerABI,
-  VaultFactoryABI,
   TokenizedBondVaultABI,
+  VaultFactoryABI,
   TreasuryFactoryABI,
-  TreasuryVaultABI,
+  ContractSignerABI,
   VeriffVerifierABI,
+  ERC20ABI,
 };
 ```
 
 ---
 
-## 🏆 Tier System (v2.1)
+## 🎫 NFT & Reputation System
 
-| Tier | NFT | User Type | Access |
-|------|-----|-----------|--------|
-| **Tier 0** | None | Unverified | No access |
-| **Tier 1** | Convexo_Passport | Individual | Treasury creation + Vault investments |
-| **Tier 2** | Convexo_LPs | Limited Partner | LP pools + Vault investments |
-| **Tier 3** | Convexo_Vaults | Vault Creator | All above + Vault creation |
-
-**Key Change:** Tier hierarchy is now **reversed** - Passport is entry-level (Tier 1).
-
----
-
-## 🎨 Key Frontend Features to Implement
-
-### 1. User Reputation Check (v2.1)
+### Understanding the Tier System
 
 ```typescript
-import { useContractRead } from 'wagmi';
-import { CONTRACTS } from './contracts/addresses';
-import { ReputationManagerABI } from './contracts/abis';
+// types/reputation.ts
+export enum ReputationTier {
+  None = 0,           // No NFTs - No access
+  Passport = 1,       // Convexo_Passport - ZKPassport verified
+  LimitedPartner = 2, // LP_Individuals OR LP_Business - Full LP access
+  VaultCreator = 3,   // Ecreditscoring - Can create vaults
+}
 
-function useUserReputation(address: `0x${string}` | undefined) {
+export interface UserReputation {
+  tier: ReputationTier;
+  tierName: string;
+  passportBalance: bigint;
+  lpIndividualsBalance: bigint;
+  lpBusinessBalance: bigint;
+  ecreditscoringBalance: bigint;
+  // Access permissions
+  canAccessLPPools: boolean;
+  canCreateTreasury: boolean;
+  canInvestInVaults: boolean;
+  canRequestCreditScore: boolean;
+  canCreateVaults: boolean;
+}
+
+export const TIER_NAMES: Record<ReputationTier, string> = {
+  [ReputationTier.None]: 'Unverified',
+  [ReputationTier.Passport]: 'Passport Holder',
+  [ReputationTier.LimitedPartner]: 'Limited Partner',
+  [ReputationTier.VaultCreator]: 'Vault Creator',
+};
+
+export const TIER_COLORS: Record<ReputationTier, string> = {
+  [ReputationTier.None]: 'gray',
+  [ReputationTier.Passport]: 'blue',
+  [ReputationTier.LimitedPartner]: 'purple',
+  [ReputationTier.VaultCreator]: 'gold',
+};
+```
+
+### useUserReputation Hook
+
+```typescript
+// hooks/useUserReputation.ts
+import { useReadContracts } from 'wagmi';
+import { getContracts } from '../config/contracts';
+import { ReputationManagerABI } from '../config/abis';
+import { ReputationTier, UserReputation, TIER_NAMES } from '../types/reputation';
+
+export function useUserReputation(address: `0x${string}` | undefined, chainId: number) {
   const contracts = getContracts(chainId);
-  
-  const { data: tier } = useContractRead({
-    address: contracts.REPUTATION_MANAGER,
-    abi: ReputationManagerABI,
-    functionName: 'getReputationTier',
-    args: address ? [address] : undefined,
-    enabled: !!address,
+
+  const { data, isLoading, error, refetch } = useReadContracts({
+    contracts: address ? [
+      {
+        address: contracts.REPUTATION_MANAGER as `0x${string}`,
+        abi: ReputationManagerABI,
+        functionName: 'getReputationDetails',
+        args: [address],
+      },
+      {
+        address: contracts.REPUTATION_MANAGER as `0x${string}`,
+        abi: ReputationManagerABI,
+        functionName: 'canAccessLPPools',
+        args: [address],
+      },
+      {
+        address: contracts.REPUTATION_MANAGER as `0x${string}`,
+        abi: ReputationManagerABI,
+        functionName: 'canCreateTreasury',
+        args: [address],
+      },
+      {
+        address: contracts.REPUTATION_MANAGER as `0x${string}`,
+        abi: ReputationManagerABI,
+        functionName: 'canInvestInVaults',
+        args: [address],
+      },
+      {
+        address: contracts.REPUTATION_MANAGER as `0x${string}`,
+        abi: ReputationManagerABI,
+        functionName: 'canRequestCreditScore',
+        args: [address],
+      },
+      {
+        address: contracts.REPUTATION_MANAGER as `0x${string}`,
+        abi: ReputationManagerABI,
+        functionName: 'canCreateVaults',
+        args: [address],
+      },
+    ] : [],
   });
 
-  return {
-    tier, // 0 = None, 1 = Passport, 2 = LimitedPartner, 3 = VaultCreator
-    canCreateTreasury: tier && tier >= 1,
-    canInvestInVaults: tier && tier >= 1,
-    canAccessLPPools: tier && tier >= 2,
-    canCreateVaults: tier && tier === 3,
+  const reputation: UserReputation | null = data ? {
+    tier: Number(data[0].result?.[0]) as ReputationTier,
+    tierName: TIER_NAMES[Number(data[0].result?.[0]) as ReputationTier],
+    passportBalance: data[0].result?.[1] ?? 0n,
+    lpIndividualsBalance: data[0].result?.[2] ?? 0n,
+    lpBusinessBalance: data[0].result?.[3] ?? 0n,
+    ecreditscoringBalance: data[0].result?.[4] ?? 0n,
+    canAccessLPPools: data[1].result ?? false,
+    canCreateTreasury: data[2].result ?? false,
+    canInvestInVaults: data[3].result ?? false,
+    canRequestCreditScore: data[4].result ?? false,
+    canCreateVaults: data[5].result ?? false,
+  } : null;
+
+  return { reputation, isLoading, error, refetch };
+}
+```
+
+### Reputation Badge Component
+
+```tsx
+// components/ReputationBadge.tsx
+import { ReputationTier, TIER_NAMES, TIER_COLORS } from '../types/reputation';
+
+interface ReputationBadgeProps {
+  tier: ReputationTier;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+const TIER_ICONS: Record<ReputationTier, string> = {
+  [ReputationTier.None]: '⚪',
+  [ReputationTier.Passport]: '🛂',
+  [ReputationTier.LimitedPartner]: '💼',
+  [ReputationTier.VaultCreator]: '🏆',
+};
+
+export function ReputationBadge({ tier, size = 'md' }: ReputationBadgeProps) {
+  const sizeClasses = {
+    sm: 'px-2 py-1 text-xs',
+    md: 'px-3 py-1.5 text-sm',
+    lg: 'px-4 py-2 text-base',
   };
-}
-```
-
-### 2. Check NFT Ownership
-
-```typescript
-function useNFTOwnership(address: `0x${string}` | undefined) {
-  const contracts = getContracts(chainId);
-  
-  const { data: lpsBalance } = useContractRead({
-    address: contracts.CONVEXO_LPS,
-    abi: ConvexoLPsABI,
-    functionName: 'balanceOf',
-    args: address ? [address] : undefined,
-  });
-
-  const { data: vaultsBalance } = useContractRead({
-    address: contracts.CONVEXO_VAULTS,
-    abi: ConvexoVaultsABI,
-    functionName: 'balanceOf',
-    args: address ? [address] : undefined,
-  });
-
-  const { data: passportBalance } = useContractRead({
-    address: contracts.CONVEXO_PASSPORT,
-    abi: ConvexoPassportABI,
-    functionName: 'balanceOf',
-    args: address ? [address] : undefined,
-  });
-
-  return {
-    hasLPsNFT: lpsBalance && lpsBalance > 0n,      // Tier 2
-    hasVaultsNFT: vaultsBalance && vaultsBalance > 0n, // Tier 3
-    hasPassportNFT: passportBalance && passportBalance > 0n, // Tier 1
-  };
-}
-```
-
-### 3. Display User Access Level
-
-```typescript
-function UserAccessBadge({ address }: { address: `0x${string}` }) {
-  const { tier, canCreateTreasury, canInvestInVaults, canAccessLPPools, canCreateVaults } = useUserReputation(address);
-
-  if (tier === 0) {
-    return (
-      <div className="badge badge-error">
-        <p>❌ No access - Get verified first</p>
-      </div>
-    );
-  }
-
-  if (tier === 1) {
-    return (
-      <div className="badge badge-primary">
-        <p>🎫 Tier 1 - Passport Holder</p>
-        <ul>
-          <li>✅ Create personal treasury</li>
-          <li>✅ Invest in vaults</li>
-        </ul>
-      </div>
-    );
-  }
-
-  if (tier === 2) {
-    return (
-      <div className="badge badge-secondary">
-        <p>💼 Tier 2 - Limited Partner</p>
-        <ul>
-          <li>✅ Access LP pools</li>
-          <li>✅ Invest in vaults</li>
-        </ul>
-      </div>
-    );
-  }
-
-  if (tier === 3) {
-    return (
-      <div className="badge badge-success">
-        <p>🏆 Tier 3 - Vault Creator</p>
-        <ul>
-          <li>✅ Create vaults</li>
-          <li>✅ Access LP pools</li>
-          <li>✅ Invest in vaults</li>
-        </ul>
-      </div>
-    );
-  }
-}
-```
-
----
-
-## 🏦 Treasury System (NEW in v2.1)
-
-### Create Treasury (Tier 1+)
-
-```typescript
-function CreateTreasuryForm() {
-  const { address } = useAccount();
-  const contracts = getContracts(chainId);
-  
-  // Check if user can create treasury
-  const { data: canCreate } = useContractRead({
-    address: contracts.REPUTATION_MANAGER,
-    abi: ReputationManagerABI,
-    functionName: 'canCreateTreasury',
-    args: [address],
-  });
-  
-  if (!canCreate) {
-    return (
-      <div className="alert alert-warning">
-        <p>❌ Tier 1+ NFT required to create treasuries</p>
-        <p>Get your Convexo Passport via ZKPassport verification</p>
-      </div>
-    );
-  }
-
-  // Create single-sig treasury
-  const { write: createTreasury } = useContractWrite({
-    address: contracts.TREASURY_FACTORY,
-    abi: TreasuryFactoryABI,
-    functionName: 'createTreasury',
-    args: [
-      [], // Empty array for single-sig
-      1,  // 1 signature required
-    ],
-  });
 
   return (
-    <div className="create-treasury">
-      <h3>Create Personal Treasury</h3>
-      <button onClick={() => createTreasury?.()}>
-        Create Treasury
-      </button>
-    </div>
+    <span 
+      className={`inline-flex items-center gap-1.5 rounded-full font-medium ${sizeClasses[size]}`}
+      style={{ 
+        backgroundColor: `${TIER_COLORS[tier]}20`,
+        color: TIER_COLORS[tier],
+        border: `1px solid ${TIER_COLORS[tier]}40`
+      }}
+    >
+      <span>{TIER_ICONS[tier]}</span>
+      <span>{TIER_NAMES[tier]}</span>
+    </span>
   );
 }
 ```
 
-### List User's Treasuries
+### Access Matrix Component
 
-```typescript
-function UserTreasuries({ address }: { address: `0x${string}` }) {
-  const contracts = getContracts(chainId);
-  
-  const { data: treasuryIds } = useContractRead({
-    address: contracts.TREASURY_FACTORY,
-    abi: TreasuryFactoryABI,
-    functionName: 'getTreasuriesByOwner',
-    args: [address],
-  });
+```tsx
+// components/AccessMatrix.tsx
+import { UserReputation } from '../types/reputation';
+
+interface AccessMatrixProps {
+  reputation: UserReputation;
+}
+
+export function AccessMatrix({ reputation }: AccessMatrixProps) {
+  const accessItems = [
+    { label: 'LP Pools', hasAccess: reputation.canAccessLPPools },
+    { label: 'Create Treasury', hasAccess: reputation.canCreateTreasury },
+    { label: 'Invest in Vaults', hasAccess: reputation.canInvestInVaults },
+    { label: 'Request Credit Score', hasAccess: reputation.canRequestCreditScore },
+    { label: 'Create Vaults', hasAccess: reputation.canCreateVaults },
+  ];
 
   return (
-    <div className="treasuries-list">
-      <h3>Your Treasuries</h3>
-      {treasuryIds?.map((id) => (
-        <TreasuryCard key={id} treasuryId={id} />
+    <div className="grid grid-cols-2 gap-3">
+      {accessItems.map((item) => (
+        <div 
+          key={item.label}
+          className={`p-3 rounded-lg border ${
+            item.hasAccess 
+              ? 'bg-green-50 border-green-200' 
+              : 'bg-gray-50 border-gray-200'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span className={item.hasAccess ? 'text-green-500' : 'text-gray-400'}>
+              {item.hasAccess ? '✅' : '❌'}
+            </span>
+            <span className="text-sm font-medium">{item.label}</span>
+          </div>
+        </div>
       ))}
     </div>
   );
 }
 ```
 
-### Treasury Management
+---
+
+## 🔐 User Authentication Flow
+
+### Authentication Flow Diagram
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                         USER AUTHENTICATION FLOWS                          │
+├────────────────────────────────────────────────────────────────────────────┤
+│                                                                            │
+│  PATH 1: International Investor (Tier 1)                                  │
+│  ═══════════════════════════════════════                                  │
+│  ZKPassport ──▶ safeMintWithIdentifier() ──▶ Convexo_Passport NFT         │
+│                                                                            │
+│  PATH 2: Individual LP (Tier 2)                                           │
+│  ═══════════════════════════════                                          │
+│  Veriff KYC ──▶ VeriffVerifier.approveVerification() ──▶ LP_Individuals   │
+│                                                                            │
+│  PATH 3: Business LP (Tier 2)                                             │
+│  ═════════════════════════════                                            │
+│  Sumsub KYB ──▶ SumsubVerifier.approveVerification() ──▶ LP_Business      │
+│                                                                            │
+│  PATH 4: Vault Creator (Tier 3)                                           │
+│  ═══════════════════════════════                                          │
+│  LP NFT + AI Credit Score ──▶ mint() ──▶ Ecreditscoring NFT               │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Passport Minting (Path 1)
 
 ```typescript
-function TreasuryCard({ treasuryId }: { treasuryId: bigint }) {
+// hooks/useMintPassport.ts
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { keccak256, toBytes } from 'viem';
+import { ConvexoPassportABI } from '../config/abis';
+import { getContracts } from '../config/contracts';
+
+export function useMintPassport(chainId: number) {
   const contracts = getContracts(chainId);
   
-  // Get treasury address
-  const { data: treasuryAddress } = useContractRead({
-    address: contracts.TREASURY_FACTORY,
-    abi: TreasuryFactoryABI,
-    functionName: 'getTreasury',
-    args: [treasuryId],
-  });
+  const { writeContract, data: hash, isPending, error } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  // Get treasury balance
-  const { data: balance } = useContractRead({
-    address: treasuryAddress as `0x${string}`,
-    abi: TreasuryVaultABI,
-    functionName: 'getBalance',
-    enabled: !!treasuryAddress,
-  });
+  const mintWithIdentifier = async (uniqueIdentifier: `0x${string}`) => {
+    await writeContract({
+      address: contracts.CONVEXO_PASSPORT as `0x${string}`,
+      abi: ConvexoPassportABI,
+      functionName: 'safeMintWithIdentifier',
+      args: [uniqueIdentifier],
+    });
+  };
 
-  // Deposit USDC
-  const { write: deposit } = useContractWrite({
-    address: treasuryAddress as `0x${string}`,
-    abi: TreasuryVaultABI,
-    functionName: 'deposit',
-  });
+  // Helper to generate identifier from ZKPassport data
+  const generateIdentifier = (publicKey: string, scope: string): `0x${string}` => {
+    const combined = publicKey + scope.replace('0x', '');
+    return keccak256(toBytes(combined));
+  };
 
-  // Propose withdrawal
-  const { write: proposeWithdrawal } = useContractWrite({
-    address: treasuryAddress as `0x${string}`,
-    abi: TreasuryVaultABI,
-    functionName: 'proposeWithdrawal',
-  });
+  return {
+    mintWithIdentifier,
+    generateIdentifier,
+    hash,
+    isPending,
+    isConfirming,
+    isSuccess,
+    error,
+  };
+}
+```
+
+### Passport Minting Component
+
+```tsx
+// components/MintPassport.tsx
+import { useState } from 'react';
+import { useAccount, useChainId } from 'wagmi';
+import { useMintPassport } from '../hooks/useMintPassport';
+
+export function MintPassport() {
+  const { address } = useAccount();
+  const chainId = useChainId();
+  const { mintWithIdentifier, generateIdentifier, isPending, isConfirming, isSuccess, error } = useMintPassport(chainId);
+  
+  const [zkPassportData, setZkPassportData] = useState<{
+    publicKey: string;
+    scope: string;
+  } | null>(null);
+
+  const handleMint = async () => {
+    if (!zkPassportData) return;
+    
+    const identifier = generateIdentifier(zkPassportData.publicKey, zkPassportData.scope);
+    await mintWithIdentifier(identifier);
+  };
 
   return (
-    <div className="treasury-card">
-      <h4>Treasury #{Number(treasuryId)}</h4>
-      <p>Balance: {formatUnits(balance || 0n, 6)} USDC</p>
-      <p>Address: {treasuryAddress}</p>
-      <button onClick={() => deposit?.()}>Deposit USDC</button>
-      <button onClick={() => proposeWithdrawal?.()}>Propose Withdrawal</button>
+    <div className="p-6 bg-white rounded-xl shadow-lg">
+      <h2 className="text-2xl font-bold mb-4">🛂 Get Your Convexo Passport</h2>
+      
+      <div className="space-y-4">
+        {/* Step 1: ZKPassport Verification */}
+        <div className="p-4 bg-blue-50 rounded-lg">
+          <h3 className="font-semibold mb-2">Step 1: Verify with ZKPassport</h3>
+          <p className="text-sm text-gray-600 mb-3">
+            Complete identity verification using your passport or ID card.
+          </p>
+          <button
+            onClick={() => {
+              // Trigger ZKPassport flow
+              // On success, set zkPassportData
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Start Verification
+          </button>
+        </div>
+
+        {/* Step 2: Mint NFT */}
+        {zkPassportData && (
+          <div className="p-4 bg-green-50 rounded-lg">
+            <h3 className="font-semibold mb-2">Step 2: Mint Your Passport NFT</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              ✅ Verification complete! Now mint your soulbound Passport NFT.
+            </p>
+            <button
+              onClick={handleMint}
+              disabled={isPending || isConfirming}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+            >
+              {isPending ? 'Confirming...' : isConfirming ? 'Minting...' : 'Mint Passport NFT'}
+            </button>
+          </div>
+        )}
+
+        {/* Success */}
+        {isSuccess && (
+          <div className="p-4 bg-emerald-100 rounded-lg text-emerald-800">
+            🎉 Passport NFT minted successfully! You now have Tier 1 access.
+          </div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="p-4 bg-red-100 rounded-lg text-red-800">
+            ❌ Error: {error.message}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -519,44 +539,350 @@ function TreasuryCard({ treasuryId }: { treasuryId: bigint }) {
 
 ---
 
-## 💰 Vault Investment Interface
+## 🏦 Vault Operations
+
+### Vault Types
+
+```typescript
+// types/vault.ts
+export enum VaultState {
+  Pending = 0,    // Accepting investments
+  Funded = 1,     // Fully funded
+  Active = 2,     // Contract signed
+  Repaying = 3,   // Making repayments
+  Completed = 4,  // All done
+  Defaulted = 5,  // Failed
+}
+
+export interface VaultInfo {
+  vaultId: bigint;
+  borrower: `0x${string}`;
+  contractHash: `0x${string}`;
+  principalAmount: bigint;
+  interestRate: bigint;
+  protocolFeeRate: bigint;
+  maturityDate: bigint;
+  state: VaultState;
+  totalRaised: bigint;
+  totalRepaid: bigint;
+  createdAt: bigint;
+  fundedAt: bigint;
+  contractAttachedAt: bigint;
+  fundsWithdrawnAt: bigint;
+}
+
+export interface VaultMetrics {
+  totalShares: bigint;
+  sharePrice: bigint;
+  totalValueLocked: bigint;
+  targetAmount: bigint;
+  fundingProgress: bigint;
+  currentAPY: bigint;
+}
+
+export interface InvestorReturn {
+  invested: bigint;
+  currentValue: bigint;
+  profit: bigint;
+  apy: bigint;
+}
+```
+
+### useVaultData Hook
+
+```typescript
+// hooks/useVaultData.ts
+import { useReadContracts } from 'wagmi';
+import { TokenizedBondVaultABI } from '../config/abis';
+import { VaultInfo, VaultMetrics, VaultState } from '../types/vault';
+
+export function useVaultData(vaultAddress: `0x${string}`) {
+  const { data, isLoading, error, refetch } = useReadContracts({
+    contracts: [
+      {
+        address: vaultAddress,
+        abi: TokenizedBondVaultABI,
+        functionName: 'vaultInfo',
+      },
+      {
+        address: vaultAddress,
+        abi: TokenizedBondVaultABI,
+        functionName: 'getVaultMetrics',
+      },
+    ],
+  });
+
+  const vaultInfo: VaultInfo | null = data?.[0]?.result ? {
+    vaultId: data[0].result[0],
+    borrower: data[0].result[1],
+    contractHash: data[0].result[2],
+    principalAmount: data[0].result[3],
+    interestRate: data[0].result[4],
+    protocolFeeRate: data[0].result[5],
+    maturityDate: data[0].result[6],
+    state: Number(data[0].result[7]) as VaultState,
+    totalRaised: data[0].result[8],
+    totalRepaid: data[0].result[9],
+    createdAt: data[0].result[10],
+    fundedAt: data[0].result[11],
+    contractAttachedAt: data[0].result[12],
+    fundsWithdrawnAt: data[0].result[13],
+  } : null;
+
+  const metrics: VaultMetrics | null = data?.[1]?.result ? {
+    totalShares: data[1].result[0],
+    sharePrice: data[1].result[1],
+    totalValueLocked: data[1].result[2],
+    targetAmount: data[1].result[3],
+    fundingProgress: data[1].result[4],
+    currentAPY: data[1].result[5],
+  } : null;
+
+  return { vaultInfo, metrics, isLoading, error, refetch };
+}
+```
+
+### Create Vault (Tier 3 Only)
+
+```typescript
+// hooks/useCreateVault.ts
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { parseUnits } from 'viem';
+import { VaultFactoryABI } from '../config/abis';
+import { getContracts } from '../config/contracts';
+
+interface CreateVaultParams {
+  principalAmount: string;      // USDC amount (e.g., "10000")
+  interestRate: number;         // Basis points (1200 = 12%)
+  protocolFeeRate: number;      // Basis points (200 = 2%)
+  maturityDays: number;         // Days until maturity
+  name: string;
+  symbol: string;
+}
+
+export function useCreateVault(chainId: number) {
+  const contracts = getContracts(chainId);
+  
+  const { writeContract, data: hash, isPending, error } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess, data: receipt } = useWaitForTransactionReceipt({ hash });
+
+  const createVault = async (params: CreateVaultParams) => {
+    const principalAmount = parseUnits(params.principalAmount, 6); // USDC has 6 decimals
+    const maturityDate = BigInt(Math.floor(Date.now() / 1000) + params.maturityDays * 24 * 60 * 60);
+
+    await writeContract({
+      address: contracts.VAULT_FACTORY as `0x${string}`,
+      abi: VaultFactoryABI,
+      functionName: 'createVault',
+      args: [
+        principalAmount,
+        BigInt(params.interestRate),
+        BigInt(params.protocolFeeRate),
+        maturityDate,
+        params.name,
+        params.symbol,
+      ],
+    });
+  };
+
+  return {
+    createVault,
+    hash,
+    isPending,
+    isConfirming,
+    isSuccess,
+    receipt,
+    error,
+  };
+}
+```
+
+### Invest in Vault (Tier 1+)
+
+```typescript
+// hooks/useInvestInVault.ts
+import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
+import { parseUnits, maxUint256 } from 'viem';
+import { TokenizedBondVaultABI, ERC20ABI } from '../config/abis';
+import { getContracts } from '../config/contracts';
+
+export function useInvestInVault(vaultAddress: `0x${string}`, chainId: number) {
+  const contracts = getContracts(chainId);
+  
+  const { writeContract, data: hash, isPending, error } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  // Check current allowance
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: contracts.USDC as `0x${string}`,
+    abi: ERC20ABI,
+    functionName: 'allowance',
+    args: [vaultAddress],
+  });
+
+  const approve = async (amount: string) => {
+    await writeContract({
+      address: contracts.USDC as `0x${string}`,
+      abi: ERC20ABI,
+      functionName: 'approve',
+      args: [vaultAddress, parseUnits(amount, 6)],
+    });
+  };
+
+  const invest = async (amount: string) => {
+    const amountWei = parseUnits(amount, 6);
+    
+    await writeContract({
+      address: vaultAddress,
+      abi: TokenizedBondVaultABI,
+      functionName: 'purchaseShares',
+      args: [amountWei],
+    });
+  };
+
+  return {
+    approve,
+    invest,
+    allowance,
+    refetchAllowance,
+    hash,
+    isPending,
+    isConfirming,
+    isSuccess,
+    error,
+  };
+}
+```
 
 ### Vault Investment Card
 
-```typescript
-function VaultInvestmentCard({ vaultAddress }: { vaultAddress: `0x${string}` }) {
+```tsx
+// components/VaultInvestmentCard.tsx
+import { useState } from 'react';
+import { useAccount, useChainId } from 'wagmi';
+import { formatUnits } from 'viem';
+import { useVaultData } from '../hooks/useVaultData';
+import { useInvestInVault } from '../hooks/useInvestInVault';
+import { useUserReputation } from '../hooks/useUserReputation';
+import { VaultState } from '../types/vault';
+
+interface VaultInvestmentCardProps {
+  vaultAddress: `0x${string}`;
+}
+
+export function VaultInvestmentCard({ vaultAddress }: VaultInvestmentCardProps) {
   const { address } = useAccount();
+  const chainId = useChainId();
+  const { vaultInfo, metrics, isLoading } = useVaultData(vaultAddress);
+  const { reputation } = useUserReputation(address, chainId);
+  const { approve, invest, isPending, isConfirming, isSuccess } = useInvestInVault(vaultAddress, chainId);
   
-  const { data: metrics } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'getVaultMetrics',
-  });
+  const [amount, setAmount] = useState('');
 
-  const { data: userReturns } = useContractRead({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'getInvestorReturn',
-    args: [address],
-    enabled: !!address,
-  });
+  if (isLoading || !vaultInfo || !metrics) {
+    return <div className="animate-pulse bg-gray-200 h-64 rounded-xl" />;
+  }
 
-  if (!metrics) return null;
-
-  const [totalShares, sharePrice, tvl, target, progress, apy] = metrics;
+  const canInvest = reputation?.canInvestInVaults && vaultInfo.state === VaultState.Pending;
+  const fundingPercentage = Number(metrics.fundingProgress) / 100;
+  const apy = Number(metrics.currentAPY) / 100;
 
   return (
-    <div className="vault-card">
-      <h3>Vault Investment</h3>
-      <p>TVL: {formatUnits(tvl, 6)} USDC</p>
-      <p>APY: {Number(apy) / 100}%</p>
-      <p>Progress: {Number(progress) / 100}%</p>
-      
-      {userReturns && (
+    <div className="p-6 bg-white rounded-xl shadow-lg border">
+      {/* Header */}
+      <div className="flex justify-between items-start mb-4">
         <div>
-          <p>Your Investment: {formatUnits(userReturns[0], 6)} USDC</p>
-          <p>Current Value: {formatUnits(userReturns[1], 6)} USDC</p>
-          <p>Profit: {formatUnits(userReturns[2], 6)} USDC</p>
+          <h3 className="text-xl font-bold">Vault #{vaultInfo.vaultId.toString()}</h3>
+          <p className="text-sm text-gray-500">
+            Borrower: {vaultInfo.borrower.slice(0, 6)}...{vaultInfo.borrower.slice(-4)}
+          </p>
+        </div>
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+          vaultInfo.state === VaultState.Pending ? 'bg-blue-100 text-blue-800' :
+          vaultInfo.state === VaultState.Funded ? 'bg-yellow-100 text-yellow-800' :
+          vaultInfo.state === VaultState.Active ? 'bg-green-100 text-green-800' :
+          vaultInfo.state === VaultState.Repaying ? 'bg-purple-100 text-purple-800' :
+          vaultInfo.state === VaultState.Completed ? 'bg-emerald-100 text-emerald-800' :
+          'bg-red-100 text-red-800'
+        }`}>
+          {VaultState[vaultInfo.state]}
+        </span>
+      </div>
+
+      {/* Metrics */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-500">Target Amount</p>
+          <p className="text-lg font-bold">
+            ${formatUnits(metrics.targetAmount, 6).toLocaleString()}
+          </p>
+        </div>
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-500">APY</p>
+          <p className="text-lg font-bold text-green-600">{apy}%</p>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="mb-6">
+        <div className="flex justify-between text-sm mb-1">
+          <span>Funding Progress</span>
+          <span>{fundingPercentage.toFixed(1)}%</span>
+        </div>
+        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-blue-600 rounded-full transition-all duration-500"
+            style={{ width: `${Math.min(fundingPercentage, 100)}%` }}
+          />
+        </div>
+        <p className="text-sm text-gray-500 mt-1">
+          ${formatUnits(vaultInfo.totalRaised, 6)} / ${formatUnits(metrics.targetAmount, 6)} USDC
+        </p>
+      </div>
+
+      {/* Investment Form */}
+      {canInvest && (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium mb-1">Investment Amount (USDC)</label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Enter amount..."
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => approve(amount)}
+              disabled={!amount || isPending || isConfirming}
+              className="flex-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+            >
+              Approve
+            </button>
+            <button
+              onClick={() => invest(amount)}
+              disabled={!amount || isPending || isConfirming}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isPending ? 'Confirming...' : isConfirming ? 'Investing...' : 'Invest'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Access Denied */}
+      {!reputation?.canInvestInVaults && (
+        <div className="p-4 bg-amber-50 rounded-lg text-amber-800 text-sm">
+          ⚠️ You need at least Tier 1 (Passport) to invest in vaults.
+        </div>
+      )}
+
+      {/* Success Message */}
+      {isSuccess && (
+        <div className="mt-4 p-4 bg-green-50 rounded-lg text-green-800">
+          ✅ Investment successful! You now own shares in this vault.
         </div>
       )}
     </div>
@@ -564,50 +890,152 @@ function VaultInvestmentCard({ vaultAddress }: { vaultAddress: `0x${string}` }) 
 }
 ```
 
-### Purchase Vault Shares (Tier 1+ Required)
+---
+
+## 🏛️ Treasury Operations
+
+### Create Treasury (Tier 1+)
 
 ```typescript
-function InvestInVault({ vaultAddress }: { vaultAddress: `0x${string}` }) {
-  const { address } = useAccount();
+// hooks/useCreateTreasury.ts
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { TreasuryFactoryABI } from '../config/abis';
+import { getContracts } from '../config/contracts';
+
+interface CreateTreasuryParams {
+  signers?: `0x${string}`[];  // Empty for single-sig
+  signaturesRequired?: number; // 0 for single-sig
+}
+
+export function useCreateTreasury(chainId: number) {
   const contracts = getContracts(chainId);
   
-  // Check if user can invest (Tier 1+)
-  const { data: canInvest } = useContractRead({
-    address: contracts.REPUTATION_MANAGER,
-    abi: ReputationManagerABI,
-    functionName: 'canInvestInVaults',
-    args: [address],
-  });
+  const { writeContract, data: hash, isPending, error } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess, data: receipt } = useWaitForTransactionReceipt({ hash });
 
-  if (!canInvest) {
+  const createTreasury = async (params?: CreateTreasuryParams) => {
+    const signers = params?.signers || [];
+    const signaturesRequired = params?.signaturesRequired || 0;
+
+    await writeContract({
+      address: contracts.TREASURY_FACTORY as `0x${string}`,
+      abi: TreasuryFactoryABI,
+      functionName: 'createTreasury',
+      args: [signers, BigInt(signaturesRequired)],
+    });
+  };
+
+  return {
+    createTreasury,
+    hash,
+    isPending,
+    isConfirming,
+    isSuccess,
+    receipt,
+    error,
+  };
+}
+```
+
+---
+
+## 🪝 React Hooks Summary
+
+| Hook | Purpose | Tier Required |
+|------|---------|---------------|
+| `useUserReputation` | Get user's tier and permissions | None |
+| `useMintPassport` | Mint Convexo_Passport NFT | None |
+| `useVaultData` | Read vault information | None |
+| `useCreateVault` | Create new vault | Tier 3 |
+| `useInvestInVault` | Invest USDC in vault | Tier 1+ |
+| `useCreateTreasury` | Create personal treasury | Tier 1+ |
+| `useRedeemShares` | Redeem vault shares | Tier 1+ |
+| `useContractSigner` | Sign contracts on-chain | Tier 1+ |
+
+---
+
+## 📱 Complete Examples
+
+### Full Dashboard Component
+
+```tsx
+// pages/Dashboard.tsx
+import { useAccount, useChainId } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useUserReputation } from '../hooks/useUserReputation';
+import { ReputationBadge } from '../components/ReputationBadge';
+import { AccessMatrix } from '../components/AccessMatrix';
+import { MintPassport } from '../components/MintPassport';
+import { VaultList } from '../components/VaultList';
+import { ReputationTier } from '../types/reputation';
+
+export function Dashboard() {
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const { reputation, isLoading } = useUserReputation(address, chainId);
+
+  if (!isConnected) {
     return (
-      <div className="alert alert-warning">
-        <p>❌ Tier 1+ NFT required to invest</p>
-        <p>Get verified via ZKPassport (individual) or Veriff (business)</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-6">Welcome to Convexo</h1>
+          <p className="text-gray-600 mb-8">Connect your wallet to get started</p>
+          <ConnectButton />
+        </div>
       </div>
     );
   }
 
-  // Approve USDC
-  const { write: approveUSDC } = useContractWrite({
-    address: USDC_ADDRESS,
-    abi: ERC20_ABI,
-    functionName: 'approve',
-    args: [vaultAddress, parseUnits('10000', 6)],
-  });
-
-  // Purchase shares
-  const { write: purchaseShares } = useContractWrite({
-    address: vaultAddress,
-    abi: TokenizedBondVaultABI,
-    functionName: 'purchaseShares',
-    args: [parseUnits('1000', 6)], // 1000 USDC
-  });
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
 
   return (
-    <div className="invest-form">
-      <button onClick={() => approveUSDC?.()}>1. Approve USDC</button>
-      <button onClick={() => purchaseShares?.()}>2. Invest</button>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Dashboard</h1>
+            <p className="text-gray-500">Welcome back!</p>
+          </div>
+          <ConnectButton />
+        </div>
+
+        {/* Reputation Section */}
+        <div className="bg-white rounded-xl shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Your Status</h2>
+            {reputation && <ReputationBadge tier={reputation.tier} size="lg" />}
+          </div>
+          {reputation && <AccessMatrix reputation={reputation} />}
+        </div>
+
+        {/* Get Verified (if no NFTs) */}
+        {reputation?.tier === ReputationTier.None && (
+          <MintPassport />
+        )}
+
+        {/* Vault List (if Tier 1+) */}
+        {reputation && reputation.tier >= ReputationTier.Passport && (
+          <VaultList />
+        )}
+
+        {/* Create Vault Button (if Tier 3) */}
+        {reputation?.canCreateVaults && (
+          <div className="bg-gradient-to-r from-gold-500 to-amber-600 rounded-xl p-6 text-white">
+            <h2 className="text-xl font-bold mb-2">🏆 Vault Creator Access</h2>
+            <p className="mb-4">As a verified Vault Creator, you can create new tokenized bond vaults.</p>
+            <button className="px-6 py-2 bg-white text-amber-600 rounded-lg font-semibold hover:bg-gray-100">
+              Create New Vault
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -615,257 +1043,50 @@ function InvestInVault({ vaultAddress }: { vaultAddress: `0x${string}` }) {
 
 ---
 
-## 🔑 Key User Flows
+## 🔄 Breaking Changes from v2.1
 
-### Flow 1: Check User Access Level
+### NFT Contract Renames
+
+| Old Name | New Name | Purpose |
+|----------|----------|---------|
+| `Convexo_LPs` | `Limited_Partners_Individuals` | Individual LP verification |
+| `Convexo_Vaults` | `Limited_Partners_Business` | Business LP verification |
+| (new) | `Ecreditscoring` | Credit-scored vault creators |
+
+### ReputationManager Changes
 
 ```typescript
-// 1. Check reputation tier
-const reputation = useUserReputation(address);
+// OLD (v2.1)
+const tier = await reputationManager.getReputationTier(address);
+// 0: None, 1: Passport, 2: LimitedPartner, 3: VaultCreator
 
-// 2. Display access level
-if (reputation.tier === 0) {
-  return <p>❌ No access - Apply for verification</p>;
-} else if (reputation.tier === 1) {
-  return <p>✅ Tier 1 - Can create treasury & invest in vaults</p>;
-} else if (reputation.tier === 2) {
-  return <p>✅ Tier 2 - Can access LP pools & invest in vaults</p>;
-} else if (reputation.tier === 3) {
-  return <p>✅ Tier 3 - Can create vaults & all Tier 2 benefits</p>;
-}
+// NEW (v2.2) - Same enum values, but different underlying NFTs:
+// Tier 2 now requires LP_Individuals OR LP_Business (not old Convexo_LPs)
+// Tier 3 now requires Ecreditscoring (not old Convexo_Vaults)
 ```
 
-### Flow 2: Individual Verification (ZKPassport → Tier 1)
+### New Functions
 
 ```typescript
-// See ZKPASSPORT_FRONTEND_INTEGRATION.md for complete flow
-// 1. User verifies identity with ZKPassport
-// 2. User mints Convexo_Passport NFT
-// 3. User gets Tier 1 access
-```
+// Check if user can request credit score (Tier 2 required)
+canRequestCreditScore(address user) returns (bool)
 
-### Flow 3: Business Verification (Veriff → Tier 2)
-
-```typescript
-// Admin flow (backend)
-// 1. User completes Veriff verification
-// 2. Admin calls veriffVerifier.submitVerification(userAddress, sessionId)
-// 3. Admin reviews and calls veriffVerifier.approveVerification(userAddress)
-// 4. Convexo_LPs NFT is automatically minted
-// 5. User gets Tier 2 access
-```
-
-### Flow 4: Vault Creator (Credit Score → Tier 3)
-
-```typescript
-// Admin flow (backend)
-// 1. User submits financial data for AI credit scoring
-// 2. If score > 70, admin mints Convexo_Vaults NFT
-// 3. User gets Tier 3 access
-// 4. User can now create vaults
-```
-
-### Flow 5: Create Vault (Tier 3 Required)
-
-```typescript
-function CreateVaultForm() {
-  const { address } = useAccount();
-  const contracts = getContracts(chainId);
-  
-  // Check if user can create vaults (Tier 3)
-  const { data: canCreate } = useContractRead({
-    address: contracts.REPUTATION_MANAGER,
-    abi: ReputationManagerABI,
-    functionName: 'canCreateVaults',
-    args: [address],
-  });
-  
-  if (!canCreate) {
-    return (
-      <div className="alert alert-warning">
-        <p>❌ Tier 3 NFT required to create vaults</p>
-        <p>Complete credit scoring to receive Tier 3 access</p>
-      </div>
-    );
-  }
-
-  const { write: createVault } = useContractWrite({
-    address: contracts.VAULT_FACTORY,
-    abi: VaultFactoryABI,
-    functionName: 'createVault',
-    args: [
-      parseUnits('50000', 6),  // 50k USDC principal
-      1200,                     // 12% interest rate
-      200,                      // 2% protocol fee
-      Math.floor(Date.now() / 1000) + 180 * 24 * 60 * 60, // 180 days
-      "My Business Vault",
-      "MBV"
-    ],
-  });
-
-  return (
-    <form onSubmit={(e) => { e.preventDefault(); createVault?.(); }}>
-      <h3>Create Funding Vault</h3>
-      <button type="submit">Create Vault</button>
-    </form>
-  );
-}
+// Check specific LP NFT holdings
+holdsLPIndividuals(address user) returns (bool)
+holdsLPBusiness(address user) returns (bool)
+holdsAnyLP(address user) returns (bool)
+holdsEcreditscoring(address user) returns (bool)
 ```
 
 ---
 
-## 📊 Dashboard Components to Build
+## 📚 Additional Resources
 
-### 1. User Dashboard
-
-- **NFT Status**: Show if user has Passport, LPs, or Vaults NFT
-- **Reputation Tier**: Display tier and access level
-- **Treasuries**: List user's personal treasuries (NEW)
-- **Portfolio**: Show all vault investments with real-time returns
-- **Created Vaults**: List vaults created by the user (Tier 3 only)
-
-### 2. Treasury Dashboard (NEW)
-
-- **Create Treasury**: Form to create new treasury
-- **Treasury List**: Show all user's treasuries
-- **Treasury Details**: Balance, signers, pending proposals
-- **Deposit/Withdraw**: USDC management
-
-### 3. Vault Marketplace
-
-- **Browse Vaults**: Display all available vaults
-- **Filter Options**: By APY, risk, maturity
-- **Invest Modal**: Amount input + approval flow
-- **Tier Check**: Show if user can invest
-
-### 4. Verification Status
-
-- **ZKPassport**: Individual verification flow
-- **Veriff Status**: Business verification status
-- **Credit Score**: AI scoring for Tier 3
+- [Contracts Reference](./CONTRACTS_REFERENCE.md)
+- [ZKPassport Integration](./ZKPASSPORT_FRONTEND_INTEGRATION.md)
+- [Deployment Addresses](./addresses.json)
+- [Security Audit](./SECURITY_AUDIT.md)
 
 ---
 
-## 🌐 Network Configuration
-
-### Base Sepolia RPC
-
-```typescript
-import { defineChain } from 'viem';
-
-export const baseSepolia = defineChain({
-  id: 84532,
-  name: 'Base Sepolia',
-  network: 'base-sepolia',
-  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  rpcUrls: {
-    default: { http: ['https://sepolia.base.org'] },
-    public: { http: ['https://sepolia.base.org'] },
-  },
-  blockExplorers: {
-    default: { name: 'BaseScan', url: 'https://sepolia.basescan.org' },
-  },
-  testnet: true,
-});
-```
-
----
-
-## 🔐 USDC Contracts
-
-| Network | USDC Address |
-|---------|-------------|
-| **Ethereum Sepolia** | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` |
-| **Base Sepolia** | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
-| **Unichain Sepolia** | `0x31d0220469e10c4E71834a79b1f276d740d3768F` |
-| **Ethereum Mainnet** | `0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48` |
-| **Base Mainnet** | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` |
-| **Unichain Mainnet** | `0x078D782b760474a361dDA0AF3839290b0EF57AD6` |
-
----
-
-## 🎯 Testing Checklist
-
-### For Frontend Developers:
-
-#### Basic Setup
-- [ ] Connect wallet to all 6 networks
-- [ ] Switch between networks
-- [ ] Check user reputation tier
-- [ ] Display NFT ownership status
-
-#### Individual Verification (Tier 1)
-- [ ] ZKPassport verification flow
-- [ ] Mint Convexo_Passport NFT
-- [ ] Verify Tier 1 access
-
-#### Treasury System (Tier 1+)
-- [ ] Create single-sig treasury
-- [ ] Create multi-sig treasury
-- [ ] Deposit USDC
-- [ ] Propose withdrawal
-- [ ] Approve withdrawal (multi-sig)
-- [ ] Execute withdrawal
-
-#### Vault Investment (Tier 1+)
-- [ ] List all available vaults
-- [ ] Show vault metrics
-- [ ] Approve USDC spending
-- [ ] Purchase vault shares
-- [ ] Display user's investment returns
-- [ ] Redeem shares (after full repayment)
-
-#### Vault Creation (Tier 3)
-- [ ] Verify Tier 3 NFT requirement
-- [ ] Create new vault
-- [ ] Monitor funding progress
-- [ ] Attach contract hash
-- [ ] Withdraw funds
-- [ ] Make repayments
-
----
-
-## 🆕 What's New in Version 2.1
-
-### New Contracts
-1. **TreasuryFactory** - Create personal multi-sig treasuries (Tier 1+)
-2. **TreasuryVault** - Multi-sig USDC treasury management
-3. **VeriffVerifier** - Human-approved KYB for Tier 2 access
-
-### Tier System Changes
-- **Tier 1**: Passport (Individual) - Treasury + Vault investments
-- **Tier 2**: LPs (Limited Partner) - LP pools + Vault investments
-- **Tier 3**: Vaults (Vault Creator) - All above + Vault creation
-
-### New ReputationManager Functions
-- `canCreateTreasury()` - Tier 1+
-- `canInvestInVaults()` - Tier 1+
-- `canAccessLPPools()` - Tier 2+
-- `canCreateVaults()` - Tier 3
-
-### Breaking Changes
-- Tier numbering reversed (Passport is now Tier 1, Vaults is Tier 3)
-- New treasury creation flow
-- `canInvestInVaults()` replaces tier checks in vault
-
----
-
-## ✅ Frontend Handoff Checklist
-
-- [x] All 12 contracts deployed on 6 networks (v2.1)
-- [x] All contracts verified on explorers
-- [x] 15 ABIs extracted and available
-- [x] Contract addresses documented
-- [x] Integration examples provided
-- [x] Treasury system documented
-- [x] Tier system updated
-- [x] Testing checklist created
-- [x] Multi-chain support ready
-
-**Status: ✅ Ready for frontend integration!**
-
-All 12 contracts are deployed, verified, and ready for frontend development on all 6 networks. 🎉
-
----
-
-**Questions?** Check [CONTRACTS_REFERENCE.md](./CONTRACTS_REFERENCE.md) for detailed contract documentation.
+*Last updated: January 2026 - v2.2*

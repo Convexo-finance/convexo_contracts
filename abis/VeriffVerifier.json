@@ -8,9 +8,9 @@
         "internalType": "address"
       },
       {
-        "name": "_convexoLPs",
+        "name": "_lpIndividuals",
         "type": "address",
-        "internalType": "contract IConvexoLPs"
+        "internalType": "contract ILimitedPartnersIndividuals"
       }
     ],
     "stateMutability": "nonpayable"
@@ -53,19 +53,6 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "convexoLPs",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract IConvexoLPs"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -242,6 +229,19 @@
         "name": "",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "lpIndividuals",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract ILimitedPartnersIndividuals"
       }
     ],
     "stateMutability": "view"

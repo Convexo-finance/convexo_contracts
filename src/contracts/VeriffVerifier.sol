@@ -2,11 +2,26 @@
 pragma solidity ^0.8.27;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {IConvexoLPs} from "../interfaces/IConvexoLPs.sol";
+import {ILimitedPartnersIndividuals} from "../interfaces/ILimitedPartnersIndividuals.sol";
 
 /// @title VeriffVerifier
-/// @notice Human-approved KYC/KYB verification system for Limited Partner access
-/// @dev Admin submits verification results from Veriff platform, then approves/rejects to mint Convexo_LPs NFT
+/// @notice Human-approved KYC verification system for INDIVIDUAL Limited Partners
+/// @dev For INDIVIDUALS only - uses Veriff platform for identity verification
+///      Upon approval, mints Limited_Partners_Individuals NFT (Tier 2)
+///
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// VERIFICATION FLOW:
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// 1. Individual completes Veriff identity verification on frontend
+/// 2. Backend receives webhook with verification result
+/// 3. Backend calls submitVerification() with session details
+/// 4. Admin reviews and calls approveVerification() or rejectVerification()
+/// 5. On approval: Limited_Partners_Individuals NFT is minted
+/// 6. User becomes Limited Partner → Can access LP pools, Treasury, Invest
+/// 7. Limited Partner can request Credit Score for Ecreditscoring NFT (Tier 3)
+///
+/// For BUSINESS KYB, use SumsubVerifier instead
+/// ═══════════════════════════════════════════════════════════════════════════════
 contract VeriffVerifier is AccessControl {
     bytes32 public constant VERIFIER_ROLE = keccak256("VERIFIER_ROLE");
 
@@ -30,8 +45,8 @@ contract VeriffVerifier is AccessControl {
         uint256 nftTokenId;
     }
 
-    /// @notice The Convexo_LPs NFT contract
-    IConvexoLPs public immutable convexoLPs;
+    /// @notice The Limited Partners Individuals NFT contract
+    ILimitedPartnersIndividuals public immutable lpIndividuals;
 
     /// @notice Mapping from user address to verification record
     mapping(address => VerificationRecord) public verifications;
@@ -64,10 +79,13 @@ contract VeriffVerifier is AccessControl {
         uint256 timestamp
     );
 
-    constructor(address admin, IConvexoLPs _convexoLPs) {
+    /// @notice Constructor
+    /// @param admin Address to receive admin and verifier roles
+    /// @param _lpIndividuals Limited Partners Individuals NFT contract address
+    constructor(address admin, ILimitedPartnersIndividuals _lpIndividuals) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(VERIFIER_ROLE, admin);
-        convexoLPs = _convexoLPs;
+        lpIndividuals = _lpIndividuals;
     }
 
     /// @notice Submit a verification result from Veriff platform
@@ -104,16 +122,16 @@ contract VeriffVerifier is AccessControl {
         emit VerificationSubmitted(user, sessionId, block.timestamp);
     }
 
-    /// @notice Approve a pending verification and mint Convexo_LPs NFT
+    /// @notice Approve a pending verification and mint Limited Partners Individuals NFT
     /// @param user The address of the user to approve
     function approveVerification(address user) external onlyRole(VERIFIER_ROLE) {
         VerificationRecord storage record = verifications[user];
         require(record.status == VerificationStatus.Pending, "No pending verification");
 
-        // Mint Convexo_LPs NFT (Tier 2)
-        uint256 tokenId = convexoLPs.safeMint(
+        // Mint Limited Partners Individuals NFT (Tier 2)
+        uint256 tokenId = lpIndividuals.safeMint(
             user,
-            record.veriffSessionId, // Use session ID as companyId
+            record.veriffSessionId, // Use session ID as verification ID
             "" // Empty URI, can be updated later
         );
 

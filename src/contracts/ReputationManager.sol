@@ -1,79 +1,121 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import {IConvexoLPs} from "../interfaces/IConvexoLPs.sol";
-import {IConvexoVaults} from "../interfaces/IConvexoVaults.sol";
 import {IConvexoPassport} from "../interfaces/IConvexoPassport.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 /// @title ReputationManager
 /// @notice Manages NFT-based reputation tiers for users
-/// @dev Checks Convexo_LPs, Convexo_Vaults, and Convexo_Passport NFT ownership to calculate reputation
+/// @dev Checks all 4 NFT types to determine user access level
+///
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// NFT SYSTEM (4 NFTs) - Progressive Verification Flow:
+/// ═══════════════════════════════════════════════════════════════════════════════
+///
+/// 1. CONVEXO PASSPORT (Tier 1) - Convexo_Passport.sol
+///    └─ Verification: ZKPassport (International KYC)
+///    └─ Purpose: Basic identity verification for international users
+///    └─ Access: LP pools, Treasury, Invest in vaults
+///
+/// 2. LIMITED PARTNERS - INDIVIDUALS (Tier 2) - Limited_Partners_Individuals.sol
+///    └─ Verification: Veriff (Individual KYC)
+///    └─ Purpose: Verified individuals who can request loans
+///    └─ Access: LP pools, Treasury, Invest + Can REQUEST Credit Score
+///
+/// 3. LIMITED PARTNERS - BUSINESS (Tier 2) - Limited_Partners_Business.sol
+///    └─ Verification: Sumsub (Business KYB)
+///    └─ Purpose: Verified businesses who can request loans
+///    └─ Access: LP pools, Treasury, Invest + Can REQUEST Credit Score
+///
+/// 4. ECREDITSCORING (Tier 3) - Ecreditscoring.sol
+///    └─ Verification: AI Credit Scoring
+///    └─ Prerequisite: MUST hold LP NFT first (Individual OR Business)
+///    └─ Purpose: Can CREATE loan vaults and tokenized bonds
+///    └─ Access: All Tier 2 benefits + Vault/Bond creation
+///
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// ACCESS MATRIX:
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// | NFT                  | LP Pools | Treasury | Invest | Request Credit | Create Vaults |
+/// |----------------------|----------|----------|--------|----------------|---------------|
+/// | Passport             | ✓        | ✓        | ✓      | ✗              | ✗             |
+/// | LP Individuals       | ✓        | ✓        | ✓      | ✓              | ✗             |
+/// | LP Business          | ✓        | ✓        | ✓      | ✓              | ✗             |
+/// | Ecreditscoring       | ✓        | ✓        | ✓      | ✓              | ✓             |
+/// ═══════════════════════════════════════════════════════════════════════════════
 contract ReputationManager {
-    /// @notice Reputation tiers (UPDATED: Tier hierarchy reversed)
+    /// @notice Reputation tiers - Progressive verification system
     /// Tier 0: No NFTs - No access
-    /// Tier 1: Passport NFT - Individual: Treasury creation + Vault investments
-    /// Tier 2: LPs NFT - Limited Partner: LP pools + Vault investments
-    /// Tier 3: Vaults NFT - Vault Creator: Vault creation + All Tier 2 privileges
+    /// Tier 1: Passport NFT - ZKPassport (International KYC)
+    /// Tier 2: LP NFT - Veriff (Individual) OR Sumsub (Business)
+    /// Tier 3: Ecreditscoring NFT - AI Credit Score (Can create vaults)
     enum ReputationTier {
         None,            // 0 - No NFTs
-        Passport,        // 1 - Convexo_Passport (Individual - Treasury + Investments)
-        LimitedPartner,  // 2 - Convexo_LPs (LP - Pools + Investments)
-        VaultCreator     // 3 - Convexo_Vaults (Business - Vault Creation + All)
+        Passport,        // 1 - Convexo_Passport (ZKPassport - International KYC)
+        LimitedPartner,  // 2 - LP Individual OR LP Business (Can request loans)
+        VaultCreator     // 3 - Ecreditscoring (Can create vaults)
     }
 
-    /// @notice The Convexo_LPs NFT contract (Business Tier 1)
-    IConvexoLPs public immutable convexoLPs;
-
-    /// @notice The Convexo_Vaults NFT contract (Business Tier 2)
-    IConvexoVaults public immutable convexoVaults;
-
-    /// @notice The Convexo_Passport NFT contract (Individual Tier 3)
-    IConvexoPassport public immutable convexoPassport;
+    /// @notice Convexo Passport NFT contract (Tier 1 - ZKPassport)
+    IERC721 public immutable convexoPassport;
+    
+    /// @notice Limited Partners Individuals NFT contract (Tier 2 - Veriff)
+    IERC721 public immutable lpIndividuals;
+    
+    /// @notice Limited Partners Business NFT contract (Tier 2 - Sumsub)
+    IERC721 public immutable lpBusiness;
+    
+    /// @notice Ecreditscoring NFT contract (Tier 3 - AI Credit Score)
+    IERC721 public immutable ecreditscoring;
 
     /// @notice Emitted when reputation is checked
     event ReputationChecked(
         address indexed user,
         ReputationTier tier,
-        uint256 lpsBalance,
-        uint256 vaultsBalance,
-        uint256 passportBalance
+        uint256 passportBalance,
+        uint256 lpIndividualsBalance,
+        uint256 lpBusinessBalance,
+        uint256 ecreditscoringBalance
     );
 
+    /// @notice Constructor
+    /// @param _convexoPassport Convexo Passport NFT contract address
+    /// @param _lpIndividuals Limited Partners Individuals NFT contract address
+    /// @param _lpBusiness Limited Partners Business NFT contract address
+    /// @param _ecreditscoring Ecreditscoring NFT contract address
     constructor(
-        IConvexoLPs _convexoLPs,
-        IConvexoVaults _convexoVaults,
-        IConvexoPassport _convexoPassport
+        IERC721 _convexoPassport,
+        IERC721 _lpIndividuals,
+        IERC721 _lpBusiness,
+        IERC721 _ecreditscoring
     ) {
-        convexoLPs = _convexoLPs;
-        convexoVaults = _convexoVaults;
         convexoPassport = _convexoPassport;
+        lpIndividuals = _lpIndividuals;
+        lpBusiness = _lpBusiness;
+        ecreditscoring = _ecreditscoring;
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // TIER DETERMINATION
+    // ═══════════════════════════════════════════════════════════════════════════════
+
     /// @notice Get the reputation tier for a user
-    /// @dev NEW: Highest tier wins, no mutual exclusivity (allows progressive KYC)
+    /// @dev Highest tier wins - allows progressive verification
     /// @param user The address to check
     /// @return The reputation tier
     function getReputationTier(address user) public view returns (ReputationTier) {
-        uint256 lpsBalance = convexoLPs.balanceOf(user);
-        uint256 vaultsBalance = convexoVaults.balanceOf(user);
-        uint256 passportBalance = IERC721(address(convexoPassport)).balanceOf(user);
-
-        // NEW APPROACH: Highest tier wins (no mutual exclusivity)
-        // This allows users to upgrade from individual (Passport) to business (LPs/Vaults)
-
-        // Tier 3: Vaults NFT (highest privilege - can create vaults + all Tier 2 benefits)
-        if (vaultsBalance > 0) {
+        // Tier 3: Ecreditscoring NFT (highest - can create vaults)
+        if (ecreditscoring.balanceOf(user) > 0) {
             return ReputationTier.VaultCreator;
         }
 
-        // Tier 2: LPs NFT (can access LP pools + invest in vaults)
-        if (lpsBalance > 0) {
+        // Tier 2: LP NFT (Individual OR Business)
+        if (lpIndividuals.balanceOf(user) > 0 || lpBusiness.balanceOf(user) > 0) {
             return ReputationTier.LimitedPartner;
         }
 
-        // Tier 1: Passport NFT (can create treasuries + invest in vaults)
-        if (passportBalance > 0) {
+        // Tier 1: Passport NFT
+        if (convexoPassport.balanceOf(user) > 0) {
             return ReputationTier.Passport;
         }
 
@@ -81,131 +123,177 @@ contract ReputationManager {
         return ReputationTier.None;
     }
 
-    /// @notice Get the numeric reputation tier (0, 1, or 2)
+    /// @notice Get the numeric reputation tier (0, 1, 2, or 3)
     /// @param user The address to check
     /// @return The numeric reputation tier
     function getReputationTierNumeric(address user) external view returns (uint256) {
         return uint256(getReputationTier(user));
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ACCESS CHECKS
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /// @notice Check if user can access LP pools (Tier 1+)
+    /// @param user The address to check
+    /// @return True if user has any NFT (Passport, LP, or Ecreditscoring)
+    function canAccessLPPools(address user) external view returns (bool) {
+        return getReputationTier(user) >= ReputationTier.Passport;
+    }
+
     /// @notice Check if user can create treasuries (Tier 1+)
     /// @param user The address to check
-    /// @return True if user has Tier 1 (Passport) or higher
+    /// @return True if user has Tier 1 or higher
     function canCreateTreasury(address user) external view returns (bool) {
         return getReputationTier(user) >= ReputationTier.Passport;
     }
 
     /// @notice Check if user can invest in vaults (Tier 1+)
     /// @param user The address to check
-    /// @return True if user has Tier 1 (Passport) or higher
+    /// @return True if user has Tier 1 or higher
     function canInvestInVaults(address user) external view returns (bool) {
         return getReputationTier(user) >= ReputationTier.Passport;
     }
 
-    /// @notice Check if user can access LP pools (Tier 2+)
+    /// @notice Check if user can request credit scoring (Tier 2 - LP status required)
     /// @param user The address to check
-    /// @return True if user has Tier 2 (LimitedPartner) or higher
-    function canAccessLPPools(address user) external view returns (bool) {
-        return getReputationTier(user) >= ReputationTier.LimitedPartner;
+    /// @return True if user has LP NFT (Individual or Business)
+    function canRequestCreditScore(address user) external view returns (bool) {
+        return lpIndividuals.balanceOf(user) > 0 || lpBusiness.balanceOf(user) > 0;
     }
 
     /// @notice Check if user can create vaults (Tier 3)
     /// @param user The address to check
-    /// @return True if user has Tier 3 (VaultCreator)
+    /// @return True if user has Ecreditscoring NFT
     function canCreateVaults(address user) external view returns (bool) {
         return getReputationTier(user) == ReputationTier.VaultCreator;
     }
 
-    /// @notice Check if a user has at least LimitedPartner tier (Tier 2) - RENAMED
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // NFT BALANCE CHECKS
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /// @notice Check if user holds Convexo Passport NFT
+    /// @param user The address to check
+    /// @return True if user holds at least one Passport NFT
+    function holdsPassport(address user) external view returns (bool) {
+        return convexoPassport.balanceOf(user) > 0;
+    }
+
+    /// @notice Check if user holds Limited Partners Individuals NFT
+    /// @param user The address to check
+    /// @return True if user holds at least one LP Individuals NFT
+    function holdsLPIndividuals(address user) external view returns (bool) {
+        return lpIndividuals.balanceOf(user) > 0;
+    }
+
+    /// @notice Check if user holds Limited Partners Business NFT
+    /// @param user The address to check
+    /// @return True if user holds at least one LP Business NFT
+    function holdsLPBusiness(address user) external view returns (bool) {
+        return lpBusiness.balanceOf(user) > 0;
+    }
+
+    /// @notice Check if user holds any LP NFT (Individual or Business)
+    /// @param user The address to check
+    /// @return True if user holds any LP NFT
+    function holdsAnyLP(address user) external view returns (bool) {
+        return lpIndividuals.balanceOf(user) > 0 || lpBusiness.balanceOf(user) > 0;
+    }
+
+    /// @notice Check if user holds Ecreditscoring NFT
+    /// @param user The address to check
+    /// @return True if user holds at least one Ecreditscoring NFT
+    function holdsEcreditscoring(address user) external view returns (bool) {
+        return ecreditscoring.balanceOf(user) > 0;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // TIER ACCESS CHECKS
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /// @notice Check if user has at least Passport tier (Tier 1+)
+    /// @param user The address to check
+    /// @return True if user has Tier 1 or higher
+    function hasPassportAccess(address user) external view returns (bool) {
+        return getReputationTier(user) >= ReputationTier.Passport;
+    }
+
+    /// @notice Check if user has at least LimitedPartner tier (Tier 2+)
     /// @param user The address to check
     /// @return True if user has Tier 2 or higher
     function hasLimitedPartnerAccess(address user) external view returns (bool) {
         return getReputationTier(user) >= ReputationTier.LimitedPartner;
     }
 
-    /// @notice Check if a user has VaultCreator tier (Tier 3) - RENAMED
+    /// @notice Check if user has VaultCreator tier (Tier 3)
     /// @param user The address to check
     /// @return True if user has Tier 3
     function hasVaultCreatorAccess(address user) external view returns (bool) {
         return getReputationTier(user) == ReputationTier.VaultCreator;
     }
 
-    /// @notice DEPRECATED: Use hasLimitedPartnerAccess() instead
-    /// @dev Kept for backward compatibility
-    function hasCompliantAccess(address user) external view returns (bool) {
-        return getReputationTier(user) >= ReputationTier.LimitedPartner;
-    }
-
-    /// @notice DEPRECATED: Use hasVaultCreatorAccess() instead
-    /// @dev Kept for backward compatibility
-    function hasCreditscoreAccess(address user) external view returns (bool) {
-        return getReputationTier(user) == ReputationTier.VaultCreator;
-    }
-
-    /// @notice Check if a user holds a Convexo_LPs NFT
-    /// @param user The address to check
-    /// @return True if user holds at least one Convexo_LPs NFT
-    function holdsConvexoLPs(address user) external view returns (bool) {
-        return convexoLPs.balanceOf(user) > 0;
-    }
-
-    /// @notice Check if a user holds a Convexo_Vaults NFT
-    /// @param user The address to check
-    /// @return True if user holds at least one Convexo_Vaults NFT
-    function holdsConvexoVaults(address user) external view returns (bool) {
-        return convexoVaults.balanceOf(user) > 0;
-    }
-
-    /// @notice Check if a user holds a Convexo_Passport NFT
-    /// @param user The address to check
-    /// @return True if user holds at least one Convexo_Passport NFT
-    function holdsConvexoPassport(address user) external view returns (bool) {
-        return IERC721(address(convexoPassport)).balanceOf(user) > 0;
-    }
-
-    /// @notice Check if a user has Passport access (Tier 3)
-    /// @param user The address to check
-    /// @return True if user has Passport tier
-    function hasPassportAccess(address user) external view returns (bool) {
-        return getReputationTier(user) == ReputationTier.Passport;
-    }
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // DETAILED INFO
+    // ═══════════════════════════════════════════════════════════════════════════════
 
     /// @notice Get detailed reputation information for a user
     /// @param user The address to check
     /// @return tier The reputation tier
-    /// @return lpsBalance The number of Convexo_LPs NFTs held
-    /// @return vaultsBalance The number of Convexo_Vaults NFTs held
-    /// @return passportBalance The number of Convexo_Passport NFTs held
+    /// @return passportBalance Number of Passport NFTs held
+    /// @return lpIndividualsBalance Number of LP Individuals NFTs held
+    /// @return lpBusinessBalance Number of LP Business NFTs held
+    /// @return ecreditscoringBalance Number of Ecreditscoring NFTs held
     function getReputationDetails(address user)
         external
         view
         returns (
             ReputationTier tier,
-            uint256 lpsBalance,
-            uint256 vaultsBalance,
-            uint256 passportBalance
+            uint256 passportBalance,
+            uint256 lpIndividualsBalance,
+            uint256 lpBusinessBalance,
+            uint256 ecreditscoringBalance
         )
     {
-        lpsBalance = convexoLPs.balanceOf(user);
-        vaultsBalance = convexoVaults.balanceOf(user);
-        passportBalance = IERC721(address(convexoPassport)).balanceOf(user);
+        passportBalance = convexoPassport.balanceOf(user);
+        lpIndividualsBalance = lpIndividuals.balanceOf(user);
+        lpBusinessBalance = lpBusiness.balanceOf(user);
+        ecreditscoringBalance = ecreditscoring.balanceOf(user);
         tier = getReputationTier(user);
 
-        return (tier, lpsBalance, vaultsBalance, passportBalance);
+        return (tier, passportBalance, lpIndividualsBalance, lpBusinessBalance, ecreditscoringBalance);
     }
 
     /// @notice Check reputation and emit event
     /// @param user The address to check
     /// @return tier The reputation tier
     function checkReputationWithEvent(address user) external returns (ReputationTier tier) {
-        uint256 lpsBalance = convexoLPs.balanceOf(user);
-        uint256 vaultsBalance = convexoVaults.balanceOf(user);
-        uint256 passportBalance = IERC721(address(convexoPassport)).balanceOf(user);
+        uint256 passportBalance = convexoPassport.balanceOf(user);
+        uint256 lpIndividualsBalance = lpIndividuals.balanceOf(user);
+        uint256 lpBusinessBalance = lpBusiness.balanceOf(user);
+        uint256 ecreditscoringBalance = ecreditscoring.balanceOf(user);
         tier = getReputationTier(user);
 
-        emit ReputationChecked(user, tier, lpsBalance, vaultsBalance, passportBalance);
+        emit ReputationChecked(
+            user,
+            tier,
+            passportBalance,
+            lpIndividualsBalance,
+            lpBusinessBalance,
+            ecreditscoringBalance
+        );
 
         return tier;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // REQUIRE FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /// @notice Require that a user has at least Passport tier (Tier 1+)
+    /// @param user The address to check
+    function requirePassportAccess(address user) external view {
+        require(getReputationTier(user) >= ReputationTier.Passport, "Must have Passport tier or higher");
     }
 
     /// @notice Require that a user has at least LimitedPartner tier (Tier 2+)
@@ -220,14 +308,26 @@ contract ReputationManager {
         require(getReputationTier(user) == ReputationTier.VaultCreator, "Must have VaultCreator tier");
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // DEPRECATED - Kept for backward compatibility
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /// @notice DEPRECATED: Use hasLimitedPartnerAccess() instead
+    function hasCompliantAccess(address user) external view returns (bool) {
+        return getReputationTier(user) >= ReputationTier.LimitedPartner;
+    }
+
+    /// @notice DEPRECATED: Use hasVaultCreatorAccess() instead
+    function hasCreditscoreAccess(address user) external view returns (bool) {
+        return getReputationTier(user) == ReputationTier.VaultCreator;
+    }
+
     /// @notice DEPRECATED: Use requireLimitedPartnerAccess() instead
-    /// @dev Kept for backward compatibility
     function requireCompliantAccess(address user) external view {
         require(getReputationTier(user) >= ReputationTier.LimitedPartner, "Must have LimitedPartner tier or higher");
     }
 
     /// @notice DEPRECATED: Use requireVaultCreatorAccess() instead
-    /// @dev Kept for backward compatibility
     function requireCreditscoreAccess(address user) external view {
         require(getReputationTier(user) == ReputationTier.VaultCreator, "Must have VaultCreator tier");
     }

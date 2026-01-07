@@ -31,6 +31,21 @@ struct SwapParams {
     uint160 sqrtPriceLimitX96;
 }
 
+/// @notice Hook permissions struct
+/// @dev Indicates which hook functions are enabled
+struct Permissions {
+    bool beforeInitialize;
+    bool afterInitialize;
+    bool beforeAddLiquidity;
+    bool afterAddLiquidity;
+    bool beforeRemoveLiquidity;
+    bool afterRemoveLiquidity;
+    bool beforeSwap;
+    bool afterSwap;
+    bool beforeDonate;
+    bool afterDonate;
+}
+
 /// @notice Interface for Uniswap V4 Hooks
 /// @dev Based on: https://docs.uniswap.org/contracts/v4/quickstart/hooks/swap
 interface IHooks {
@@ -100,3 +115,4 @@ interface IHooks {
         bytes calldata hookData
     ) external returns (bytes4);
 }
+

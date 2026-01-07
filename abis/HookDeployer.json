@@ -9,9 +9,38 @@
         "internalType": "contract IPoolManager"
       },
       {
-        "name": "convexoPassport",
+        "name": "reputationManager",
         "type": "address",
-        "internalType": "contract IConvexoPassport"
+        "internalType": "contract ReputationManager"
+      },
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "computePassportGatedHookAddress",
+    "inputs": [
+      {
+        "name": "poolManager",
+        "type": "address",
+        "internalType": "contract IPoolManager"
+      },
+      {
+        "name": "reputationManager",
+        "type": "address",
+        "internalType": "contract ReputationManager"
       },
       {
         "name": "salt",
@@ -38,9 +67,9 @@
         "internalType": "contract IPoolManager"
       },
       {
-        "name": "convexoPassport",
+        "name": "reputationManager",
         "type": "address",
-        "internalType": "contract IConvexoPassport"
+        "internalType": "contract ReputationManager"
       },
       {
         "name": "salt",
@@ -52,10 +81,78 @@
       {
         "name": "hook",
         "type": "address",
-        "internalType": "contract CompliantLPHook"
+        "internalType": "contract PassportGatedHook"
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deployPassportGatedHook",
+    "inputs": [
+      {
+        "name": "poolManager",
+        "type": "address",
+        "internalType": "contract IPoolManager"
+      },
+      {
+        "name": "reputationManager",
+        "type": "address",
+        "internalType": "contract ReputationManager"
+      },
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "hook",
+        "type": "address",
+        "internalType": "contract PassportGatedHook"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "findPassportGatedHookSalt",
+    "inputs": [
+      {
+        "name": "poolManager",
+        "type": "address",
+        "internalType": "contract IPoolManager"
+      },
+      {
+        "name": "reputationManager",
+        "type": "address",
+        "internalType": "contract ReputationManager"
+      },
+      {
+        "name": "startingSalt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "maxIterations",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "hookAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -67,9 +164,9 @@
         "internalType": "contract IPoolManager"
       },
       {
-        "name": "convexoPassport",
+        "name": "reputationManager",
         "type": "address",
-        "internalType": "contract IConvexoPassport"
+        "internalType": "contract ReputationManager"
       },
       {
         "name": "startingSalt",
@@ -117,7 +214,7 @@
   },
   {
     "type": "event",
-    "name": "HookDeployed",
+    "name": "PassportGatedHookDeployed",
     "inputs": [
       {
         "name": "hook",
@@ -132,7 +229,7 @@
         "internalType": "address"
       },
       {
-        "name": "convexoPassport",
+        "name": "reputationManager",
         "type": "address",
         "indexed": true,
         "internalType": "address"

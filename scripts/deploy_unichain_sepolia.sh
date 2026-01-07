@@ -1,49 +1,80 @@
 #!/bin/bash
-
-# Deploy and verify all contracts on Unichain Sepolia
+# ═══════════════════════════════════════════════════════════════
+# Deploy to Unichain Sepolia (Chain ID: 1301)
+# Deploys 14 contracts with Blockscout verification
 # Usage: ./scripts/deploy_unichain_sepolia.sh
+# ═══════════════════════════════════════════════════════════════
 
 set -e
 
-echo "=================================="
-echo "Deploying to Unichain Sepolia"
-echo "=================================="
+CHAIN_NAME="Unichain Sepolia"
+CHAIN_ID="1301"
+EXPLORER="https://unichain-sepolia.blockscout.com"
 
-# Source environment variables
-source .env
+# Public RPC for Unichain Sepolia (fallback)
+PUBLIC_RPC="https://sepolia.unichain.org"
 
-# Use public Unichain Sepolia RPC if not set in .env
-UNICHAIN_RPC="${UNICHAIN_SEPOLIA_RPC_URL:-https://unichain-sepolia-rpc.publicnode.com}"
-
-echo "Using RPC: $UNICHAIN_RPC"
+echo "╔═══════════════════════════════════════════════════════════╗"
+echo "║          Deploying to $CHAIN_NAME                   ║"
+echo "║          Chain ID: $CHAIN_ID | 14 Contracts               ║"
+echo "╚═══════════════════════════════════════════════════════════╝"
 echo ""
 
-# Set environment variables to bypass macOS proxy detection bug
+# Source environment
+source .env
+
+# Validate environment
+if [ -z "$PRIVATE_KEY" ]; then
+    echo "❌ PRIVATE_KEY not set in .env"
+    exit 1
+fi
+
+# Use UNICHAIN_SEPOLIA_RPC_URL if set, otherwise use public RPC
+if [ -n "$UNICHAIN_SEPOLIA_RPC_URL" ]; then
+    RPC_URL="$UNICHAIN_SEPOLIA_RPC_URL"
+    echo "📡 Using .env RPC: $RPC_URL"
+else
+    RPC_URL="$PUBLIC_RPC"
+    echo "📡 Using public RPC: $RPC_URL"
+fi
+
+# Verify RPC is for Unichain (should NOT contain "base")
+if [[ "$RPC_URL" == *"base"* ]]; then
+    echo "❌ ERROR: RPC URL contains 'base' - this is wrong for Unichain!"
+    echo "   Current RPC: $RPC_URL"
+    echo "   Please fix UNICHAIN_SEPOLIA_RPC_URL in .env"
+    echo "   Expected: https://sepolia.unichain.org or similar"
+    exit 1
+fi
+
+echo ""
+
+# Bypass macOS proxy issues
 export NO_PROXY="*"
 export HTTP_PROXY=""
 export HTTPS_PROXY=""
 
-# Deploy all contracts with Blockscout verification
+# Deploy with Blockscout verification
 forge script script/DeployAll.s.sol:DeployAll \
-    --rpc-url "$UNICHAIN_RPC" \
+    --rpc-url "$RPC_URL" \
     --broadcast \
     --verify \
     --verifier blockscout \
     --verifier-url https://unichain-sepolia.blockscout.com/api \
-    --chain-id 1301 \
+    --chain-id $CHAIN_ID \
     --legacy \
     --slow \
-    --with-gas-price 1000000 \
     --skip-simulation \
     -vvv
 
 echo ""
-echo "=================================="
-echo "✅ Deployment Complete!"
-echo "=================================="
+echo "╔═══════════════════════════════════════════════════════════╗"
+echo "║              ✅ Deployment Complete!                      ║"
+echo "╚═══════════════════════════════════════════════════════════╝"
 echo ""
-echo "📁 Check addresses in broadcast/DeployAll.s.sol/1301/run-latest.json"
+echo "📁 Broadcast: broadcast/DeployAll.s.sol/$CHAIN_ID/run-latest.json"
+echo "🔍 Explorer: $EXPLORER"
 echo ""
-echo "🔍 All contracts should be verified on Blockscout:"
-echo "https://unichain-sepolia.blockscout.com"
-
+echo "Next steps:"
+echo "  ./scripts/update-addresses.sh $CHAIN_ID"
+echo "  ./scripts/extract-abis.sh"
