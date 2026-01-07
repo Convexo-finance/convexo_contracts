@@ -8,11 +8,15 @@ import {ProofVerificationParams} from "./IZKPassportVerifier.sol";
 /// @dev Soulbound NFT for individual investors verified via ZKPassport
 interface IConvexoPassport {
     /// @notice Verified identity information stored for each passport holder
+    /// @dev Stores complete ZKPassport verification data: Unique ID + Personhood + KYC result
     struct VerifiedIdentity {
-        bytes32 uniqueIdentifier;
-        uint256 verifiedAt;
-        bool isActive;
-        string nationality;
+        bytes32 uniqueIdentifier;      // Hash of publicKey + scope (UNIQUE ID)
+        bytes32 personhoodProof;       // Nullifier from ZKPassport (PERSONHOOD PROOF)
+        uint256 verifiedAt;            // Contract verification timestamp
+        uint256 zkPassportTimestamp;   // Original ZKPassport verification timestamp
+        bool isActive;                 // Whether passport is currently active
+        bool isOver18;                 // Age verification result (KYC)
+        string nationality;            // Nationality from passport/ID (KYC)
     }
 
     /// @notice Emitted when a new passport is minted
@@ -20,7 +24,9 @@ interface IConvexoPassport {
         address indexed holder,
         uint256 indexed tokenId,
         bytes32 uniqueIdentifier,
-        string nationality
+        bytes32 personhoodProof,
+        string nationality,
+        bool isOver18
     );
 
     /// @notice Emitted when a passport is revoked

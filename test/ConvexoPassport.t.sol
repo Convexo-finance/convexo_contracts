@@ -51,7 +51,9 @@ contract ConvexoPassportTest is Test {
         address indexed holder,
         uint256 indexed tokenId,
         bytes32 uniqueIdentifier,
-        string nationality
+        bytes32 personhoodProof,
+        string nationality,
+        bool isOver18
     );
 
     event PassportRevoked(
@@ -91,7 +93,14 @@ contract ConvexoPassportTest is Test {
 
         vm.prank(user1);
         vm.expectEmit(true, true, false, true);
-        emit PassportMinted(user1, 0, keccak256(abi.encodePacked(params.publicKey, params.scope)), "US");
+        emit PassportMinted(
+            user1, 
+            0, 
+            keccak256(abi.encodePacked(params.publicKey, params.scope)), 
+            params.nullifier,
+            "US",
+            true
+        );
         
         uint256 tokenId = passport.safeMintWithZKPassport(params, false);
 
@@ -101,9 +110,14 @@ contract ConvexoPassportTest is Test {
         assertTrue(passport.holdsActivePassport(user1));
         assertEq(passport.getActivePassportCount(), 1);
 
+        // Verify all stored ZKPassport data
         IConvexoPassport.VerifiedIdentity memory identity = passport.getVerifiedIdentity(user1);
         assertTrue(identity.isActive);
         assertEq(identity.nationality, "US");
+        assertEq(identity.personhoodProof, params.nullifier); // PERSONHOOD
+        assertTrue(identity.isOver18); // KYC age verification
+        assertGt(identity.zkPassportTimestamp, 0); // ZKPassport timestamp
+        assertEq(identity.uniqueIdentifier, keccak256(abi.encodePacked(params.publicKey, params.scope))); // UNIQUE ID
     }
 
     function test_SafeMintWithZKPassport_RevertIfProofFails() public {
@@ -189,12 +203,13 @@ contract ConvexoPassportTest is Test {
 
     function test_AdminMint_Success() public {
         vm.prank(admin);
-        uint256 tokenId = passport.safeMint(user1, "https://custom-uri.com/1");
+        uint256 tokenId = passport.safeMint(user1, "/custom/1");
 
         assertEq(tokenId, 0);
         assertEq(passport.ownerOf(tokenId), user1);
         assertEq(passport.balanceOf(user1), 1);
-        assertEq(passport.tokenURI(tokenId), "https://custom-uri.com/1");
+        // TokenURI is base URI + passed URI
+        assertEq(passport.tokenURI(tokenId), string(abi.encodePacked(BASE_URI, "/custom/1")));
         assertTrue(passport.holdsActivePassport(user1));
     }
 

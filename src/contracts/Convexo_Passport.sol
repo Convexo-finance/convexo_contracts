@@ -105,11 +105,17 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, string(abi.encodePacked(_baseTokenURI, "/", _toString(tokenId))));
 
-        // Store verified identity
+        // Store verified identity with complete ZKPassport data
+        // UNIQUE ID: uniqueIdentifier (hash of publicKey + scope)
+        // PERSONHOOD: params.nullifier (cryptographic proof of unique person)
+        // KYC: nationality, isOver18, zkPassportTimestamp
         verifiedUsers[msg.sender] = VerifiedIdentity({
             uniqueIdentifier: uniqueIdentifier,
+            personhoodProof: params.nullifier,
             verifiedAt: block.timestamp,
+            zkPassportTimestamp: disclosedData.verifiedAt,
             isActive: true,
+            isOver18: disclosedData.isOver18,
             nationality: disclosedData.nationality
         });
 
@@ -119,7 +125,14 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         // Increment active passport count
         activePassportCount++;
 
-        emit PassportMinted(msg.sender, tokenId, uniqueIdentifier, disclosedData.nationality);
+        emit PassportMinted(
+            msg.sender, 
+            tokenId, 
+            uniqueIdentifier, 
+            params.nullifier,
+            disclosedData.nationality, 
+            disclosedData.isOver18
+        );
     }
 
     /// @notice Self-mint a passport using unique identifier from ZKPassport (simplified approach)
@@ -143,11 +156,14 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, string(abi.encodePacked(_baseTokenURI, "/", _toString(tokenId))));
 
-        // Store verified identity (nationality from off-chain verification)
+        // Store verified identity (off-chain verification - personhood comes from off-chain)
         verifiedUsers[msg.sender] = VerifiedIdentity({
             uniqueIdentifier: uniqueIdentifier,
+            personhoodProof: bytes32(0), // Set from off-chain verification if available
             verifiedAt: block.timestamp,
+            zkPassportTimestamp: 0, // Set from off-chain verification if available
             isActive: true,
+            isOver18: true, // Assumed verified off-chain
             nationality: "VERIFIED" // Set from off-chain verification
         });
 
@@ -157,7 +173,7 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         // Increment active passport count
         activePassportCount++;
 
-        emit PassportMinted(msg.sender, tokenId, uniqueIdentifier, "VERIFIED");
+        emit PassportMinted(msg.sender, tokenId, uniqueIdentifier, bytes32(0), "VERIFIED", true);
     }
 
     /// @inheritdoc IConvexoPassport
@@ -176,15 +192,18 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         bytes32 uniqueIdentifier = keccak256(abi.encodePacked(to, block.timestamp));
         verifiedUsers[to] = VerifiedIdentity({
             uniqueIdentifier: uniqueIdentifier,
+            personhoodProof: bytes32(0), // Admin mint - no ZKPassport proof
             verifiedAt: block.timestamp,
+            zkPassportTimestamp: 0, // Admin mint - no ZKPassport timestamp
             isActive: true,
+            isOver18: true, // Assumed for admin mint
             nationality: "ADMIN_MINT"
         });
 
         passportIdentifierToAddress[uniqueIdentifier] = to;
         activePassportCount++;
 
-        emit PassportMinted(to, tokenId, uniqueIdentifier, "ADMIN_MINT");
+        emit PassportMinted(to, tokenId, uniqueIdentifier, bytes32(0), "ADMIN_MINT", true);
     }
 
     /// @inheritdoc IConvexoPassport

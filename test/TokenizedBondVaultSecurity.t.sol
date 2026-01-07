@@ -3,6 +3,10 @@ pragma solidity ^0.8.27;
 
 import {Test} from "forge-std/Test.sol";
 import {TokenizedBondVault} from "../src/contracts/TokenizedBondVault.sol";
+import {ReputationManager} from "../src/contracts/ReputationManager.sol";
+import {IConvexoLPs} from "../src/interfaces/IConvexoLPs.sol";
+import {IConvexoVaults} from "../src/interfaces/IConvexoVaults.sol";
+import {IConvexoPassport} from "../src/interfaces/IConvexoPassport.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -13,6 +17,19 @@ contract MockERC20 is ERC20 {
     
     function mint(address to, uint256 amount) public {
         _mint(to, amount);
+    }
+}
+
+// Mock NFT contract for testing - allows setting balances
+contract MockNFT {
+    mapping(address => uint256) private _balances;
+    
+    function balanceOf(address owner) external view returns (uint256) {
+        return _balances[owner];
+    }
+    
+    function setBalance(address owner, uint256 balance) external {
+        _balances[owner] = balance;
     }
 }
 
@@ -45,7 +62,9 @@ contract TokenizedBondVaultSecurityTest is Test {
     TokenizedBondVault vault;
     MockERC20 usdc;
     MockContractSigner signer;
-    
+    ReputationManager reputationManager;
+    MockNFT mockPassport;
+
     address admin = address(1);
     address borrower = address(2);
     address investor1 = address(3);
@@ -60,11 +79,21 @@ contract TokenizedBondVaultSecurityTest is Test {
 
     function setUp() public {
         vm.startPrank(admin);
-        
+
         usdc = new MockERC20();
-        
+
         signer = new MockContractSigner();
+
+        // Deploy mock passport NFT for Tier 1 access
+        mockPassport = new MockNFT();
         
+        // Deploy ReputationManager with mock passport
+        reputationManager = new ReputationManager(
+            IConvexoLPs(address(0)),
+            IConvexoVaults(address(0)),
+            IConvexoPassport(address(mockPassport))
+        );
+
         vault = new TokenizedBondVault(
             1,
             borrower,
@@ -77,11 +106,16 @@ contract TokenizedBondVaultSecurityTest is Test {
             address(signer),
             admin,
             protocolCollector,
+            reputationManager,
             "Vault Token",
             "VT"
         );
         
         vm.stopPrank();
+        
+        // Give investors Tier 1 access (Passport) so they can invest
+        mockPassport.setBalance(investor1, 1);
+        mockPassport.setBalance(investor2, 1);
         
         // Fund investors
         usdc.mint(investor1, principal);
@@ -126,8 +160,8 @@ contract TokenizedBondVaultSecurityTest is Test {
         vm.stopPrank();
         
         // Verify:
-        // - Investor 1 got money back
-        assertEq(usdc.balanceOf(investor1), principal/2);
+        // - Investor 1 got money back (started with principal, invested principal/2, got it back)
+        assertEq(usdc.balanceOf(investor1), principal);
         // - Vault state reverted to Pending
         assertEq(uint(vault.getVaultState()), uint(TokenizedBondVault.VaultState.Pending));
         // - Contract hash detached

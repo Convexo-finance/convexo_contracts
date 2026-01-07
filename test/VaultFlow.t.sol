@@ -67,6 +67,7 @@ contract VaultFlowTest is Test {
     ReputationManager public reputationManager;
     Convexo_LPs public convexoLPs;
     Convexo_Vaults public convexoVaults;
+    MockConvexoPassport public mockPassport;
     ERC20Mock public usdc;
 
     address public admin = address(0x1);
@@ -116,7 +117,7 @@ contract VaultFlowTest is Test {
 
         // Deploy core contracts
         // Create a mock Convexo_Passport for testing
-        MockConvexoPassport mockPassport = new MockConvexoPassport();
+        mockPassport = new MockConvexoPassport();
         reputationManager = new ReputationManager(
             IConvexoLPs(address(convexoLPs)),
             IConvexoVaults(address(convexoVaults)),
@@ -136,11 +137,15 @@ contract VaultFlowTest is Test {
         );
 
 
-        // Mint NFTs to borrower (Tier 2)
+        // Mint NFTs to borrower (Tier 3 - VaultCreator)
         vm.startPrank(admin);
         convexoLPs.safeMint(borrower, "COMPANY001", "ipfs://lp-nft");
         convexoVaults.safeMint(borrower, "COMPANY001", "ipfs://vault-nft");
         vm.stopPrank();
+
+        // Give investors Tier 1 access (Passport) so they can invest
+        MockConvexoPassport(address(mockPassport)).setBalance(investor1, 1);
+        MockConvexoPassport(address(mockPassport)).setBalance(investor2, 1);
 
         // Give USDC to investors
         usdc.mint(investor1, 30000 * 1e6);
@@ -167,9 +172,9 @@ contract VaultFlowTest is Test {
         assertEq(uint256(vault.getVaultState()), uint256(TokenizedBondVault.VaultState.Pending));
     }
 
-    function testBorrowerWithoutTier2CannotCreateVault() public {
+    function testBorrowerWithoutTier3CannotCreateVault() public {
         vm.prank(userWithoutNFT);
-        vm.expectRevert("Must have Tier 2 NFT (Convexo_Vaults)");
+        vm.expectRevert("Must have Tier 3 NFT (Convexo_Vaults)");
         vaultFactory.createVault(
             PRINCIPAL_AMOUNT,
             INTEREST_RATE,
@@ -719,7 +724,7 @@ contract VaultFlowTest is Test {
 
     function testVaultCreationValidations() public {
         // Test user without NFT cannot create vault
-        vm.expectRevert("Must have Tier 2 NFT (Convexo_Vaults)");
+        vm.expectRevert("Must have Tier 3 NFT (Convexo_Vaults)");
         vm.prank(userWithoutNFT);
         vaultFactory.createVault(
             PRINCIPAL_AMOUNT,
