@@ -19,9 +19,9 @@ contract EcreditscoringTest is Test {
     address public user3 = address(0x5); // No LP holder
 
     function setUp() public {
-        // Deploy LP NFTs
-        lpIndividuals = new Limited_Partners_Individuals(admin, minter);
-        lpBusiness = new Limited_Partners_Business(admin, minter);
+        // Deploy LP NFTs (with address(0) verifier for basic tests)
+        lpIndividuals = new Limited_Partners_Individuals(admin, minter, address(0));
+        lpBusiness = new Limited_Partners_Business(admin, minter, address(0));
         
         // Deploy Ecreditscoring
         nft = new Ecreditscoring(
@@ -50,7 +50,7 @@ contract EcreditscoringTest is Test {
         vm.prank(minter);
         uint256 tokenId = nft.safeMint(
             user1,
-            750, // score
+            75, // score (0-100 scale)
             Ecreditscoring.CreditTier.Gold,
             1000000e6, // max loan amount
             "ref_123",
@@ -59,9 +59,9 @@ contract EcreditscoringTest is Test {
 
         assertEq(nft.ownerOf(tokenId), user1);
         assertEq(nft.balanceOf(user1), 1);
-        
+
         Ecreditscoring.CreditInfo memory info = nft.getCreditInfo(tokenId);
-        assertEq(info.score, 750);
+        assertEq(info.score, 75);
         assertEq(uint(info.tier), uint(Ecreditscoring.CreditTier.Gold));
     }
 
@@ -69,7 +69,7 @@ contract EcreditscoringTest is Test {
         vm.prank(minter);
         uint256 tokenId = nft.safeMint(
             user2,
-            850,
+            85, // score (0-100 scale)
             Ecreditscoring.CreditTier.Platinum,
             5000000e6,
             "ref_456",
@@ -84,7 +84,7 @@ contract EcreditscoringTest is Test {
         vm.expectRevert(Ecreditscoring.MustHoldLPNFT.selector);
         nft.safeMint(
             user3, // no LP NFT
-            500,
+            50, // score (0-100 scale)
             Ecreditscoring.CreditTier.Bronze,
             100000e6,
             "ref_789",
@@ -108,32 +108,44 @@ contract EcreditscoringTest is Test {
         vm.prank(minter);
         uint256 tokenId = nft.safeMint(
             user1,
-            700,
+            70, // score (0-100 scale)
             Ecreditscoring.CreditTier.Silver,
             500000e6,
             "ref_123",
             ""
         );
 
+        uint256 originalTimestamp = block.timestamp;
+        Ecreditscoring.CreditInfo memory infoBefore = nft.getCreditInfo(tokenId);
+        assertEq(infoBefore.scoredAt, originalTimestamp);
+
+        // Move forward in time
+        vm.warp(block.timestamp + 30 days);
+        uint256 newTimestamp = block.timestamp;
+
         vm.prank(minter);
         nft.updateCreditInfo(
             tokenId,
-            850,
+            85, // updated score (0-100 scale)
             Ecreditscoring.CreditTier.Platinum,
             2000000e6,
-            "ref_updated"
+            "ref_updated",
+            newTimestamp // editable validation date
         );
 
         Ecreditscoring.CreditInfo memory info = nft.getCreditInfo(tokenId);
-        assertEq(info.score, 850);
+        assertEq(info.score, 85);
         assertEq(uint(info.tier), uint(Ecreditscoring.CreditTier.Platinum));
+        assertEq(info.scoredAt, newTimestamp);
+        assertEq(info.maxLoanAmount, 2000000e6);
+        assertEq(info.referenceId, "ref_updated");
     }
 
     function test_Soulbound() public {
         vm.prank(minter);
         uint256 tokenId = nft.safeMint(
             user1,
-            700,
+            70, // score (0-100 scale)
             Ecreditscoring.CreditTier.Silver,
             500000e6,
             "ref_123",
@@ -143,6 +155,129 @@ contract EcreditscoringTest is Test {
         vm.prank(user1);
         vm.expectRevert(Ecreditscoring.SoulboundToken.selector);
         nft.transferFrom(user1, user2, tokenId);
+    }
+
+    function test_OneNFTPerAddress_SecondMintFails() public {
+        // Mint first Ecreditscoring NFT to user1 (who has LP Individual NFT)
+        vm.prank(minter);
+        nft.safeMint(
+            user1,
+            75, // score (0-100 scale)
+            Ecreditscoring.CreditTier.Gold,
+            1000000e6,
+            "ref_123",
+            "ipfs://metadata"
+        );
+
+        // Try to mint second Ecreditscoring NFT to same user1 - should fail
+        vm.prank(minter);
+        vm.expectRevert(Ecreditscoring.AlreadyHoldsNFT.selector);
+        nft.safeMint(
+            user1,
+            85, // score (0-100 scale)
+            Ecreditscoring.CreditTier.Platinum,
+            2000000e6,
+            "ref_456",
+            "ipfs://metadata2"
+        );
+    }
+
+    function test_OneNFTPerAddress_DifferentUsersCanMint() public {
+        // Mint Ecreditscoring NFT to user1 (Individual LP holder)
+        vm.prank(minter);
+        uint256 tokenId1 = nft.safeMint(
+            user1,
+            75, // score (0-100 scale)
+            Ecreditscoring.CreditTier.Gold,
+            1000000e6,
+            "ref_123",
+            "ipfs://metadata"
+        );
+
+        // Mint Ecreditscoring NFT to user2 (Business LP holder) - should succeed
+        vm.prank(minter);
+        uint256 tokenId2 = nft.safeMint(
+            user2,
+            85, // score (0-100 scale)
+            Ecreditscoring.CreditTier.Platinum,
+            5000000e6,
+            "ref_456",
+            "ipfs://metadata2"
+        );
+
+        assertEq(nft.ownerOf(tokenId1), user1);
+        assertEq(nft.ownerOf(tokenId2), user2);
+        assertEq(nft.balanceOf(user1), 1);
+        assertEq(nft.balanceOf(user2), 1);
+    }
+
+    function test_OneNFTPerAddress_AfterBurnCanMintAgain() public {
+        // Mint first Ecreditscoring NFT to user1
+        vm.prank(minter);
+        uint256 tokenId = nft.safeMint(
+            user1,
+            70, // score (0-100 scale)
+            Ecreditscoring.CreditTier.Silver,
+            500000e6,
+            "ref_123",
+            "ipfs://metadata"
+        );
+
+        // Burn the NFT
+        vm.prank(user1);
+        nft.burn(tokenId);
+
+        assertEq(nft.balanceOf(user1), 0);
+
+        // Mint new Ecreditscoring NFT to user1 - should succeed after burn
+        vm.prank(minter);
+        uint256 newTokenId = nft.safeMint(
+            user1,
+            90, // score (0-100 scale)
+            Ecreditscoring.CreditTier.Platinum,
+            3000000e6,
+            "ref_789",
+            "ipfs://metadata3"
+        );
+
+        assertEq(nft.ownerOf(newTokenId), user1);
+        assertEq(nft.balanceOf(user1), 1);
+    }
+
+    function test_MintFails_ScoreAbove100() public {
+        vm.prank(minter);
+        vm.expectRevert("Credit score must be between 0 and 100");
+        nft.safeMint(
+            user1,
+            150, // Invalid score > 100
+            Ecreditscoring.CreditTier.Platinum,
+            5000000e6,
+            "ref_invalid",
+            ""
+        );
+    }
+
+    function test_UpdateCreditInfo_FailsScoreAbove100() public {
+        vm.prank(minter);
+        uint256 tokenId = nft.safeMint(
+            user1,
+            70,
+            Ecreditscoring.CreditTier.Silver,
+            500000e6,
+            "ref_123",
+            ""
+        );
+
+        vm.prank(minter);
+        vm.expectRevert("Credit score must be between 0 and 100");
+        nft.updateCreditInfo(
+            tokenId,
+            150, // Invalid score > 100
+            Ecreditscoring.CreditTier.Platinum,
+            2000000e6,
+            "ref_updated",
+            block.timestamp
+        );
     }
 }
 

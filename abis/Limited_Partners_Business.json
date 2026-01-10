@@ -11,6 +11,11 @@
         "name": "minter",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "_verifier",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
@@ -558,6 +563,19 @@
     "stateMutability": "pure"
   },
   {
+    "type": "function",
+    "name": "verifierContract",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
     "type": "event",
     "name": "Approval",
     "inputs": [
@@ -759,6 +777,11 @@
         "internalType": "bytes32"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "AlreadyHoldsNFT",
+    "inputs": []
   },
   {
     "type": "error",

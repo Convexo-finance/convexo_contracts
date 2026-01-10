@@ -1,8 +1,8 @@
 # Convexo Contracts Reference
 
-**Version 2.2** | Solidity ^0.8.27
+**Version 3.0** | Solidity ^0.8.27 | **Privacy-Enhanced Verification**
 
-> **📍 Contract Addresses:** See [ETHEREUM_DEPLOYMENTS.md](./ETHEREUM_DEPLOYMENTS.md), [BASE_DEPLOYMENTS.md](./BASE_DEPLOYMENTS.md), [UNICHAIN_DEPLOYMENTS.md](./UNICHAIN_DEPLOYMENTS.md)
+> **📍 Contract Addresses:** See [addresses.json](./addresses.json)
 
 ---
 
@@ -11,9 +11,14 @@
 | Tier | NFT | Verification | Access |
 |------|-----|--------------|--------|
 | **0** | None | - | No access |
-| **1** | Convexo_Passport | ZKPassport | Treasury + Vault investments |
-| **2** | LP_Individuals / LP_Business | Veriff / Sumsub | LP pools + Vault investments |
-| **3** | Ecreditscoring | AI Credit Score | All above + Vault creation |
+| **1** | Convexo_Passport | ZKPassport | **LP Pool Swaps** (via Uniswap V4 hook) + Vault investments |
+| **2** | LP_Individuals / LP_Business | Veriff / Sumsub | **Request Credit Score** + Monetization + OTC Orders + Vault investments |
+| **3** | Ecreditscoring | AI Credit Score | All above + **Vault creation** |
+
+**Note:**
+- **Limited_Partners_Individuals** and **Limited_Partners_Business** grant identical permissions (Tier 2)
+- They differ only as identity markers: Individual (KYC via Veriff) vs Business (KYB via Sumsub)
+- Both can request credit scoring to upgrade to Tier 3 (Ecreditscoring NFT)
 
 ---
 
@@ -287,48 +292,374 @@ function isContractSigned(bytes32 documentHash, address signer) returns (bool)
 
 ---
 
-## VeriffVerifier
+## Verification System Architecture (Tier 2)
 
-Human-approved KYC for Limited Partners (Tier 2).
+### Overview
+
+**Tier 2 uses a PRIVACY-ENHANCED two-contract system:**
+
+1. **Verifier Contracts** (VeriffVerifier, SumsubVerifier) = **Private Registry & Approval Workflow**
+   - Store verification submissions with PRIVATE data (admin-only access)
+   - Admin reviews private data and approves/rejects
+   - **NO auto-mint on approval** - status changes to Approved only
+   - Public can only check `hasVerificationRecord()` and `getStatus()` (no details)
+
+2. **NFT Contracts** (Limited_Partners_Individuals, Limited_Partners_Business) = **Access Token**
+   - Soulbound ERC721 tokens
+   - Grant identical Tier 2 permissions (only difference: person vs business identifier)
+   - Admin manually mints after verification approval
+   - **Auto-callback** to verifier on mint to update status to Minted
+
+**Privacy Model:**
+- All verification data (session IDs, company names, etc.) is PRIVATE
+- Events emit minimal info (user address, timestamp only)
+- Public can check existence and status, but not details
+
+**Key Point:** Both LP NFT types grant the same access:
+- ✅ Request Credit Score (upgrade to Tier 3)
+- ✅ Monetization features
+- ✅ OTC Orders
+- ✅ Vault investments
+
+### Verification Flow (Privacy-Enhanced)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  INDIVIDUAL PATH (Veriff) - MANUAL MINT                      │
+│                                                              │
+│  1. User completes Veriff KYC                                │
+│  2. Backend → VeriffVerifier.submitVerification()            │
+│  3. Admin reviews PRIVATE data                               │
+│  4. Admin → VeriffVerifier.approveVerification()             │
+│     └── Status: Approved (NO auto-mint)                      │
+│  5. Admin → Limited_Partners_Individuals.safeMint()          │
+│     └── NFT callback → VeriffVerifier.markAsMinted()         │
+│  6. User receives LP Individual NFT (Tier 2)                 │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  BUSINESS PATH (Sumsub) - MANUAL MINT                        │
+│                                                              │
+│  1. Business completes Sumsub KYB                            │
+│  2. Backend → SumsubVerifier.submitVerification()            │
+│  3. Admin reviews PRIVATE data                               │
+│  4. Admin → SumsubVerifier.approveVerification()             │
+│     └── Status: Approved (NO auto-mint)                      │
+│  5. Admin → Limited_Partners_Business.safeMint()             │
+│     └── NFT callback → SumsubVerifier.markAsMinted()         │
+│  6. Business receives LP Business NFT (Tier 2)               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## VeriffVerifier (Registry Contract)
+
+**Purpose:** Privacy-enhanced KYC registry for individual Limited Partners.
+
+**Architecture:** This is NOT the NFT contract. It acts as a PRIVATE registry that:
+- Stores verification submissions with PRIVATE data (admin-only access)
+- Requires admin approval before minting (NO auto-mint)
+- NFT contract calls `markAsMinted()` after manual mint
+
+**Privacy Features:**
+- All verification data is PRIVATE (admin-only via `VERIFIER_ROLE`)
+- Public can only check `hasVerificationRecord()`, `getStatus()`, `isApproved()`, `isMinted()`
+- Events emit no sensitive data (user address and timestamp only)
+
+### Verification States
+
+```solidity
+enum VerificationStatus {
+    None,       // 0 - No submission
+    Pending,    // 1 - Submitted, awaiting admin review
+    Approved,   // 2 - Approved but NFT NOT yet minted
+    Rejected,   // 3 - Rejected by admin
+    Minted      // 4 - Approved AND NFT minted (via callback)
+}
+```
 
 ### Write Functions
 
 ```solidity
-// Submit verification result
+// Submit verification result (backend calls this after Veriff webhook)
 function submitVerification(address user, string calldata sessionId) // VERIFIER_ROLE
 
-// Approve and mint LP NFT
+// Approve verification (NO auto-mint - status changes to Approved only)
 function approveVerification(address user) // VERIFIER_ROLE
 
 // Reject with reason
 function rejectVerification(address user, string calldata reason) // VERIFIER_ROLE
 
-// Reset rejected verification
+// Reset rejected verification (allows resubmission)
 function resetVerification(address user) // DEFAULT_ADMIN_ROLE
+
+// Called by NFT contract after minting (updates status to Minted)
+function markAsMinted(address user, uint256 tokenId) // MINTER_CALLBACK_ROLE
+```
+
+### Read Functions (Admin-Only - VERIFIER_ROLE)
+
+```solidity
+function getVerificationRecord(address user) returns (VerificationRecord memory)
+function getSessionId(address user) returns (string memory)
+function isSessionIdUsed(string calldata sessionId) returns (bool)
+function getUserBySessionId(string calldata sessionId) returns (address)
+```
+
+### Read Functions (Public - No sensitive data)
+
+```solidity
+function hasVerificationRecord(address user) returns (bool)
+function getStatus(address user) returns (VerificationStatus)
+function isApproved(address user) returns (bool)  // Status == Approved
+function isMinted(address user) returns (bool)    // Status == Minted
+function isVerified(address user) returns (bool)  // Approved OR Minted
+```
+
+### Role Management (Multi-Admin Support)
+
+```solidity
+// Add/remove compliance officers (VERIFIER_ROLE)
+function addVerifier(address account) // DEFAULT_ADMIN_ROLE
+function removeVerifier(address account) // DEFAULT_ADMIN_ROLE
+function isVerifier(address account) returns (bool)
+
+// Add/remove admins
+function addAdmin(address account) // DEFAULT_ADMIN_ROLE
+function removeAdmin(address account) // DEFAULT_ADMIN_ROLE (cannot remove self)
+function isAdmin(address account) returns (bool)
+
+// Manage NFT callback permissions
+function addMinterCallback(address nftContract) // DEFAULT_ADMIN_ROLE
+function removeMinterCallback(address nftContract) // DEFAULT_ADMIN_ROLE
+function hasMinterCallback(address account) returns (bool)
+```
+
+---
+
+## SumsubVerifier (Registry Contract)
+
+**Purpose:** Privacy-enhanced KYB registry for business Limited Partners.
+
+**Architecture:** This is NOT the NFT contract. It acts as a PRIVATE registry that:
+- Stores business verification submissions with PRIVATE company details
+- Requires admin approval before minting (NO auto-mint)
+- NFT contract calls `markAsMinted()` after manual mint
+
+**Privacy Features:**
+- All verification data is PRIVATE (admin-only via `VERIFIER_ROLE`)
+- Company names, registration numbers, etc. are NOT publicly readable
+- Public can only check `hasVerificationRecord()`, `getStatus()`, `isApproved()`, `isMinted()`
+- Events emit no sensitive data (user address and timestamp only)
+
+### Verification States
+
+```solidity
+enum VerificationStatus {
+    None,       // 0 - No submission
+    Pending,    // 1 - Submitted, awaiting admin review
+    Approved,   // 2 - Approved but NFT NOT yet minted
+    Rejected,   // 3 - Rejected by admin
+    Minted      // 4 - Approved AND NFT minted (via callback)
+}
+```
+
+### Write Functions
+
+```solidity
+// Submit KYB verification (backend calls this after Sumsub webhook)
+function submitVerification(
+    address user,
+    string calldata applicantId,
+    string calldata companyName,
+    string calldata registrationNumber,
+    string calldata jurisdiction,
+    BusinessType businessType
+) // VERIFIER_ROLE
+
+// Approve verification (NO auto-mint - status changes to Approved only)
+function approveVerification(address user) // VERIFIER_ROLE
+
+// Reject with reason
+function rejectVerification(address user, string calldata reason) // VERIFIER_ROLE
+
+// Reset rejected verification (allows resubmission)
+function resetVerification(address user) // DEFAULT_ADMIN_ROLE
+
+// Called by NFT contract after minting (updates status to Minted)
+function markAsMinted(address user, uint256 tokenId) // MINTER_CALLBACK_ROLE
+```
+
+### Read Functions (Admin-Only - VERIFIER_ROLE)
+
+```solidity
+function getVerificationRecord(address user) returns (VerificationRecord memory)
+function getCompanyDetails(address user) returns (companyName, registrationNumber, jurisdiction, businessType)
+function isApplicantIdUsed(string calldata applicantId) returns (bool)
+function isRegistrationUsed(string calldata registrationNumber) returns (bool)
+function getUserByApplicantId(string calldata applicantId) returns (address)
+function getUserByRegistration(string calldata registrationNumber) returns (address)
+```
+
+### Read Functions (Public - No sensitive data)
+
+```solidity
+function hasVerificationRecord(address user) returns (bool)
+function getStatus(address user) returns (VerificationStatus)
+function isApproved(address user) returns (bool)  // Status == Approved
+function isMinted(address user) returns (bool)    // Status == Minted
+function isVerified(address user) returns (bool)  // Approved OR Minted
+```
+
+### Role Management (Multi-Admin Support)
+
+```solidity
+// Add/remove compliance officers (VERIFIER_ROLE)
+function addVerifier(address account) // DEFAULT_ADMIN_ROLE
+function removeVerifier(address account) // DEFAULT_ADMIN_ROLE
+function isVerifier(address account) returns (bool)
+
+// Add/remove admins
+function addAdmin(address account) // DEFAULT_ADMIN_ROLE
+function removeAdmin(address account) // DEFAULT_ADMIN_ROLE (cannot remove self)
+function isAdmin(address account) returns (bool)
+
+// Manage NFT callback permissions
+function addMinterCallback(address nftContract) // DEFAULT_ADMIN_ROLE
+function removeMinterCallback(address nftContract) // DEFAULT_ADMIN_ROLE
+function hasMinterCallback(address account) returns (bool)
+```
+
+---
+
+## Limited_Partners_Individuals (NFT Contract)
+
+**Purpose:** Soulbound NFT for verified individual Limited Partners (Tier 2).
+
+**Architecture:** This is the ERC721 NFT contract with verifier callback:
+- Admin manually mints after verification approval
+- On mint, auto-calls `VeriffVerifier.markAsMinted()` to update status
+
+**Verifier Callback:**
+- Constructor takes `_verifier` address (immutable)
+- `safeMint()` calls `verifier.markAsMinted(to, tokenId)` after minting
+- Ensures verifier status stays in sync with NFT ownership
+
+**Access Granted:**
+- Request credit score (upgrade to Tier 3 Ecreditscoring NFT)
+- Monetization features
+- OTC Orders
+- Vault investments
+
+**Note:** This NFT grants the SAME permissions as Limited_Partners_Business. The only difference is the identity marker (individual vs business).
+
+### Write Functions
+
+```solidity
+// Mint NFT and trigger verifier callback
+function safeMint(address to, string memory verificationId, string memory uri) returns (uint256) // MINTER_ROLE
+// After mint: calls verifierContract.markAsMinted(to, tokenId)
+
+// Set token state
+function setTokenState(uint256 tokenId, bool isActive) // DEFAULT_ADMIN_ROLE
+
+// Burn token
+function burn(uint256 tokenId) // Token owner only
 ```
 
 ### Read Functions
 
 ```solidity
-function getVerificationStatus(address user) returns (VerificationRecord memory)
-function isVerified(address user) returns (bool)
-function isSessionIdUsed(string calldata sessionId) returns (bool)
-function getUserBySessionId(string calldata sessionId) returns (address)
+function balanceOf(address owner) returns (uint256)
+function ownerOf(uint256 tokenId) returns (address)
+function getTokenState(uint256 tokenId) returns (bool)
+function getVerificationId(uint256 tokenId) returns (string memory) // Admin only
+function verifierContract() returns (address) // Immutable verifier address
 ```
 
 ---
 
-## CompliantLPHook
+## Limited_Partners_Business (NFT Contract)
 
-Uniswap V4 hook that gates pool access to Tier 1+.
+**Purpose:** Soulbound NFT for verified business Limited Partners (Tier 2).
+
+**Architecture:** This is the ERC721 NFT contract with verifier callback:
+- Admin manually mints after verification approval
+- On mint, auto-calls `SumsubVerifier.markAsMinted()` to update status
+
+**Verifier Callback:**
+- Constructor takes `_verifier` address (immutable)
+- `safeMint()` calls `verifier.markAsMinted(to, tokenId)` after minting
+- Ensures verifier status stays in sync with NFT ownership
+
+**Access Granted:**
+- Request credit score (upgrade to Tier 3 Ecreditscoring NFT)
+- Monetization features
+- OTC Orders
+- Vault investments
+
+**Note:** This NFT grants the SAME permissions as Limited_Partners_Individuals. The only difference is the identity marker (business vs individual).
+
+### Write Functions
+
+```solidity
+// Mint NFT and trigger verifier callback
+function safeMint(
+    address to,
+    string memory companyName,
+    string memory registrationNumber,
+    string memory jurisdiction,
+    BusinessType businessType,
+    string memory sumsubApplicantId,
+    string memory uri
+) returns (uint256) // MINTER_ROLE
+// After mint: calls verifierContract.markAsMinted(to, tokenId)
+
+// Set token state
+function setTokenState(uint256 tokenId, bool isActive) // DEFAULT_ADMIN_ROLE
+
+// Burn token
+function burn(uint256 tokenId) // Token owner only
+```
+
+### Read Functions
+
+```solidity
+function balanceOf(address owner) returns (uint256)
+function ownerOf(uint256 tokenId) returns (address)
+function getTokenState(uint256 tokenId) returns (bool)
+function getCompanyName(uint256 tokenId) returns (string memory) // Public
+function getBusinessInfo(uint256 tokenId) returns (BusinessInfo memory) // Admin only
+function verifierContract() returns (address) // Immutable verifier address
+```
+
+---
+
+## CompliantLPHook (Uniswap V4 Integration)
+
+**Purpose:** Uniswap V4 hook that gates LP pool access to Tier 1+ users.
+
+**Architecture:** This hook is attached to Uniswap V4 liquidity pools to enforce KYC requirements.
+
+**Access Requirements:**
+- **Tier 1 (Convexo_Passport)**: ✅ Can swap, add liquidity, remove liquidity
+- **Tier 2+ (Limited Partners, Vault Creators)**: ✅ Can swap, add liquidity, remove liquidity
+- **Tier 0 (No NFT)**: ❌ Cannot interact with gated pools
+
+**Key Feature:** This is THE contract that enables Tier 1 passport holders to access LP pools.
 
 ### Hook Functions (Automatic)
 
+These functions are called automatically by Uniswap V4 before each operation:
+
 ```solidity
-function beforeSwap(...) // Requires Tier 1+
-function beforeAddLiquidity(...) // Requires Tier 1+
-function beforeRemoveLiquidity(...) // Requires Tier 1+
+function beforeSwap(...) // Requires Tier 1+ (Convexo_Passport or higher)
+function beforeAddLiquidity(...) // Requires Tier 1+ (Convexo_Passport or higher)
+function beforeRemoveLiquidity(...) // Requires Tier 1+ (Convexo_Passport or higher)
 ```
+
+**Integration:** Liquidity pools register this hook via the PoolRegistry contract.
 
 ---
 
@@ -385,12 +716,22 @@ function convertLocalToUSDC(CurrencyPair pair, uint256 localAmount) returns (uin
 | `DEFAULT_ADMIN_ROLE` | All | Full admin |
 | `MINTER_ROLE` | NFTs | Can mint |
 | `REVOKER_ROLE` | Convexo_Passport | Can revoke |
-| `VERIFIER_ROLE` | VeriffVerifier | Can approve/reject |
+| `VERIFIER_ROLE` | VeriffVerifier, SumsubVerifier | Can submit/approve/reject, read private data |
+| `MINTER_CALLBACK_ROLE` | VeriffVerifier, SumsubVerifier | Can call markAsMinted (granted to NFT contracts) |
 | `VAULT_MANAGER_ROLE` | TokenizedBondVault | Can attach contracts |
 
 ---
 
 ## Events
+
+### Verifier Events (Privacy-Enhanced - No sensitive data)
+```solidity
+// VeriffVerifier & SumsubVerifier
+event VerificationSubmitted(address indexed user, uint256 timestamp)
+event VerificationApproved(address indexed user, address indexed approver, uint256 timestamp)
+event VerificationRejected(address indexed user, address indexed rejector, uint256 timestamp)
+event VerificationMinted(address indexed user, uint256 tokenId, uint256 timestamp)
+```
 
 ### Passport Events
 ```solidity
@@ -417,4 +758,4 @@ event TreasuryCreated(uint256 indexed treasuryId, address indexed treasuryAddres
 
 ---
 
-*For contract addresses, see chain-specific deployment docs.*
+*For contract addresses, see [addresses.json](./addresses.json).*

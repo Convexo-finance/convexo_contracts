@@ -673,6 +673,11 @@
         "name": "referenceId",
         "type": "string",
         "internalType": "string"
+      },
+      {
+        "name": "scoredAt",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -880,6 +885,11 @@
         "internalType": "bytes32"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "AlreadyHoldsNFT",
+    "inputs": []
   },
   {
     "type": "error",

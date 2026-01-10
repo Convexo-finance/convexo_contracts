@@ -1,125 +1,803 @@
 # Convexo Protocol
 
-**Decentralized Lending Infrastructure for Latin American SMEs**
+**Reducing the Gap funding for SMEs in Latin America using stablecoins, NFT-permissioned liquidity pools and vaults.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Solidity](https://img.shields.io/badge/Solidity-^0.8.27-363636?logo=solidity)](https://soliditylang.org/)
-[![Version](https://img.shields.io/badge/Version-2.2-purple)](./CONTRACTS_REFERENCE.md)
+[![Tests](https://img.shields.io/badge/Tests-91%2F91%20Passing-brightgreen)](./test)
+[![Deployed](https://img.shields.io/badge/Deployed-Base%20Mainnet-blue)](https://basescan.org)
+[![Deployed](https://img.shields.io/badge/Deployed-Unichain%20Mainnet-success)](https://unichain.blockscout.com)
+[![Version](https://img.shields.io/badge/Version-3.0-purple)](./CONTRACTS_REFERENCE.md)
 
 ---
 
-## Overview
+## 🌎 Overview
 
-Convexo bridges international investors with Latin American SMEs through compliant, on-chain lending using stablecoins, NFT-permissioned liquidity pools, and tokenized bond vaults.
+Convexo Protocol bridges the gap between international investors and Latin American SMEs through compliant, on-chain lending infrastructure.
 
-### Key Features
-- **4-NFT Verification System** - Progressive KYC/KYB with ZKPassport, Veriff, Sumsub, and AI Credit Scoring
-- **Tokenized Bond Vaults** - 12% APY for investors, flexible repayment for borrowers
-- **Compliant LP Pools** - Uniswap V4 hooks with NFT-gated access
-- **Personal Treasuries** - Multi-sig USDC management for verified users
+### The Problem
+SMEs in LATAM struggle to access international capital due to:
+- Complex compliance requirements
+- Limited credit history
+- Currency conversion challenges
+- High transaction costs
 
----
-
-## Tier System
-
-| Tier | NFT | Verification | Access |
-|------|-----|--------------|--------|
-| **0** | None | - | No access |
-| **1** | Convexo_Passport | ZKPassport | Treasury + Vault investments |
-| **2** | LP_Individuals / LP_Business | Veriff / Sumsub | LP pools + Vault investments |
-| **3** | Ecreditscoring | AI Credit Score | All above + Vault creation |
-
----
-
-## Deployed Networks
-
-| Network | Status | Documentation |
-|---------|--------|---------------|
-| **⟠ Ethereum Mainnet** | ✅ 12/12 contracts | [ETHEREUM_DEPLOYMENTS.md](./ETHEREUM_DEPLOYMENTS.md) |
-| **🔵 Base Mainnet** | ✅ 12/12 contracts | [BASE_DEPLOYMENTS.md](./BASE_DEPLOYMENTS.md) |
-| **🦄 Unichain Mainnet** | ✅ 12/12 contracts | [UNICHAIN_DEPLOYMENTS.md](./UNICHAIN_DEPLOYMENTS.md) |
-| Ethereum Sepolia | ✅ Testnet | [ETHEREUM_DEPLOYMENTS.md](./ETHEREUM_DEPLOYMENTS.md) |
-| Base Sepolia | ✅ Testnet | [BASE_DEPLOYMENTS.md](./BASE_DEPLOYMENTS.md) |
-| Unichain Sepolia | ✅ Testnet | [UNICHAIN_DEPLOYMENTS.md](./UNICHAIN_DEPLOYMENTS.md) |
-
-> **📍 Contract addresses:** See chain-specific deployment docs above or [addresses.json](./addresses.json)
+### Our Solution
+Convexo creates a compliant, efficient lending protocol using:
+- **Local Stablecoins** paired with USDC via Uniswap V4 Hooks
+- **Cross-chain tokens** powered by Chainlink CCIP
+- **NFT-gated access** for compliance and credit verification
+- **AI Credit Scoring** for automated risk assessment
+- **Tokenized vaults** for transparent lending
+- **Personal treasuries** for multi-sig USDC management
 
 ---
 
-## Quick Start
+## 🔑 Key Features
 
+### 1. Compliant Liquidity Pools
+- **Uniswap V4 Hooks** gate pool access to verified users
+- Pairs: USDC/ECOP (Colombian Peso), USDC/ARS (Argentine Peso), USDC/MXN (Mexican Peso)
+- Only holders of Convexo_LPs NFT (Tier 2+) can trade
+- Seamless currency conversion for SMEs
+
+### 2. NFT-Permissioned Vaults
+- **AI-powered credit scoring** (threshold: 70+)
+- Create tokenized bond vaults to request funding
+- Investors earn 10-12% APY in USDC
+- Real-time tracking of investments and returns
+
+### 3. Tokenized Bond Vaults
+- **Borrower-initiated**: SMEs with Tier 2 NFT create vaults for financing
+- **Flexible repayment**: Pay anytime, any amount before maturity
+- **Proportional withdrawals**: Each party withdraws independently
+  - Protocol collector: 2% fee (proportional to repayments)
+  - Investors: Principal + 12% returns (proportional to repayments)
+- **Transparent tracking**: Real-time on-chain state
+
+### 4. Personal Treasuries (NEW in v2.1)
+- **Individual treasuries**: Tier 1+ users can create personal USDC treasuries
+- **Multi-sig support**: Optional 2-of-3 or custom signature requirements
+- **Secure withdrawals**: Proposal-based withdrawal system
+- **Audit trail**: Full on-chain transaction history
+
+---
+
+## 👥 User Journeys
+
+### For Individual Investors (ZKPassport Verified)
+
+**Privacy-first verification for individual investors!**
+
+```
+1. Connect wallet
+2. Verify identity using ZKPassport (passport or ID card)
+   - Privacy-preserving: Only verification traits stored (no PII)
+   - Instant on-chain verification
+3. Receive Convexo_Passport NFT (Tier 1)
+4. Create personal treasury (NEW!)
+5. Browse and invest in available vaults
+6. Earn returns (10-12% APY)
+7. Redeem shares after full repayment
+```
+
+**Benefits:**
+- ✅ No business KYB required
+- ✅ Privacy-first verification
+- ✅ Instant on-chain minting
+- ✅ Personal treasury creation
+- ✅ Access to vault investments
+- ✅ Soulbound NFT (non-transferable)
+
+**Flow:**
+```
+Connect Wallet → ZKPassport Verification → Self-Mint Passport NFT → 
+Create Treasury (optional) → Invest in Vaults → Earn Returns → Redeem
+```
+
+### For SMEs (Borrowers)
+
+#### Step 1: Compliance Verification
+```
+1. Submit KYB via Veriff/Sumsub
+2. Pass compliance checks
+3. Admin approves via VeriffVerifier (NEW!)
+4. Receive Convexo_LPs NFT (Tier 2)
+5. Can now use liquidity pools to convert USDC ↔ Local Stables
+```
+
+**Benefits:**
+- Exchange USDC (from funded vaults) → Local stablecoins (ECOP, ARS, MXN)
+- Top up account with local stables → Get USDC for operations
+
+#### Step 2: Credit Scoring & Vault Creation
+```
+1. Submit financial statements & business model to AI
+2. AI analyzes creditworthiness
+3. If score > 70: Receive Convexo_Vaults NFT (Tier 3)
+4. Create vault to request funding
+5. Investors fund the vault
+6. Sign contract with investors
+7. Withdraw funds and use for business
+8. Repay anytime (principal + 12% interest + 2% protocol fee)
+9. Each party withdraws independently
+```
+
+**Flow:**
+```
+Apply → AI Score → NFT (if > 70) → Create Vault → Get Funded → 
+Sign Contract → Withdraw → Repay → Protocol & Investors Withdraw
+```
+
+### For Business Investors (Lenders)
+
+```
+1. Submit KYB via Veriff/Sumsub (business verification)
+2. Admin approves via VeriffVerifier
+3. Receive Convexo_LPs NFT (Tier 2)
+4. Browse available vaults
+5. Review: APY (12%), risk level, maturity date
+6. Invest USDC in vault (purchase shares)
+7. Track returns in real-time
+8. Redeem shares after borrower fully repays
+9. Receive principal + 12% returns proportionally
+```
+
+**Returns:**
+- 12% APY on USDC investments
+- Withdrawal after full repayment
+- Transparent, on-chain tracking
+- Proportional to repayments made
+
+---
+
+## 🏗️ Architecture
+
+### Reputation Tiers (v2.1 - UPDATED)
+
+| Tier | NFT Contract | User Type | Access | Verification Method |
+|------|--------------|-----------|--------|---------------------|
+| **Tier 0** | None | Unverified | No access | N/A |
+| **Tier 1** | Convexo_Passport | Individual Investor | **LP Pool Swaps** (Uniswap V4) + Vault investments | Self-mint via ZKPassport |
+| **Tier 2** | Limited_Partners_Individuals | Limited Partner (Individual) | Credit Score Request + Monetization + OTC + Vaults | KYC via VeriffVerifier (admin approval) |
+| **Tier 2** | Limited_Partners_Business | Limited Partner (Business) | Credit Score Request + Monetization + OTC + Vaults | KYB via SumsubVerifier (admin approval) |
+| **Tier 3** | Ecreditscoring | Vault Creator | All above + **Vault creation** | AI Credit Score (backend mints) |
+
+**Note:** 
+- Highest tier wins (progressive KYC). Users can upgrade from Tier 1 to Tier 2/3.
+- **Tier 2 NFTs grant identical permissions** - only difference is identity marker (individual vs business)
+
+### NFT Metadata & Images
+
+| NFT Contract | IPFS URI | CID | Auto-Applied? |
+|--------------|----------|-----|---------------|
+| Convexo_Passport | [View Image](https://lime-famous-condor-7.mypinata.cloud/ipfs/bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4) | `bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4` | ✅ Yes (hardcoded) |
+| Limited_Partners_Individuals | [View Image](https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreib7mkjzpdm3id6st6d5vsxpn7v5h6sxeiswejjmrbcb5yoagaf4em) | `bafkreib7mkjzpdm3id6st6d5vsxpn7v5h6sxeiswejjmrbcb5yoagaf4em` | ✅ Yes (via VeriffVerifier) |
+| Limited_Partners_Business | [View Image](https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreiejesvgsvohwvv7q5twszrbu5z6dnpke6sg5cdiwgn2rq7dilu33m) | `bafkreiejesvgsvohwvv7q5twszrbu5z6dnpke6sg5cdiwgn2rq7dilu33m` | ✅ Yes (via SumsubVerifier) |
+| Ecreditscoring | [View Image](https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreignxas6gqi7it5ng6muoykujxlgxxc4g7rr6sqvwgdfwveqf2zw3e) | `bafkreignxas6gqi7it5ng6muoykujxlgxxc4g7rr6sqvwgdfwveqf2zw3e` | ⚠️ No (backend must pass URI) |
+
+**Important:** All NFTs are soulbound (non-transferable) and limited to **one per address**.
+
+
+### Core Components
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│            Verification Layer (3-Path System)                │
+│                                                              │
+│  PATH 1 - Individual Self-Verification (Tier 1):            │
+│  ZKPassport → Self-Mint → Convexo_Passport NFT              │
+│  ✅ LP Pool Swaps (Uniswap V4) + Vault investments          │
+│                                                              │
+│  PATH 2A - Individual KYC (Tier 2):                         │
+│  Veriff KYC → VeriffVerifier (Registry) →                   │
+│  → Admin Approval → Limited_Partners_Individuals NFT         │
+│  ✅ Request Credit Score + Monetization + OTC + Vaults      │
+│                                                              │
+│  PATH 2B - Business KYB (Tier 2):                           │
+│  Sumsub KYB → SumsubVerifier (Registry) →                   │
+│  → Admin Approval → Limited_Partners_Business NFT            │
+│  ✅ Request Credit Score + Monetization + OTC + Vaults      │
+│  (Same permissions as PATH 2A)                               │
+│                                                              │
+│  PATH 3 - Vault Creators (Tier 3):                          │
+│  AI Credit Score → Backend → Ecreditscoring NFT              │
+│  ✅ All above + Vault creation                              │
+└─────────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│          Liquidity Pools (Tier 1+ Access) ★                 │
+│  Uniswap V4 + CompliantLPHook                               │
+│  USDC/ECOP, USDC/ARS, USDC/MXN                              │
+│  ★ Convexo_Passport holders can swap here                   │
+└─────────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│              Tokenized Bond Vaults                           │
+│  • VaultFactory: Create funding vaults (Tier 3 only)        │
+│  • TokenizedBondVault: ERC20 share-based vaults             │
+│  • Investors: Tier 1+ can invest                            │
+│  • Flexible repayment & independent withdrawals             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📋 Deployed Contracts
+
+View contract addresses by network in **[addresses.json](./addresses.json)**
+
+Supported Networks:
+- **⟠ Ethereum**: Mainnet (1) + Sepolia (11155111)
+- **🔵 Base**: Mainnet (8453) + Sepolia (84532)
+- **🦄 Unichain**: Mainnet (130) + Sepolia (1301)
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
 ```bash
 # Install Foundry
-curl -L https://foundry.paradigm.xyz | bash && foundryup
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
 
-# Clone and build
-git clone https://github.com/convexo-finance/convexo_contracts.git
-cd convexo_contracts
-forge install && forge build
+# Verify installation
+forge --version
+```
 
-# Run tests
+### Installation
+```bash
+git clone https://github.com/convexo-finance/convexo-protocol.git
+forge install
+```
+
+### Configuration
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Add your keys
+PRIVATE_KEY=your_deployer_private_key
+ETHERSCAN_API_KEY=your_api_key
+```
+
+### Testing
+```bash
+# Run all tests
+forge test
+
+# With gas report
+forge test --gas-report
+
+# Verbose output
 forge test -vvv
 ```
 
----
-
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [CONTRACTS_REFERENCE.md](./CONTRACTS_REFERENCE.md) | Contract functions & architecture |
-| [FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md) | React/Wagmi integration guide |
-| [ZKPASSPORT_FRONTEND_INTEGRATION.md](./ZKPASSPORT_FRONTEND_INTEGRATION.md) | ZKPassport verification flow |
-| [SECURITY_AUDIT.md](./SECURITY_AUDIT.md) | Security features & audit info |
-| [addresses.json](./addresses.json) | All contract addresses (JSON) |
+**Test Results:** ✅ 91/91 tests passing (100% coverage)
 
 ---
 
-## Contracts (12)
+## 🌐 Deployment Status
+
+### 🚀 Mainnet Deployments
+
+| Network | Chain ID | Status | Contracts | Explorer |
+|---------|----------|--------|-----------|----------|
+| **Ethereum Mainnet** | 1 | ✅ Complete | 14/14 (v3.0) | [Etherscan](https://etherscan.io) |
+| **Base Mainnet** | 8453 | ✅ Complete | 14/14 (v3.0) | [BaseScan](https://basescan.org) |
+| **Unichain Mainnet** | 130 | ✅ Complete | 14/14 (v3.0) | [Blockscout](https://unichain.blockscout.com) |
+
+### 🧪 Testnet Deployments
+
+| Network | Chain ID | Status | Contracts | Explorer |
+|---------|----------|--------|-----------|----------|
+| **Ethereum Sepolia** | 11155111 | ✅ Complete | 14/14 (v3.0) | [Etherscan](https://sepolia.etherscan.io) |
+| **Base Sepolia** | 84532 | ✅ Complete | 14/14 (v3.0) | [BaseScan](https://sepolia.basescan.org) |
+| **Unichain Sepolia** | 1301 | ✅ Complete | 14/14 (v3.0) | [Blockscout](https://unichain-sepolia.blockscout.com) |
+
+**Note**: All networks on v3.0 with 14 contracts. ZKPassport verifier: `0x1D000001000EFD9a6371f4d90bB8920D5431c0D8` (same address on all chains).
+
+### 📦 Deployed Contracts (14 Total)
 
 | # | Contract | Purpose |
 |---|----------|---------|
-| 1 | **Convexo_Passport** | Soulbound NFT for individuals (Tier 1) |
-| 2 | **Limited_Partners_Individuals** | NFT for verified individuals (Tier 2) |
-| 3 | **Limited_Partners_Business** | NFT for verified businesses (Tier 2) |
-| 4 | **Ecreditscoring** | NFT for credit-scored borrowers (Tier 3) |
-| 5 | **ReputationManager** | Tier calculation & access control |
-| 6 | **VaultFactory** | Creates tokenized bond vaults |
-| 7 | **TreasuryFactory** | Creates personal treasuries |
-| 8 | **ContractSigner** | Multi-party contract signing |
-| 9 | **VeriffVerifier** | Human-approved KYC verification |
-| 10 | **CompliantLPHook** | Uniswap V4 access control hook |
-| 11 | **PoolRegistry** | Compliant pool tracking |
-| 12 | **PriceFeedManager** | Chainlink price feeds |
+| 1 | **Convexo_Passport** | NFT for individual investors (Tier 1 - ZKPassport) |
+| 2 | **Limited_Partners_Individuals** | NFT for individual LP access (Tier 2 - Veriff KYC) |
+| 3 | **Limited_Partners_Business** | NFT for business LP access (Tier 2 - Sumsub KYB) |
+| 4 | **Ecreditscoring** | NFT for vault creators (Tier 3 - AI Credit Score) |
+| 5 | **VeriffVerifier** | Privacy-enhanced individual KYC verification |
+| 6 | **SumsubVerifier** | Privacy-enhanced business KYB verification |
+| 7 | **ReputationManager** | User tier calculation system |
+| 8 | **HookDeployer** | Helper for deploying hooks with correct addresses |
+| 9 | **PassportGatedHook** | Uniswap V4 hook for gated pool access |
+| 10 | **PoolRegistry** | Registry for compliant pools |
+| 11 | **PriceFeedManager** | Chainlink price feed integration |
+| 12 | **ContractSigner** | Multi-signature contract system |
+| 13 | **VaultFactory** | Factory for creating tokenized bond vaults |
+| 14 | **TreasuryFactory** | Factory for creating personal treasuries |
 
 ---
 
-## ABIs
+## 🧪 Development
 
-All ABIs in `abis/` directory:
+### Build
+```bash
+forge build
+```
+
+### Test
+```bash
+# Run all tests
+forge test
+
+# Verbose output
+forge test -vvv
+
+# With gas report
+forge test --gas-report
+```
+
+**Test Results:** ✅ 91/91 tests passing (100% coverage)
+
+### Available Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/deploy.sh <network>` | Deploy contracts to any network |
+| `scripts/update-addresses.sh <chain_id>` | Update addresses.json from broadcast |
+| `scripts/verify-all.sh <chain_id>` | Verify all contracts on explorer |
+| `scripts/extract-abis.sh` | Extract ABIs for frontend |
+
+### Solidity Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `script/DeployDeterministic.s.sol` | Main deployment script (CREATE2) |
+| `script/PredictAddresses.s.sol` | Preview addresses before deployment |
+
+---
+
+## 🚀 Deployment Guide
+
+### Understanding Deterministic Deployment
+
+Convexo uses **Deterministic Deployment** via [Safe Singleton Factory](https://github.com/safe-fndn/safe-singleton-factory) (CREATE2).
 
 ```
-abis/
-├── Convexo_Passport.json
-├── ReputationManager.json
-├── TokenizedBondVault.json
-├── VaultFactory.json
-├── TreasuryFactory.json
-├── ContractSigner.json
-├── VeriffVerifier.json
-├── CompliantLPHook.json
-├── PoolRegistry.json
-├── PriceFeedManager.json
-└── combined.json
+┌─────────────────────────────────────────────────────────────────┐
+│  Q: Do I deploy once and it goes to all chains?                 │
+│  A: NO. You must deploy SEPARATELY on EACH chain.               │
+│                                                                  │
+│  Q: Then why is it called "deterministic"?                      │
+│  A: The ADDRESSES are deterministic (same on all chains)        │
+│     because CREATE2 computes address from:                      │
+│     • Factory address (same everywhere)                         │
+│     • Salt (we use "convexo.v3.0")                              │
+│     • Bytecode + constructor args                               │
+│                                                                  │
+│  Q: What's the benefit?                                         │
+│  A: Frontend/backend can use ONE set of addresses for           │
+│     core contracts across all chains.                           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Contract Types:**
+
+| Type | Addresses | Examples |
+|------|-----------|----------|
+| **Core (CREATE2)** | SAME on all chains | Convexo_Passport, LP_Individuals, ReputationManager |
+| **Chain-Specific** | DIFFERENT per chain | VaultFactory, TreasuryFactory, PassportGatedHook |
+
+---
+
+### Prerequisites
+
+1. **Environment Setup**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Configure `.env`**
+   ```bash
+   # Required
+   PRIVATE_KEY=your_deployer_private_key
+   MINTER_ADDRESS=your_minter_address
+
+   # API Keys for verification
+   ETHERSCAN_API_KEY=your_etherscan_api_key
+   BASESCAN_API_KEY=your_basescan_api_key
+   UNISCAN_API_KEY=your_uniscan_api_key
+
+   # RPC URLs (optional - has public fallbacks)
+   ETHEREUM_SEPOLIA_RPC_URL=https://...
+   BASE_SEPOLIA_RPC_URL=https://...
+   UNICHAIN_SEPOLIA_RPC_URL=https://...
+   ```
+
+---
+
+### Deployment Workflow
+
+**Two-Step Process: Deploy First, Then Verify Separately**
+
+```
+  DEPLOY  ──▶  UPDATE ADDRESSES  ──▶  VERIFY  ──▶  EXTRACT ABIs
+```
+
+#### Step 0: Predict Addresses (Optional)
+
+```bash
+forge script script/PredictAddresses.s.sol -vvv
+```
+
+#### Step 1: Deploy to Each Chain
+
+```bash
+# Unified deploy script: ./scripts/deploy.sh <network>
+
+# ═══════════════════ TESTNETS ═══════════════════
+./scripts/deploy.sh ethereum-sepolia
+./scripts/deploy.sh base-sepolia
+./scripts/deploy.sh unichain-sepolia
+
+# ═══════════════════ MAINNETS ═══════════════════
+./scripts/deploy.sh ethereum
+./scripts/deploy.sh base
+./scripts/deploy.sh unichain
+```
+
+**Note:** If contracts already exist at the computed addresses, they will be skipped automatically.
+
+#### Redeploying After Contract Changes
+
+If you modify contract code and need new addresses, bump the version:
+
+```bash
+# Option 1: Use environment variable (recommended)
+DEPLOY_VERSION=convexo.v3.1 ./scripts/deploy.sh ethereum-sepolia
+
+# Option 2: Edit default version in script/DeployDeterministic.s.sol
+# Change: string public constant DEFAULT_VERSION = "convexo.v3.1";
+```
+
+Preview new addresses before deploying:
+```bash
+DEPLOY_VERSION=convexo.v3.1 forge script script/PredictAddresses.s.sol -vvv
+```
+
+#### Step 2: Update Addresses
+
+```bash
+./scripts/update-addresses.sh 11155111  # Ethereum Sepolia
+./scripts/update-addresses.sh 84532     # Base Sepolia
+./scripts/update-addresses.sh 1301      # Unichain Sepolia
+```
+
+#### Step 3: Verify Contracts
+
+```bash
+./scripts/verify-all.sh 11155111  # Ethereum Sepolia
+./scripts/verify-all.sh 84532     # Base Sepolia
+./scripts/verify-all.sh 1301      # Unichain Sepolia
+
+./scripts/verify-all.sh 1         # Ethereum Mainnet
+./scripts/verify-all.sh 8453      # Base Mainnet
+./scripts/verify-all.sh 130       # Unichain Mainnet
+```
+
+#### Step 4: Extract ABIs
+
+```bash
+./scripts/extract-abis.sh
 ```
 
 ---
 
-## Links
+### Chain IDs Reference
+
+| Network | Chain ID | Explorer |
+|---------|----------|----------|
+| Ethereum Sepolia | 11155111 | sepolia.etherscan.io |
+| Base Sepolia | 84532 | sepolia.basescan.org |
+| Unichain Sepolia | 1301 | unichain-sepolia.blockscout.com |
+| Ethereum Mainnet | 1 | etherscan.io |
+| Base Mainnet | 8453 | basescan.org |
+| Unichain Mainnet | 130 | unichain.blockscout.com |
+
+---
+
+### Deployment Checklist
+
+#### Pre-Deployment
+- [ ] Tests passing (`forge test`)
+- [ ] `.env` configured (PRIVATE_KEY, MINTER_ADDRESS, API keys)
+- [ ] Sufficient gas in deployer wallet
+
+#### Post-Deployment (per chain)
+- [ ] Deploy: `./scripts/deploy.sh <network>`
+- [ ] Update: `./scripts/update-addresses.sh <chain_id>`
+- [ ] Verify: `./scripts/verify-all.sh <chain_id>`
+- [ ] Extract: `./scripts/extract-abis.sh`
+
+---
+
+## 📚 Documentation
+
+### Core Documentation
+
+| Document | Description |
+|----------|-------------|
+| **[CONTRACTS_REFERENCE.md](./CONTRACTS_REFERENCE.md)** | 📖 Complete contract reference with all functions |
+| **[FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md)** | 💻 Frontend integration guide with code examples |
+| **[ZKPASSPORT_FRONTEND_INTEGRATION.md](./ZKPASSPORT_FRONTEND_INTEGRATION.md)** | 🔐 ZKPassport integration guide |
+| **[SECURITY_AUDIT.md](./SECURITY_AUDIT.md)** | 🛡️ Security features and audit information |
+
+### Contract Resources
+- **[addresses.json](./addresses.json)** - All deployed contract addresses in JSON format
+- **[abis/](./abis/)** - Contract ABIs for frontend integration (16 ABIs)
+
+---
+
+## 💻 Frontend Integration
+
+### Install Dependencies
+```bash
+npm install viem wagmi @rainbow-me/rainbowkit
+```
+
+### Check User Reputation
+```typescript
+import { useContractRead } from 'wagmi';
+import ReputationManagerABI from './abis/ReputationManager.json';
+
+function useUserTier(address: `0x${string}`) {
+  const { data: tier } = useContractRead({
+    address: REPUTATION_MANAGER_ADDRESS,
+    abi: ReputationManagerABI,
+    functionName: 'getReputationTier',
+    args: [address],
+  });
+
+  return {
+    tier, // 0, 1, 2, or 3
+    canCreateTreasury: tier >= 1,
+    canInvestInVaults: tier >= 1,
+    canAccessLPPools: tier >= 2,
+    canCreateVaults: tier === 3,
+  };
+}
+```
+
+**See [FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md) for complete examples.**
+
+---
+
+## 🔐 Security
+
+- ✅ **OpenZeppelin v5.5.0** audited contracts
+- ✅ **Role-based access control** for admin functions
+- ✅ **Soulbound NFTs** (non-transferable)
+- ✅ **Uniswap V4 Hooks** for compliant pool access
+- ✅ **Chainlink price feeds** for accurate conversions
+- ✅ **Multi-signature** contract signing
+- ✅ **Privacy-compliant** verification (no PII stored)
+- ✅ **All contracts verified** on block explorers
+
+---
+
+## ✨ What's New in v3.0
+
+### 🆕 New in v3.0 (14 contracts)
+
+1. **Privacy-Enhanced Verification** - All verification data is now private (admin-only access)
+2. **Multi-Admin Support** - Multiple compliance officers can have VERIFIER_ROLE
+3. **SumsubVerifier** - Separate KYB verification for businesses
+4. **Deterministic Deployment** - Deploy same addresses on all chains via Safe Singleton Factory
+5. **Minted Status** - Track when NFTs are minted after verification approval
+
+### 🏆 Tier System Changes
+
+| Tier | NFT Contract | User Type | Access Level | Minting Method |
+|------|--------------|-----------|--------------|----------------|
+| **Tier 0** | None | Unverified | No access | N/A |
+| **Tier 1** | Convexo_Passport | Individual Investor | Treasury creation + LP Pools + Vault investments | Self-mint via ZKPassport |
+| **Tier 2** | Limited_Partners_Individuals | Limited Partner (Individual) | Monetization + Vault investments | Admin-mint via VeriffVerifier |
+| **Tier 2** | Limited_Partners_Business | Limited Partner (Business) | Monetization + Vault investments | Admin-mint via SumsubVerifier |
+| **Tier 3** | Ecreditscoring | Vault Creator | All above + Vault creation | Backend-mint with AI credit score |
+
+**Note:** Highest tier wins (progressive KYC). Users can upgrade from Tier 1 to Tier 2/3.
+
+### NFT Metadata & Images
+
+| NFT Contract | IPFS URI | CID | Auto-Applied? |
+|--------------|----------|-----|---------------|
+| Convexo_Passport | [View Image](https://lime-famous-condor-7.mypinata.cloud/ipfs/bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4) | `bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4` | ✅ Yes (hardcoded in contract) |
+| Limited_Partners_Individuals | [View Image](https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreib7mkjzpdm3id6st6d5vsxpn7v5h6sxeiswejjmrbcb5yoagaf4em) | `bafkreib7mkjzpdm3id6st6d5vsxpn7v5h6sxeiswejjmrbcb5yoagaf4em` | ✅ Yes (via VeriffVerifier) |
+| Limited_Partners_Business | [View Image](https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreiejesvgsvohwvv7q5twszrbu5z6dnpke6sg5cdiwgn2rq7dilu33m) | `bafkreiejesvgsvohwvv7q5twszrbu5z6dnpke6sg5cdiwgn2rq7dilu33m` | ✅ Yes (via SumsubVerifier) |
+| Ecreditscoring | [View Image](https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreignxas6gqi7it5ng6muoykujxlgxxc4g7rr6sqvwgdfwveqf2zw3e) | `bafkreignxas6gqi7it5ng6muoykujxlgxxc4g7rr6sqvwgdfwveqf2zw3e` | ⚠️ No (backend must pass URI) |
+
+**Important:** All NFTs are soulbound (non-transferable) and limited to **one per address**.
+
+### 🔒 Privacy-Compliant Verification
+
+- Only verification **traits** stored on-chain (no PII)
+- Stored traits: `kycVerified`, `faceMatchPassed`, `sanctionsPassed`, `isOver18`
+- No name, address, birthdate, or biometric data stored
+
+### 📊 Updated ReputationManager
+
+New functions:
+- `canCreateTreasury()` - Tier 1+
+- `canInvestInVaults()` - Tier 1+
+- `canAccessLPPools()` - Tier 2+
+- `canCreateVaults()` - Tier 3
+
+### 🔄 Progressive KYC
+
+- Highest tier wins (no mutual exclusivity)
+- Users can upgrade from individual to business verification
+- Passport holders can later get LPs/Vaults NFTs
+
+### ⚡ Vault Redemption Update
+
+- Redemption requires **full repayment** when in Repaying state
+- Early exit allowed when vault is Funded/Active (before borrower withdrawal)
+
+---
+
+## 📊 Key Metrics
+
+| Metric | Value |
+|--------|-------|
+| **Version** | 3.0 (Privacy-Enhanced Verification) |
+| **Test Coverage** | 91/91 tests passing (100%) |
+| **Contracts** | 14 contracts per network |
+| **Networks Supported** | 3 mainnets, 3 testnets |
+| **Verification Methods** | 3 paths (ZKPassport + Veriff + Sumsub) |
+| **Investor Returns** | 12% APY |
+| **Min Credit Score** | 70 (for vault creation) |
+| **Protocol Fee** | 2% of principal (protected) |
+| **Repayment** | Flexible (anytime before maturity) |
+| **Privacy** | All verification data private (admin-only) ✅ |
+| **Deterministic Deploy** | Same addresses on all chains ✅ |
+
+---
+
+## 🛠️ Technical Stack
+
+- **Smart Contracts**: Solidity ^0.8.27
+- **Development**: Foundry
+- **Standards**: ERC-721, ERC-20
+- **DEX Integration**: Uniswap V4 Hooks
+- **Oracles**: Chainlink Price Feeds & CCIP
+- **KYB/KYC**: Veriff + ZKPassport
+- **AI Scoring**: Custom credit scoring engine
+
+---
+
+## 📖 How It Works
+
+### 1. Compliance & NFT Issuance
+```solidity
+// Individual: ZKPassport verification
+convexoPassport.safeMintWithIdentifier(uniqueIdentifier);
+
+// Business: Veriff verification
+veriffVerifier.approveVerification(businessAddress);
+// → Automatically mints Convexo_LPs NFT
+```
+
+### 2. Reputation Check
+```solidity
+// System checks user tier
+reputationManager.getReputationTier(user);
+// Returns: None (0), Passport (1), LimitedPartner (2), VaultCreator (3)
+```
+
+### 3. Treasury Creation (Tier 1+)
+```solidity
+// Create personal treasury
+treasuryFactory.createTreasury(signers, signaturesRequired);
+```
+
+### 4. Vault Creation (Tier 3)
+```solidity
+// Create funding vault after credit scoring
+vaultFactory.createVault(
+  principalAmount,
+  interestRate,
+  maturityDate,
+  ...
+);
+```
+
+### 5. Investment & Returns (Tier 1+)
+```solidity
+// Investor stakes USDC
+vault.purchaseShares(1000e6); // 1000 USDC
+
+// Check returns
+vault.getInvestorReturn(investor);
+// Returns: invested, currentValue, profit, apy
+```
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our contributing guidelines.
+
+```bash
+# Create a branch
+git checkout -b feature/your-feature
+
+# Make changes and test
+forge test
+
+# Commit and push
+git commit -m "Add feature"
+git push origin feature/your-feature
+```
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](./LICENSE) file for details.
+
+---
+
+## 🔗 Links
 
 - **Website**: [convexo.finance](https://convexo.finance)
-- **Docs**: [docs.convexo.finance](https://docs.convexo.finance)
+- **Documentation**: [docs.convexo.finance](https://docs.convexo.finance)
 - **Twitter**: [@ConvexoFinance](https://twitter.com/ConvexoFinance)
+- **Discord**: [Join Community](https://discord.gg/convexo)
+- **GitHub**: [github.com/convexo-finance](https://github.com/convexo-finance)
+
+---
+
+## 📞 Support
+
+- **Technical Issues**: Open an issue on GitHub
+- **Contract Reference**: See [CONTRACTS_REFERENCE.md](./CONTRACTS_REFERENCE.md)
+- **Frontend Integration**: See [FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md)
+- **ZKPassport Integration**: See [ZKPASSPORT_FRONTEND_INTEGRATION.md](./ZKPASSPORT_FRONTEND_INTEGRATION.md)
+- **Security**: See [SECURITY_AUDIT.md](./SECURITY_AUDIT.md)
+- **General Questions**: Join our Discord
+
+---
+
+## 🎉 Status
+
+**🆕 VERSION 3.0 - PRIVACY-ENHANCED VERIFICATION COMPLETE**
+
+All 14 contracts deployed, verified, and ready for production.
+
+**Development Status:**
+- ✅ 14 smart contracts implemented
+- ✅ Comprehensive testing (91 tests, 100% coverage)
+- ✅ Deployment scripts unified (deterministic via CREATE2)
+- ✅ Documentation complete
+- ✅ Security review complete
+- ✅ Deployed on all 6 networks
+
+**Version 3.0 Features:**
+- 🆕 **Privacy-Enhanced Verification** - All data private (admin-only)
+- 🆕 **SumsubVerifier** - Separate KYB for businesses
+- 🆕 **Multi-Admin Support** - Multiple compliance officers
+- 🆕 **Deterministic Deployment** - Same addresses on all chains
+- 🆕 **Minted Status** - Track NFT minting after approval
+- ✅ TreasuryFactory - Personal multi-sig treasuries
+- ✅ Progressive KYC - Upgrade from individual to business
+- ✅ Borrower-initiated vault creation (Tier 3)
+- ✅ Flexible repayment system
+
+**Test Results:**
+- ✅ NFT Tests: 46/46 passing
+- ✅ Verifier Tests: 21/21 passing
+- ✅ Integration Tests: 24/24 passing
+- ✅ Total: 91/91 tests passing (100% coverage)
 
 ---
 

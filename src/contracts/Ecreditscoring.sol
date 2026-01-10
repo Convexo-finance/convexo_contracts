@@ -59,9 +59,9 @@ contract Ecreditscoring is ERC721, ERC721Burnable, ERC721URIStorage, AccessContr
     /// @notice Credit score information
     struct CreditInfo {
         CreditTier tier;
-        uint256 score;          // 0-1000 scale
+        uint256 score;          // 0-100 scale
         uint256 maxLoanAmount;  // Maximum loan amount in USDC (6 decimals)
-        uint256 scoredAt;       // Timestamp of scoring
+        uint256 scoredAt;       // Timestamp of scoring (editable)
         string referenceId;     // External reference ID
     }
 
@@ -73,6 +73,7 @@ contract Ecreditscoring is ERC721, ERC721Burnable, ERC721URIStorage, AccessContr
 
     error SoulboundToken();
     error MustHoldLPNFT();
+    error AlreadyHoldsNFT();
 
     /// @notice Constructor
     /// @param defaultAdmin Address to receive DEFAULT_ADMIN_ROLE
@@ -107,11 +108,11 @@ contract Ecreditscoring is ERC721, ERC721Burnable, ERC721URIStorage, AccessContr
 
     /// @notice Mint a new Ecreditscoring NFT
     /// @param to Address to mint to (must hold LP NFT)
-    /// @param score Credit score (0-1000)
+    /// @param score Credit score (0-100)
     /// @param tier Credit tier
     /// @param maxLoanAmount Maximum loan amount allowed
     /// @param referenceId External reference ID from credit scoring service
-    /// @param uri Token metadata URI
+    /// @param uri Token metadata URI (use: https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreignxas6gqi7it5ng6muoykujxlgxxc4g7rr6sqvwgdfwveqf2zw3e)
     /// @return tokenId The minted token ID
     function safeMint(
         address to,
@@ -125,11 +126,19 @@ contract Ecreditscoring is ERC721, ERC721Burnable, ERC721URIStorage, AccessContr
         onlyRole(MINTER_ROLE)
         returns (uint256)
     {
+        // One NFT per address constraint
+        if (balanceOf(to) > 0) {
+            revert AlreadyHoldsNFT();
+        }
+
         // Require user to have LP NFT (Individual or Business)
         if (!hasLPStatus(to)) {
             revert MustHoldLPNFT();
         }
-        
+
+        // Validate credit score is within 0-100 range
+        require(score <= 100, "Credit score must be between 0 and 100");
+
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
@@ -186,23 +195,29 @@ contract Ecreditscoring is ERC721, ERC721Burnable, ERC721URIStorage, AccessContr
 
     /// @notice Update credit information for a token (for re-scoring)
     /// @param tokenId Token ID to update
-    /// @param score New credit score
+    /// @param score New credit score (0-100)
     /// @param tier New credit tier
     /// @param maxLoanAmount New maximum loan amount
     /// @param referenceId New reference ID
+    /// @param scoredAt New validation date (timestamp)
     function updateCreditInfo(
         uint256 tokenId,
         uint256 score,
         CreditTier tier,
         uint256 maxLoanAmount,
-        string memory referenceId
+        string memory referenceId,
+        uint256 scoredAt
     ) public onlyRole(MINTER_ROLE) {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
+
+        // Validate credit score is within 0-100 range
+        require(score <= 100, "Credit score must be between 0 and 100");
+
         _creditInfo[tokenId] = CreditInfo({
             tier: tier,
             score: score,
             maxLoanAmount: maxLoanAmount,
-            scoredAt: block.timestamp,
+            scoredAt: scoredAt,
             referenceId: referenceId
         });
     }

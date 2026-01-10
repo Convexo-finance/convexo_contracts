@@ -7,30 +7,38 @@ import {ILimitedPartnersIndividuals} from "../interfaces/ILimitedPartnersIndivid
 /// @title VeriffVerifier
 /// @notice Human-approved KYC verification system for INDIVIDUAL Limited Partners
 /// @dev For INDIVIDUALS only - uses Veriff platform for identity verification
-///      Upon approval, mints Limited_Partners_Individuals NFT (Tier 2)
+///      Upon approval, admin manually mints Limited_Partners_Individuals NFT (Tier 2)
 ///
 /// ═══════════════════════════════════════════════════════════════════════════════
-/// VERIFICATION FLOW:
+/// VERIFICATION FLOW (PRIVACY-ENHANCED):
 /// ═══════════════════════════════════════════════════════════════════════════════
 /// 1. Individual completes Veriff identity verification on frontend
 /// 2. Backend receives webhook with verification result
 /// 3. Backend calls submitVerification() with session details
-/// 4. Admin reviews and calls approveVerification() or rejectVerification()
-/// 5. On approval: Limited_Partners_Individuals NFT is minted
-/// 6. User becomes Limited Partner → Can access LP pools, Treasury, Invest
-/// 7. Limited Partner can request Credit Score for Ecreditscoring NFT (Tier 3)
+/// 4. Admin reviews PRIVATE data and calls approveVerification() or rejectVerification()
+/// 5. On approval: Status changes to Approved (NO auto-mint)
+/// 6. Admin manually calls Limited_Partners_Individuals.safeMint()
+/// 7. NFT contract calls markAsMinted() to update status to Minted
+/// 8. User becomes Limited Partner → Can access LP pools, Treasury, Invest
+///
+/// PRIVACY MODEL:
+/// - All verification data is PRIVATE (admin-only access)
+/// - Public can only check hasVerificationRecord() (existence, not details)
+/// - Events are emitted for monitoring but contain no sensitive data
 ///
 /// For BUSINESS KYB, use SumsubVerifier instead
 /// ═══════════════════════════════════════════════════════════════════════════════
 contract VeriffVerifier is AccessControl {
     bytes32 public constant VERIFIER_ROLE = keccak256("VERIFIER_ROLE");
+    bytes32 public constant MINTER_CALLBACK_ROLE = keccak256("MINTER_CALLBACK_ROLE");
 
     /// @notice Verification status states
     enum VerificationStatus {
         None,       // 0 - No verification submitted
         Pending,    // 1 - Submitted, awaiting approval
-        Approved,   // 2 - Approved and NFT minted
-        Rejected    // 3 - Rejected by admin
+        Approved,   // 2 - Approved but NFT not yet minted
+        Rejected,   // 3 - Rejected by admin
+        Minted      // 4 - Approved and NFT minted
     }
 
     /// @notice Verification record for a user
@@ -43,29 +51,27 @@ contract VeriffVerifier is AccessControl {
         address processor;
         string rejectionReason;
         uint256 nftTokenId;
+        uint256 mintedAt;
     }
 
     /// @notice The Limited Partners Individuals NFT contract
     ILimitedPartnersIndividuals public immutable lpIndividuals;
 
-    /// @notice Mapping from user address to verification record
-    mapping(address => VerificationRecord) public verifications;
+    /// @notice Mapping from user address to verification record (PRIVATE)
+    mapping(address => VerificationRecord) private verifications;
 
-    /// @notice Mapping from Veriff session ID to user address (prevent duplicates)
-    mapping(string => address) public sessionIdToUser;
+    /// @notice Mapping from Veriff session ID to user address (PRIVATE)
+    mapping(string => address) private sessionIdToUser;
 
     /// @notice Emitted when a verification is submitted
     event VerificationSubmitted(
         address indexed user,
-        string sessionId,
         uint256 timestamp
     );
 
     /// @notice Emitted when a verification is approved
     event VerificationApproved(
         address indexed user,
-        string sessionId,
-        uint256 nftTokenId,
         address indexed approver,
         uint256 timestamp
     );
@@ -73,9 +79,14 @@ contract VeriffVerifier is AccessControl {
     /// @notice Emitted when a verification is rejected
     event VerificationRejected(
         address indexed user,
-        string sessionId,
-        string reason,
         address indexed rejector,
+        uint256 timestamp
+    );
+
+    /// @notice Emitted when an NFT is minted and verification status updated
+    event VerificationMinted(
+        address indexed user,
+        uint256 tokenId,
         uint256 timestamp
     );
 
@@ -114,36 +125,28 @@ contract VeriffVerifier is AccessControl {
             processedAt: 0,
             processor: address(0),
             rejectionReason: "",
-            nftTokenId: 0
+            nftTokenId: 0,
+            mintedAt: 0
         });
 
         sessionIdToUser[sessionId] = user;
 
-        emit VerificationSubmitted(user, sessionId, block.timestamp);
+        emit VerificationSubmitted(user, block.timestamp);
     }
 
-    /// @notice Approve a pending verification and mint Limited Partners Individuals NFT
+    /// @notice Approve a pending verification (NO auto-mint)
+    /// @dev After approval, admin must manually mint NFT via LP contract
     /// @param user The address of the user to approve
     function approveVerification(address user) external onlyRole(VERIFIER_ROLE) {
         VerificationRecord storage record = verifications[user];
         require(record.status == VerificationStatus.Pending, "No pending verification");
 
-        // Mint Limited Partners Individuals NFT (Tier 2)
-        uint256 tokenId = lpIndividuals.safeMint(
-            user,
-            record.veriffSessionId, // Use session ID as verification ID
-            "" // Empty URI, can be updated later
-        );
-
         record.status = VerificationStatus.Approved;
         record.processedAt = block.timestamp;
         record.processor = msg.sender;
-        record.nftTokenId = tokenId;
 
         emit VerificationApproved(
             user,
-            record.veriffSessionId,
-            tokenId,
             msg.sender,
             block.timestamp
         );
@@ -167,44 +170,120 @@ contract VeriffVerifier is AccessControl {
 
         emit VerificationRejected(
             user,
-            record.veriffSessionId,
-            reason,
             msg.sender,
             block.timestamp
         );
     }
 
-    /// @notice Get verification status for a user
+    /// @notice Mark verification as minted (called by NFT contract after minting)
+    /// @param user The user whose NFT was minted
+    /// @param tokenId The minted token ID
+    function markAsMinted(address user, uint256 tokenId) external onlyRole(MINTER_CALLBACK_ROLE) {
+        VerificationRecord storage record = verifications[user];
+        require(record.status == VerificationStatus.Approved, "Not approved");
+
+        record.status = VerificationStatus.Minted;
+        record.nftTokenId = tokenId;
+        record.mintedAt = block.timestamp;
+
+        emit VerificationMinted(user, tokenId, block.timestamp);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ADMIN-ONLY VIEW FUNCTIONS (Private data access)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /// @notice Get full verification record (admin only)
     /// @param user The address to check
     /// @return The verification record
-    function getVerificationStatus(address user)
+    function getVerificationRecord(address user)
         external
         view
+        onlyRole(VERIFIER_ROLE)
         returns (VerificationRecord memory)
     {
         return verifications[user];
     }
 
-    /// @notice Check if a user has an approved verification
+    /// @notice Get verification session ID for a user (admin only)
     /// @param user The address to check
-    /// @return True if user has approved verification
-    function isVerified(address user) external view returns (bool) {
-        return verifications[user].status == VerificationStatus.Approved;
+    /// @return The Veriff session ID
+    function getSessionId(address user)
+        external
+        view
+        onlyRole(VERIFIER_ROLE)
+        returns (string memory)
+    {
+        return verifications[user].veriffSessionId;
     }
 
-    /// @notice Check if a session ID has been used
+    /// @notice Check if a session ID has been used (admin only)
     /// @param sessionId The Veriff session ID to check
     /// @return True if session ID has been used
-    function isSessionIdUsed(string calldata sessionId) external view returns (bool) {
+    function isSessionIdUsed(string calldata sessionId)
+        external
+        view
+        onlyRole(VERIFIER_ROLE)
+        returns (bool)
+    {
         return sessionIdToUser[sessionId] != address(0);
     }
 
-    /// @notice Get user address associated with a session ID
+    /// @notice Get user address associated with a session ID (admin only)
     /// @param sessionId The Veriff session ID
     /// @return The user address (address(0) if not found)
-    function getUserBySessionId(string calldata sessionId) external view returns (address) {
+    function getUserBySessionId(string calldata sessionId)
+        external
+        view
+        onlyRole(VERIFIER_ROLE)
+        returns (address)
+    {
         return sessionIdToUser[sessionId];
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // PUBLIC VIEW FUNCTIONS (No sensitive data exposed)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /// @notice Check if a user has any verification record (public)
+    /// @param user The address to check
+    /// @return True if user has any verification record
+    function hasVerificationRecord(address user) external view returns (bool) {
+        return verifications[user].user != address(0);
+    }
+
+    /// @notice Check if a user has an approved verification (ready to mint)
+    /// @param user The address to check
+    /// @return True if user has approved verification
+    function isApproved(address user) external view returns (bool) {
+        return verifications[user].status == VerificationStatus.Approved;
+    }
+
+    /// @notice Check if a user has a minted verification
+    /// @param user The address to check
+    /// @return True if user has minted verification
+    function isMinted(address user) external view returns (bool) {
+        return verifications[user].status == VerificationStatus.Minted;
+    }
+
+    /// @notice Check if a user is verified (approved or minted)
+    /// @param user The address to check
+    /// @return True if user is verified
+    function isVerified(address user) external view returns (bool) {
+        VerificationStatus status = verifications[user].status;
+        return status == VerificationStatus.Approved || status == VerificationStatus.Minted;
+    }
+
+    /// @notice Get verification status for a user (status only, no details)
+    /// @param user The address to check
+    /// @return The verification status
+    function getStatus(address user) external view returns (VerificationStatus) {
+        return verifications[user].status;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ADMIN FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════════════════════
 
     /// @notice Allow user to resubmit after rejection (admin only)
     /// @param user The address of the user
@@ -220,5 +299,72 @@ contract VeriffVerifier is AccessControl {
 
         // Reset verification record
         delete verifications[user];
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ROLE MANAGEMENT (Multi-admin support for compliance teams)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /// @notice Add a new verifier (compliance officer)
+    /// @dev Multiple compliance officers can have VERIFIER_ROLE
+    /// @param account The address to grant VERIFIER_ROLE
+    function addVerifier(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(account != address(0), "Invalid address");
+        _grantRole(VERIFIER_ROLE, account);
+    }
+
+    /// @notice Remove a verifier (compliance officer)
+    /// @param account The address to revoke VERIFIER_ROLE from
+    function removeVerifier(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _revokeRole(VERIFIER_ROLE, account);
+    }
+
+    /// @notice Add a new admin
+    /// @dev Multiple admins can manage the contract
+    /// @param account The address to grant DEFAULT_ADMIN_ROLE
+    function addAdmin(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(account != address(0), "Invalid address");
+        _grantRole(DEFAULT_ADMIN_ROLE, account);
+    }
+
+    /// @notice Remove an admin (cannot remove self)
+    /// @param account The address to revoke DEFAULT_ADMIN_ROLE from
+    function removeAdmin(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(account != msg.sender, "Cannot remove self as admin");
+        _revokeRole(DEFAULT_ADMIN_ROLE, account);
+    }
+
+    /// @notice Grant minter callback role to an NFT contract
+    /// @param nftContract The NFT contract address that can call markAsMinted
+    function addMinterCallback(address nftContract) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(nftContract != address(0), "Invalid address");
+        _grantRole(MINTER_CALLBACK_ROLE, nftContract);
+    }
+
+    /// @notice Revoke minter callback role from an NFT contract
+    /// @param nftContract The NFT contract address
+    function removeMinterCallback(address nftContract) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _revokeRole(MINTER_CALLBACK_ROLE, nftContract);
+    }
+
+    /// @notice Check if an address is a verifier (compliance officer)
+    /// @param account The address to check
+    /// @return True if the address has VERIFIER_ROLE
+    function isVerifier(address account) external view returns (bool) {
+        return hasRole(VERIFIER_ROLE, account);
+    }
+
+    /// @notice Check if an address is an admin
+    /// @param account The address to check
+    /// @return True if the address has DEFAULT_ADMIN_ROLE
+    function isAdmin(address account) external view returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, account);
+    }
+
+    /// @notice Check if an address has minter callback role
+    /// @param account The address to check
+    /// @return True if the address has MINTER_CALLBACK_ROLE
+    function hasMinterCallback(address account) external view returns (bool) {
+        return hasRole(MINTER_CALLBACK_ROLE, account);
     }
 }

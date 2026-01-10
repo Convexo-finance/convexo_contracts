@@ -8,11 +8,22 @@ import {Limited_Partners_Individuals} from "../src/contracts/Limited_Partners_In
 import {Limited_Partners_Business} from "../src/contracts/Limited_Partners_Business.sol";
 import {Ecreditscoring} from "../src/contracts/Ecreditscoring.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IZKPassportVerifier, ProofVerificationParams, DisclosedData} from "../src/interfaces/IZKPassportVerifier.sol";
 
-/// @notice Mock ZKPassport verifier that always returns true
-contract MockZKPassportVerifier {
-    function verifyProof(bytes32, bytes memory, uint256[] memory) external pure returns (bool) {
-        return true;
+/// @notice Mock ZKPassport verifier for testing
+contract MockZKPassportVerifier is IZKPassportVerifier {
+    function verifyProof(
+        ProofVerificationParams calldata,
+        bool
+    ) external view returns (bool success, DisclosedData memory disclosedData) {
+        success = true;
+        disclosedData = DisclosedData({
+            kycVerified: true,
+            faceMatchPassed: true,
+            sanctionsPassed: true,
+            isOver18: true,
+            verifiedAt: block.timestamp
+        });
     }
 }
 
@@ -23,7 +34,7 @@ contract ReputationManagerTest is Test {
     Limited_Partners_Business public lpBusiness;
     Ecreditscoring public ecreditscoring;
     MockZKPassportVerifier public mockVerifier;
-    
+
     address public admin = address(0x1);
     address public minter = address(0x2);
     address public passportHolder = address(0x3);
@@ -35,18 +46,18 @@ contract ReputationManagerTest is Test {
     function setUp() public {
         // Deploy mock verifier
         mockVerifier = new MockZKPassportVerifier();
-        
+
         // Deploy NFT contracts - use address(this) as admin for test convenience
         passport = new Convexo_Passport(address(this), address(mockVerifier), "https://metadata");
-        lpIndividuals = new Limited_Partners_Individuals(address(this), address(this));
-        lpBusiness = new Limited_Partners_Business(address(this), address(this));
+        lpIndividuals = new Limited_Partners_Individuals(address(this), address(this), address(0));
+        lpBusiness = new Limited_Partners_Business(address(this), address(this), address(0));
         ecreditscoring = new Ecreditscoring(
             address(this),
             address(this),
             IERC721(address(lpIndividuals)),
             IERC721(address(lpBusiness))
         );
-        
+
         // Deploy ReputationManager
         reputationManager = new ReputationManager(
             IERC721(address(passport)),
@@ -54,17 +65,14 @@ contract ReputationManagerTest is Test {
             IERC721(address(lpBusiness)),
             IERC721(address(ecreditscoring))
         );
-        
+
         // Setup holders
-        // Grant minter role to this contract
-        passport.grantRole(passport.MINTER_ROLE(), address(this));
-        
-        // Passport holder (Tier 1)
-        passport.safeMint(passportHolder, "");
-        
+        // Passport holder (Tier 1) - mint via ZKPassport
+        _mintPassportForUser(passportHolder, 1);
+
         // Individual LP holder (Tier 2)
         lpIndividuals.safeMint(individualLPHolder, "veriff_123", "");
-        
+
         // Business LP holder (Tier 2)
         lpBusiness.safeMint(
             businessLPHolder,
@@ -75,17 +83,31 @@ contract ReputationManagerTest is Test {
             "sumsub_123",
             ""
         );
-        
+
         // Credit holder (Tier 3) - needs LP first
         lpIndividuals.safeMint(creditHolder, "veriff_456", "");
         ecreditscoring.safeMint(
             creditHolder,
-            800,
+            80, // score (0-100 scale)
             Ecreditscoring.CreditTier.Gold,
             1000000e6,
             "ref_123",
             ""
         );
+    }
+
+    /// @notice Helper to mint passport via ZKPassport for a user
+    function _mintPassportForUser(address user, uint256 seed) internal {
+        ProofVerificationParams memory params = ProofVerificationParams({
+            publicKey: bytes32(seed),
+            nullifier: bytes32(seed + 1000),
+            proof: abi.encodePacked(seed),
+            attestationId: seed,
+            scope: bytes32(seed + 2000),
+            currentDate: block.timestamp
+        });
+        vm.prank(user);
+        passport.safeMintWithZKPassport(params, false);
     }
 
     function test_TierNone() public view {
@@ -142,7 +164,7 @@ contract ReputationManagerTest is Test {
             uint256 lpBusBal,
             uint256 creditBal
         ) = reputationManager.getReputationDetails(creditHolder);
-        
+
         assertEq(uint(tier), uint(ReputationManager.ReputationTier.VaultCreator));
         assertEq(passportBal, 0);
         assertEq(lpIndBal, 1);
@@ -160,12 +182,11 @@ contract ReputationManagerTest is Test {
     function test_RequireAccess_Reverts() public {
         vm.expectRevert("Must have Passport tier or higher");
         reputationManager.requirePassportAccess(noNFTHolder);
-        
+
         vm.expectRevert("Must have LimitedPartner tier or higher");
         reputationManager.requireLimitedPartnerAccess(passportHolder);
-        
+
         vm.expectRevert("Must have VaultCreator tier");
         reputationManager.requireVaultCreatorAccess(individualLPHolder);
     }
 }
-

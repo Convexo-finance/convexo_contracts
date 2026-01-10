@@ -46,25 +46,16 @@ interface IConvexoPassport {
         bytes32 uniqueIdentifier
     );
 
-    /// @notice Self-mint a passport using ZKPassport verification
+    /// @notice Self-mint a passport using ZKPassport verification (ONLY minting path)
     /// @param params The ZKPassport proof parameters
     /// @param isIDCard Whether the proof is from an ID card
     /// @return tokenId The minted token ID
+    /// @dev This is the ONLY way to mint a Convexo Passport.
+    ///      Enforces: 1 human → 1 ZKPassport → 1 NFT → 1 wallet
     function safeMintWithZKPassport(
         ProofVerificationParams calldata params,
         bool isIDCard
     ) external returns (uint256 tokenId);
-
-    /// @notice Self-mint a passport using unique identifier from ZKPassport (simplified)
-    /// @param uniqueIdentifier The unique identifier from ZKPassport verification
-    /// @return tokenId The minted token ID
-    function safeMintWithIdentifier(bytes32 uniqueIdentifier) external returns (uint256 tokenId);
-
-    /// @notice Admin mint a passport (for testing or special cases)
-    /// @param to The address to mint to
-    /// @param uri The token URI
-    /// @return tokenId The minted token ID
-    function safeMint(address to, string memory uri) external returns (uint256 tokenId);
 
     /// @notice Revoke a passport
     /// @param tokenId The token ID to revoke
@@ -81,8 +72,9 @@ interface IConvexoPassport {
     function getVerifiedIdentity(address holder) external view returns (VerifiedIdentity memory identity);
 
     /// @notice Check if a unique identifier has been used
-    /// @param uniqueIdentifier The identifier to check
+    /// @param uniqueIdentifier The identifier to check (hash of publicKey + scope)
     /// @return used Whether the identifier has been used
+    /// @dev This is the SINGLE source of truth for sybil resistance
     function isIdentifierUsed(bytes32 uniqueIdentifier) external view returns (bool used);
 
     /// @notice Get the total number of active passports

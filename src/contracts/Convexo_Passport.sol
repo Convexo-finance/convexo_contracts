@@ -24,7 +24,6 @@ import {IZKPassportVerifier, ProofVerificationParams, DisclosedData} from "../in
 ///      - Convexo_LPs (Tier 2): Verified via Veriff/Sumsub human KYC → VeriffVerifier contract
 ///      - Convexo_Vaults (Tier 3): Verified via KYB Sumsub for businesses → allows vault creation
 contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessControl, IConvexoPassport {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant REVOKER_ROLE = keccak256("REVOKER_ROLE");
 
     /// @notice The ZKPassport verifier contract
@@ -37,6 +36,9 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
     string private _baseTokenURI;
 
     /// @notice Mapping from unique identifier to address (prevents duplicate passports)
+    /// @dev uniqueIdentifier = keccak256(publicKey + scope) from ZKPassport
+    ///      This is the SINGLE source of truth for sybil resistance:
+    ///      One human → one ZKPassport → one uniqueIdentifier → one NFT
     mapping(bytes32 => address) private passportIdentifierToAddress;
 
     /// @notice Mapping from address to verified identity (stores ZKPassport outputs)
@@ -73,7 +75,6 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         require(_zkPassportVerifier != address(0), "Invalid verifier address");
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
-        _grantRole(MINTER_ROLE, admin);
         _grantRole(REVOKER_ROLE, admin);
 
         zkPassportVerifier = IZKPassportVerifier(_zkPassportVerifier);
@@ -105,6 +106,7 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         bytes32 uniqueIdentifier = keccak256(abi.encodePacked(params.publicKey, params.scope));
 
         // Check if identifier has been used (sybil resistance)
+        // uniqueIdentifier = hash(publicKey + scope) ensures: 1 human = 1 passport
         if (passportIdentifierToAddress[uniqueIdentifier] != address(0)) {
             revert IdentifierAlreadyUsed();
         }
@@ -112,7 +114,7 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         // Mint the passport NFT
         tokenId = _nextTokenId++;
         _safeMint(msg.sender, tokenId);
-        _setTokenURI(tokenId, string(abi.encodePacked(_baseTokenURI, "/", _toString(tokenId))));
+        _setTokenURI(tokenId, "https://lime-famous-condor-7.mypinata.cloud/ipfs/bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4");
 
         // Store ZKPassport verification results as traits (no PII)
         verifiedUsers[msg.sender] = VerifiedIdentity({
@@ -150,85 +152,6 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         );
     }
 
-    /// @notice Self-mint a passport using unique identifier from ZKPassport (simplified approach)
-    /// @param uniqueIdentifier The unique identifier from ZKPassport verification (off-chain)
-    /// @return tokenId The minted token ID
-    /// @dev This function allows users to mint after off-chain ZKPassport verification
-    ///      The unique identifier ensures: 1 wallet = 1 unique identifier
-    ///      All verification traits assumed true for off-chain verified users
-    function safeMintWithIdentifier(bytes32 uniqueIdentifier) external returns (uint256 tokenId) {
-        // Check if user already has a passport
-        if (balanceOf(msg.sender) > 0) {
-            revert AlreadyHasPassport();
-        }
-
-        // Check if identifier has been used (prevents duplicate passports)
-        if (passportIdentifierToAddress[uniqueIdentifier] != address(0)) {
-            revert IdentifierAlreadyUsed();
-        }
-
-        // Mint the passport NFT
-        tokenId = _nextTokenId++;
-        _safeMint(msg.sender, tokenId);
-        _setTokenURI(tokenId, string(abi.encodePacked(_baseTokenURI, "/", _toString(tokenId))));
-
-        // Store verified identity (off-chain verification - all traits assumed true)
-        verifiedUsers[msg.sender] = VerifiedIdentity({
-            uniqueIdentifier: uniqueIdentifier,
-            personhoodProof: bytes32(0),
-            verifiedAt: block.timestamp,
-            zkPassportTimestamp: 0,
-            isActive: true,
-            // Off-chain verified: assume all checks passed
-            kycVerified: true,
-            faceMatchPassed: true,
-            sanctionsPassed: true,
-            isOver18: true
-        });
-
-        // Map identifier to address (1 wallet = 1 unique identifier)
-        passportIdentifierToAddress[uniqueIdentifier] = msg.sender;
-
-        // Increment active passport count
-        activePassportCount++;
-
-        // Emit with all traits as true (off-chain verified)
-        emit PassportMinted(msg.sender, tokenId, uniqueIdentifier, bytes32(0), true, true, true, true);
-    }
-
-    /// @inheritdoc IConvexoPassport
-    function safeMint(address to, string memory uri) external onlyRole(MINTER_ROLE) returns (uint256 tokenId) {
-        require(to != address(0), "Cannot mint to zero address");
-        
-        if (balanceOf(to) > 0) {
-            revert AlreadyHasPassport();
-        }
-
-        tokenId = _nextTokenId++;
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
-
-        // Create a basic verified identity for admin-minted passports
-        bytes32 uniqueIdentifier = keccak256(abi.encodePacked(to, block.timestamp));
-        verifiedUsers[to] = VerifiedIdentity({
-            uniqueIdentifier: uniqueIdentifier,
-            personhoodProof: bytes32(0), // Admin mint - no ZKPassport proof
-            verifiedAt: block.timestamp,
-            zkPassportTimestamp: 0,
-            isActive: true,
-            // Admin mint: assume all checks passed
-            kycVerified: true,
-            faceMatchPassed: true,
-            sanctionsPassed: true,
-            isOver18: true
-        });
-
-        passportIdentifierToAddress[uniqueIdentifier] = to;
-        activePassportCount++;
-
-        // Emit with all traits as true (admin verified)
-        emit PassportMinted(to, tokenId, uniqueIdentifier, bytes32(0), true, true, true, true);
-    }
 
     /// @inheritdoc IConvexoPassport
     function revokePassport(uint256 tokenId) external onlyRole(REVOKER_ROLE) {
@@ -288,9 +211,9 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         _baseTokenURI = newBaseURI;
     }
 
-    /// @notice Get base URI
+    /// @notice Get base URI - returns empty since we use full IPFS URIs
     function _baseURI() internal view override returns (string memory) {
-        return _baseTokenURI;
+        return ""; // Empty string so full IPFS URIs work correctly
     }
 
     /// @notice Override required by Solidity for multiple inheritance

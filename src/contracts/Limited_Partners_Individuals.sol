@@ -7,18 +7,22 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {ERC721Burnable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IVeriffVerifier} from "../interfaces/IVeriffVerifier.sol";
 
 /// @title Limited Partners Individuals NFT
 /// @notice Soulbound NFT for individual Limited Partners verified via Veriff
 /// @dev Tier 2 NFT - Individual KYC verification
 ///
 /// ═══════════════════════════════════════════════════════════════════════════════
-/// MINTING FLOW:
+/// MINTING FLOW (PRIVACY-ENHANCED):
 /// ═══════════════════════════════════════════════════════════════════════════════
 /// 1. Individual completes Veriff identity verification
 /// 2. Backend receives verification result
-/// 3. VeriffVerifier contract calls safeMint on approval
-/// 4. User receives Limited Partners Individuals NFT
+/// 3. Admin reviews PRIVATE verification data
+/// 4. Admin approves verification (status = Approved)
+/// 5. Admin manually calls safeMint() on this contract
+/// 6. NFT minted → Auto-callback to VeriffVerifier.markAsMinted()
+/// 7. User receives Limited Partners Individuals NFT
 ///
 /// ACCESS GRANTED:
 /// - LP Pools (via PassportGatedHook)
@@ -35,23 +39,30 @@ contract Limited_Partners_Individuals is ERC721, ERC721Burnable, ERC721URIStorag
         NonActive
     }
 
+    /// @notice The VeriffVerifier contract for callback
+    address public immutable verifierContract;
+
     /// @notice Mapping from token ID to token state
     mapping(uint256 => TokenState) private _tokenStates;
-    
+
     /// @notice Mapping from token ID to verification ID (Veriff session ID)
     mapping(uint256 => string) private _verificationIds;
 
     error SoulboundToken();
+    error AlreadyHoldsNFT();
 
     /// @notice Constructor
     /// @param defaultAdmin Address to receive DEFAULT_ADMIN_ROLE
-    /// @param minter Address to receive MINTER_ROLE (typically VeriffVerifier contract)
-    constructor(address defaultAdmin, address minter) ERC721("Limited_Partners_Individuals", "LPI") {
+    /// @param minter Address to receive MINTER_ROLE (typically admin for manual minting)
+    /// @param _verifier Address of the VeriffVerifier contract for callback
+    constructor(address defaultAdmin, address minter, address _verifier) ERC721("Limited_Partners_Individuals", "LPI") {
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
         _grantRole(MINTER_ROLE, minter);
+        verifierContract = _verifier;
     }
 
     /// @notice Mint a new Limited Partners Individuals NFT
+    /// @dev After minting, calls verifier to update status to Minted
     /// @param to Address to mint to
     /// @param verificationId The Veriff session ID used for verification
     /// @param uri Token metadata URI
@@ -61,11 +72,22 @@ contract Limited_Partners_Individuals is ERC721, ERC721Burnable, ERC721URIStorag
         onlyRole(MINTER_ROLE)
         returns (uint256)
     {
+        // One NFT per address constraint
+        if (balanceOf(to) > 0) {
+            revert AlreadyHoldsNFT();
+        }
+
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
         _tokenStates[tokenId] = TokenState.Active;
         _verificationIds[tokenId] = verificationId;
+
+        // Callback to verifier to update status to Minted
+        if (verifierContract != address(0)) {
+            IVeriffVerifier(verifierContract).markAsMinted(to, tokenId);
+        }
+
         return tokenId;
     }
 
@@ -130,4 +152,3 @@ contract Limited_Partners_Individuals is ERC721, ERC721Burnable, ERC721URIStorag
         return super.tokenURI(tokenId);
     }
 }
-
