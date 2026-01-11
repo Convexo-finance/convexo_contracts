@@ -10,7 +10,7 @@ interface IConvexoPassport {
     /// @dev Stores verification results as "traits" - no sensitive PII stored on-chain
     struct VerifiedIdentity {
         // Cryptographic identifiers (sybil resistance)
-        bytes32 uniqueIdentifier;       // Hash of publicKey + scope
+        bytes32 identifierHash;         // keccak256 hash of uniqueIdentifier string from ZKPassport
         bytes32 personhoodProof;        // Nullifier from ZKPassport
         // Timestamps
         uint256 verifiedAt;             // Contract verification timestamp
@@ -29,7 +29,7 @@ interface IConvexoPassport {
     event PassportMinted(
         address indexed holder,
         uint256 indexed tokenId,
-        bytes32 uniqueIdentifier,       // Cryptographic identifier (not PII)
+        bytes32 identifierHash,         // keccak256 hash of uniqueIdentifier (not PII)
         bytes32 personhoodProof,        // Nullifier (not PII)
         bool kycVerified,               // Verification trait
         bool faceMatchPassed,           // Verification trait
@@ -41,11 +41,11 @@ interface IConvexoPassport {
     event PassportRevoked(
         address indexed holder,
         uint256 indexed tokenId,
-        bytes32 uniqueIdentifier
+        bytes32 identifierHash
     );
 
     /// @notice Self-mint a passport using verification results (ONLY minting path)
-    /// @param uniqueIdentifier Hash of publicKey + scope for sybil resistance
+    /// @param uniqueIdentifier String identifier directly from ZKPassport SDK (hashed internally)
     /// @param personhoodProof Nullifier from ZKPassport verification
     /// @param sanctionsPassed Whether sanctions check passed
     /// @param isOver18 Whether age verification (18+) passed
@@ -54,8 +54,9 @@ interface IConvexoPassport {
     /// @return tokenId The minted token ID
     /// @dev This is the ONLY way to mint a Convexo Passport.
     ///      Enforces: 1 human → 1 ZKPassport → 1 NFT → 1 wallet
+    ///      The uniqueIdentifier string is hashed internally using keccak256
     function safeMintWithVerification(
-        bytes32 uniqueIdentifier,
+        string calldata uniqueIdentifier,
         bytes32 personhoodProof,
         bool sanctionsPassed,
         bool isOver18,
@@ -77,11 +78,12 @@ interface IConvexoPassport {
     /// @return identity The verified identity information
     function getVerifiedIdentity(address holder) external view returns (VerifiedIdentity memory identity);
 
-    /// @notice Check if a unique identifier has been used
-    /// @param uniqueIdentifier The identifier to check (hash of publicKey + scope)
+    /// @notice Check if a unique identifier string has been used
+    /// @param uniqueIdentifier The identifier string from ZKPassport SDK
     /// @return used Whether the identifier has been used
     /// @dev This is the SINGLE source of truth for sybil resistance
-    function isIdentifierUsed(bytes32 uniqueIdentifier) external view returns (bool used);
+    ///      The string is hashed internally using keccak256
+    function isIdentifierUsed(string calldata uniqueIdentifier) external view returns (bool used);
 
     /// @notice Get the total number of active passports
     /// @return count The number of active passports

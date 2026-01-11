@@ -32,10 +32,12 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
     /// @notice Base URI for token metadata
     string private _baseTokenURI;
 
-    /// @notice Mapping from unique identifier to address (prevents duplicate passports)
-    /// @dev uniqueIdentifier = keccak256(publicKey + scope) from ZKPassport
+    /// @notice Mapping from identifier hash to address (prevents duplicate passports)
+    /// @dev The key is keccak256(uniqueIdentifier) where uniqueIdentifier is the string from ZKPassport SDK
+    ///      ZKPassport computes uniqueIdentifier as: Poseidon2(ID_data + domain + scope)
     ///      This is the SINGLE source of truth for sybil resistance:
-    ///      One human → one ZKPassport → one uniqueIdentifier → one NFT
+    ///      One ID → one uniqueIdentifier per domain+scope → one NFT
+    ///      IMPORTANT: Pass uniqueIdentifier string directly from ZKPassport - contract hashes internally!
     mapping(bytes32 => address) private passportIdentifierToAddress;
 
     /// @notice Mapping from address to verified identity (stores ZKPassport outputs)
@@ -55,6 +57,9 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
 
     /// @notice Error thrown when unique identifier is already used
     error IdentifierAlreadyUsed();
+
+    /// @notice Error thrown when unique identifier string is empty
+    error InvalidIdentifier();
 
     /// @notice Error thrown when passport is not active
     error PassportNotActive();
@@ -78,22 +83,31 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
     /// @dev Simplified minting with verification results only.
     ///      Privacy-compliant: no PII stored, only boolean verification results.
     ///      Frontend passes the verification results from ZKPassport verification.
+    ///      uniqueIdentifier is passed as string directly from ZKPassport SDK and hashed internally.
     function safeMintWithVerification(
-        bytes32 uniqueIdentifier,
+        string calldata uniqueIdentifier,
         bytes32 personhoodProof,
         bool sanctionsPassed,
         bool isOver18,
         bool faceMatchPassed,
         string calldata ipfsMetadataHash
     ) external returns (uint256 tokenId) {
+        // Validate unique identifier is not empty
+        if (bytes(uniqueIdentifier).length == 0) {
+            revert InvalidIdentifier();
+        }
+
+        // Hash the string identifier for storage (sybil resistance)
+        bytes32 identifierHash = keccak256(bytes(uniqueIdentifier));
+
         // Check if user already has a passport
         if (balanceOf(msg.sender) > 0) {
             revert AlreadyHasPassport();
         }
 
         // Check if identifier has been used (sybil resistance)
-        // uniqueIdentifier ensures: 1 human = 1 passport
-        if (passportIdentifierToAddress[uniqueIdentifier] != address(0)) {
+        // identifierHash ensures: 1 human = 1 passport
+        if (passportIdentifierToAddress[identifierHash] != address(0)) {
             revert IdentifierAlreadyUsed();
         }
 
@@ -109,7 +123,7 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         // Store verification results as traits (no PII)
         verifiedUsers[msg.sender] = VerifiedIdentity({
             // Cryptographic identifiers (sybil resistance)
-            uniqueIdentifier: uniqueIdentifier,
+            identifierHash: identifierHash,
             personhoodProof: personhoodProof,
             // Timestamps
             verifiedAt: block.timestamp,
@@ -123,8 +137,8 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
             isOver18: isOver18
         });
 
-        // Map identifier to address (sybil resistance)
-        passportIdentifierToAddress[uniqueIdentifier] = msg.sender;
+        // Map identifier hash to address (sybil resistance)
+        passportIdentifierToAddress[identifierHash] = msg.sender;
 
         // Increment active passport count
         activePassportCount++;
@@ -133,7 +147,7 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         emit PassportMinted(
             msg.sender, 
             tokenId, 
-            uniqueIdentifier, 
+            identifierHash, 
             personhoodProof,
             true, // kycVerified
             faceMatchPassed,
@@ -155,7 +169,7 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         identity.isActive = false;
         activePassportCount--;
 
-        emit PassportRevoked(holder, tokenId, identity.uniqueIdentifier);
+        emit PassportRevoked(holder, tokenId, identity.identifierHash);
     }
 
     /// @inheritdoc IConvexoPassport
@@ -169,8 +183,9 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
     }
 
     /// @inheritdoc IConvexoPassport
-    function isIdentifierUsed(bytes32 uniqueIdentifier) external view returns (bool) {
-        return passportIdentifierToAddress[uniqueIdentifier] != address(0);
+    function isIdentifierUsed(string calldata uniqueIdentifier) external view returns (bool) {
+        bytes32 identifierHash = keccak256(bytes(uniqueIdentifier));
+        return passportIdentifierToAddress[identifierHash] != address(0);
     }
 
     /// @inheritdoc IConvexoPassport

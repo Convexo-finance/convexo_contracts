@@ -30,7 +30,7 @@ import {PassportGatedHook} from "../src/hooks/PassportGatedHook.sol";
 ///
 contract PredictAddresses is Script {
     /// @notice Default version - can be overridden via DEPLOY_VERSION env var
-    string public constant DEFAULT_VERSION = "convexo.v3.15";
+    string public constant DEFAULT_VERSION = "convexo.v3.16";
 
     /// @notice Admin address - MUST be same across all chains
     address public constant ADMIN = 0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8;

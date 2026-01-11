@@ -1005,7 +1005,7 @@
             "internalType": "struct IConvexoPassport.VerifiedIdentity",
             "components": [
               {
-                "name": "uniqueIdentifier",
+                "name": "identifierHash",
                 "type": "bytes32",
                 "internalType": "bytes32"
               },
@@ -1145,8 +1145,8 @@
         "inputs": [
           {
             "name": "uniqueIdentifier",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "type": "string",
+            "internalType": "string"
           }
         ],
         "outputs": [
@@ -1245,8 +1245,8 @@
         "inputs": [
           {
             "name": "uniqueIdentifier",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "type": "string",
+            "internalType": "string"
           },
           {
             "name": "personhoodProof",
@@ -1538,7 +1538,7 @@
             "internalType": "uint256"
           },
           {
-            "name": "uniqueIdentifier",
+            "name": "identifierHash",
             "type": "bytes32",
             "indexed": false,
             "internalType": "bytes32"
@@ -1593,7 +1593,7 @@
             "internalType": "uint256"
           },
           {
-            "name": "uniqueIdentifier",
+            "name": "identifierHash",
             "type": "bytes32",
             "indexed": false,
             "internalType": "bytes32"
@@ -1833,6 +1833,11 @@
       {
         "type": "error",
         "name": "IdentifierAlreadyUsed",
+        "inputs": []
+      },
+      {
+        "type": "error",
+        "name": "InvalidIdentifier",
         "inputs": []
       },
       {

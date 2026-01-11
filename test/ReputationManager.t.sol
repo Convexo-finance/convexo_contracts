@@ -76,7 +76,7 @@ contract ReputationManagerTest is Test {
 
     /// @notice Helper to mint passport via ZKPassport for a user
     function _mintPassportForUser(address user, uint256 seed) internal {
-        bytes32 uniqueIdentifier = bytes32(seed);
+        string memory uniqueIdentifier = string(abi.encodePacked("zkpassport-id-", vm.toString(seed)));
         bytes32 personhoodProof = bytes32(seed + 1000);
         vm.prank(user);
         passport.safeMintWithVerification(

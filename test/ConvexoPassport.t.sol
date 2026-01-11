@@ -32,7 +32,7 @@ contract ConvexoPassportSimplifiedTest is Test {
         bool isOver18,
         bool faceMatchPassed
     ) internal returns (uint256) {
-        bytes32 uniqueIdentifier = bytes32(seed);
+        string memory uniqueIdentifier = string(abi.encodePacked("zkpassport-id-", vm.toString(seed)));
         bytes32 personhoodProof = bytes32(seed + 1000);
         // Use actual Convexo Passport IPFS hash
         string memory ipfsHash = "bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4";
@@ -55,7 +55,8 @@ contract ConvexoPassportSimplifiedTest is Test {
     }
 
     function test_SafeMintWithVerification_Success() public {
-        bytes32 uniqueIdentifier = bytes32(uint256(1));
+        string memory uniqueIdentifier = "zkpassport-unique-id-12345";
+        bytes32 identifierHash = keccak256(bytes(uniqueIdentifier));
         bytes32 personhoodProof = bytes32(uint256(2));
         
         // Expect PassportMinted event
@@ -63,7 +64,7 @@ contract ConvexoPassportSimplifiedTest is Test {
         emit IConvexoPassport.PassportMinted(
             user1,
             0, // tokenId
-            uniqueIdentifier,
+            identifierHash,
             personhoodProof,
             true, // kycVerified (always true when minted)
             true, // faceMatchPassed
@@ -89,7 +90,7 @@ contract ConvexoPassportSimplifiedTest is Test {
         
         // Verify identity data
         IConvexoPassport.VerifiedIdentity memory identity = passport.getVerifiedIdentity(user1);
-        assertEq(identity.uniqueIdentifier, uniqueIdentifier);
+        assertEq(identity.identifierHash, identifierHash);
         assertEq(identity.personhoodProof, personhoodProof);
         assertTrue(identity.isActive);
         assertTrue(identity.kycVerified);
@@ -103,7 +104,7 @@ contract ConvexoPassportSimplifiedTest is Test {
     }
 
     function test_SafeMintWithVerification_RevertIfIdentifierUsed() public {
-        bytes32 uniqueIdentifier = bytes32(uint256(1));
+        string memory uniqueIdentifier = "zkpassport-same-id-used-twice";
         bytes32 personhoodProof1 = bytes32(uint256(2));
         bytes32 personhoodProof2 = bytes32(uint256(3));
         
@@ -139,7 +140,7 @@ contract ConvexoPassportSimplifiedTest is Test {
         vm.prank(user1);
         vm.expectRevert(Convexo_Passport.AlreadyHasPassport.selector);
         passport.safeMintWithVerification(
-            bytes32(uint256(2)), // Different identifier
+            "zkpassport-different-id-999", // Different identifier
             bytes32(uint256(3)), // Different proof
             true, // sanctionsPassed
             true, // isOver18
@@ -149,7 +150,7 @@ contract ConvexoPassportSimplifiedTest is Test {
     }
 
     function test_SafeMintWithVerification_StoresVariousTraits() public {
-        bytes32 uniqueIdentifier = bytes32(uint256(1));
+        string memory uniqueIdentifier = "zkpassport-traits-test-id";
         bytes32 personhoodProof = bytes32(uint256(2));
         
         vm.prank(user1);
@@ -247,15 +248,15 @@ contract ConvexoPassportSimplifiedTest is Test {
         assertEq(tokenURI, "https://lime-famous-condor-7.mypinata.cloud/ipfs/bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4");
     }
 
-    function test_GetVerifiedIdentity_EmptyForNonHolder() public {
+    function test_GetVerifiedIdentity_EmptyForNonHolder() public view {
         IConvexoPassport.VerifiedIdentity memory identity = passport.getVerifiedIdentity(user1);
         assertFalse(identity.isActive);
-        assertEq(identity.uniqueIdentifier, bytes32(0));
+        assertEq(identity.identifierHash, bytes32(0));
         assertEq(identity.personhoodProof, bytes32(0));
     }
 
-    function test_IsIdentifierUsed_FalseForUnused() public {
-        bytes32 unusedIdentifier = bytes32(uint256(999));
+    function test_IsIdentifierUsed_FalseForUnused() public view {
+        string memory unusedIdentifier = "zkpassport-unused-id-999";
         assertFalse(passport.isIdentifierUsed(unusedIdentifier));
     }
 }

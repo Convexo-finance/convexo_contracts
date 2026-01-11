@@ -295,10 +295,11 @@ function getReputationDetails(address user) returns (
 #### Write Functions
 
 ```typescript
-// Self-mint with ZKPassport proof (on-chain verification)
 // Self-mint with verification results (simplified)
+// uniqueIdentifier is passed directly as string from ZKPassport SDK
+// Contract hashes it internally with keccak256 for storage efficiency
 function safeMintWithVerification(
-    bytes32 uniqueIdentifier,     // Unique ID from ZKPassport
+    string uniqueIdentifier,      // Unique ID string from ZKPassport SDK (use directly!)
     bytes32 personhoodProof,      // Personhood proof from ZKPassport
     bool sanctionsPassed,         // Sanctions check result
     bool isOver18,                // Age verification result
@@ -314,7 +315,7 @@ function revokePassport(uint256 tokenId)
 ```typescript
 function holdsActivePassport(address holder) returns (bool)
 function getVerifiedIdentity(address holder) returns (VerifiedIdentity memory)
-function isIdentifierUsed(bytes32 uniqueIdentifier) returns (bool)
+function isIdentifierUsed(string uniqueIdentifier) returns (bool) // Pass string, hashed internally
 function getActivePassportCount() returns (uint256)
 function balanceOf(address owner) returns (uint256)
 function ownerOf(uint256 tokenId) returns (address)
@@ -324,7 +325,7 @@ function ownerOf(uint256 tokenId) returns (address)
 
 ```typescript
 struct VerifiedIdentity {
-    bytes32 uniqueIdentifier;
+    bytes32 identifierHash;   // keccak256 hash of uniqueIdentifier string
     bytes32 personhoodProof;
     uint256 verifiedAt;
     uint256 zkPassportTimestamp;
@@ -952,7 +953,6 @@ export function useVerificationStatus(address: `0x${string}` | undefined, chainI
 ```typescript
 // hooks/useMintPassport.ts
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { keccak256, toBytes } from 'viem';
 import { ConvexoPassportABI } from '../config/abis';
 import { getContracts } from '../config/contracts';
 
@@ -962,23 +962,26 @@ export function useMintPassport(chainId: number) {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  const mintWithZKPassport = async (params: ProofVerificationParams, isIDCard: boolean) => {
+  // Simplified: pass uniqueIdentifier string directly from ZKPassport SDK
+  // The contract handles keccak256 hashing internally for storage efficiency
+  const mintWithVerification = async (
+    uniqueIdentifier: string,  // Pass string directly from ZKPassport SDK!
+    personhoodProof: `0x${string}`,
+    sanctionsPassed: boolean,
+    isOver18: boolean,
+    faceMatchPassed: boolean,
+    ipfsMetadataHash: string
+  ) => {
     await writeContract({
       address: contracts.CONVEXO_PASSPORT as `0x${string}`,
       abi: ConvexoPassportABI,
-      functionName: 'safeMintWithZKPassport',
-      args: [params, isIDCard],
+      functionName: 'safeMintWithVerification',
+      args: [uniqueIdentifier, personhoodProof, sanctionsPassed, isOver18, faceMatchPassed, ipfsMetadataHash],
     });
   };
 
-  const generateIdentifier = (publicKey: string, scope: string): `0x${string}` => {
-    const combined = publicKey + scope.replace('0x', '');
-    return keccak256(toBytes(combined));
-  };Verification,
-    createVerificationResults
   return {
-    mintWithZKPassport,
-    generateIdentifier,
+    mintWithVerification,
     hash,
     isPending,
     isConfirming,
@@ -1399,4 +1402,4 @@ export function VaultCard({ vaultAddress }: VaultCardProps) {
 
 ---
 
-*Version 3.0 | Updated January 2026*
+*Version 3.16 | Updated January 2026 - String uniqueIdentifier support*

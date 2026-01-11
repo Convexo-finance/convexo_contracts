@@ -48,7 +48,7 @@ contract DeployDeterministic is Script {
     /// @notice Default salt version - can be overridden via DEPLOY_VERSION env var
     /// @dev Change version to get new addresses after contract changes
     ///      Example: DEPLOY_VERSION=v3.1 ./scripts/deploy.sh ethereum-sepolia
-    string public constant DEFAULT_VERSION = "convexo.v3.15";
+    string public constant DEFAULT_VERSION = "convexo.v3.16";
 
     /// @notice Admin address - MUST be same across all chains for same addresses
     address public constant ADMIN = 0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8;

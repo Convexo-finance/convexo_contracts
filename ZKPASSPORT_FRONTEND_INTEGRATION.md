@@ -1,6 +1,6 @@
 # ZKPassport Frontend Integration Guide
 
-**Version 3.1** - Simplified verification with direct verification results  
+**Version 3.16** - String uniqueIdentifier support (pass SDK value directly!)  
 **IPFS**: Pinata Gateway `lime-famous-condor-7.mypinata.cloud`
 
 ---
@@ -213,11 +213,10 @@ export async function createVerificationRequest() {
 }
 ```
 
-### Handle Verification Result & Extract Unique Identifier
+### Handle Verification Result & Get Unique Identifier
 
 ```typescript
 // lib/zkpassport.ts
-import { keccak256, toBytes, toHex } from 'viem';
 
 export interface VerificationResult {
   verified: boolean;
@@ -234,31 +233,25 @@ export interface VerificationResult {
       fullname?: string;
     };
   };
-  uniqueIdentifier?: `0x${string}`; // The unique identifier for minting
+  uniqueIdentifier?: string; // The unique identifier string from ZKPassport SDK (use directly!)
 }
 
-// Extract unique identifier from ZKPassport proof
-export function extractUniqueIdentifier(proof: any): `0x${string}` {
-  // ZKPassport provides publicKey and scope
-  // Unique identifier = keccak256(publicKey + scope)
-  const publicKey = proof.publicKey.startsWith('0x') 
-    ? proof.publicKey 
-    : `0x${proof.publicKey}`;
-  
-  const scope = proof.scope.startsWith('0x')
-    ? proof.scope
-    : `0x${proof.scope}`;
-
-  // Generate unique identifier (same as contract does)
-  const uniqueIdentifier = keccak256(
-    toBytes(publicKey + scope.slice(2)) // Concatenate without 0x prefix
-  ) as `0x${string}`;
-
-  return uniqueIdentifier;
-}
-
+/**
+ * IMPORTANT: Use the uniqueIdentifier directly from ZKPassport SDK!
+ * 
+ * ZKPassport computes the uniqueIdentifier using Poseidon2 hash:
+ *   uniqueIdentifier = Poseidon2(ID_data + domain + scope)
+ * 
+ * This ensures:
+ * - Same ID + same domain + same scope = SAME identifier (sybil resistance)
+ * - Different IDs = Different identifiers (unique per person)
+ * - Different domains = Different identifiers (privacy between services)
+ * 
+ * DO NOT manually compute the identifier! Use what ZKPassport provides.
+ */
 export function onResult(callback: (result: VerificationResult) => void) {
-  zkPassport.onResult(({ verified, result, proof }) => {
+  // ZKPassport SDK provides uniqueIdentifier directly as a string
+  zkPassport.onResult(({ verified, result, uniqueIdentifier }) => {
     const verificationResult: VerificationResult = {
       verified,
       result: {
@@ -274,7 +267,9 @@ export function onResult(callback: (result: VerificationResult) => void) {
           fullname: result.disclosed?.fullname,
         },
       },
-      uniqueIdentifier: proof ? extractUniqueIdentifier(proof) : undefined,
+      // Use uniqueIdentifier directly as string from ZKPassport SDK!
+      // DO NOT convert or hash it - the contract handles hashing internally
+      uniqueIdentifier: uniqueIdentifier,
     };
 
     callback(verificationResult);
@@ -291,7 +286,7 @@ export function onResult(callback: (result: VerificationResult) => void) {
 import { useState, useEffect } from 'react';
 import { createVerificationRequest, onResult, VerificationResult } from '@/lib/zkpassport';
 
-export function IdentityVerification({ onVerified }: { onVerified: (uniqueIdentifier: `0x${string}`) => void }) {
+export function IdentityVerification({ onVerified }: { onVerified: (uniqueIdentifier: string) => void }) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -406,7 +401,7 @@ import ConvexoPassportABI from '@/abis/Convexo_Passport.json';
 import { CONVEXO_PASSPORT_ADDRESSES } from '@/lib/constants';
 
 interface MintPassportNFTProps {
-  uniqueIdentifier: `0x${string}`;
+  uniqueIdentifier: string; // String from ZKPassport SDK - pass directly to contract!
 }
 
 export function MintPassportNFT({ uniqueIdentifier }: MintPassportNFTProps) {
@@ -600,10 +595,11 @@ import { IdentityVerification } from './IdentityVerification';
 import { MintPassportNFT } from './MintPassportNFT';
 
 export function PassportOnboarding() {
-  const [uniqueIdentifier, setUniqueIdentifier] = useState<`0x${string}` | null>(null);
+  // uniqueIdentifier is now a string from ZKPassport SDK - no conversion needed!
+  const [uniqueIdentifier, setUniqueIdentifier] = useState<string | null>(null);
   const [step, setStep] = useState<'verify' | 'mint'>('verify');
 
-  const handleVerified = (identifier: `0x${string}`) => {
+  const handleVerified = (identifier: string) => {
     setUniqueIdentifier(identifier);
     setStep('mint');
   };
@@ -755,21 +751,26 @@ const MintPassportWithIPFS = ({ verificationResults }) => {
 ### Simplified Contract Interface
 
 ```solidity
+// uniqueIdentifier is passed directly as string from ZKPassport SDK
+// Contract hashes it internally with keccak256 for storage efficiency
 function safeMintWithVerification(
-    bytes32 uniqueIdentifier,     // Unique ID from ZKPassport
-    bytes32 personhoodProof,      // Personhood proof (nullifier)
-    bool sanctionsPassed,         // Sanctions check result
-    bool isOver18,                // Age verification result  
-    bool faceMatchPassed,         // Face match result
-    string calldata ipfsMetadataHash // IPFS hash for NFT metadata
+    string calldata uniqueIdentifier, // Use string directly from ZKPassport SDK!
+    bytes32 personhoodProof,          // Personhood proof (nullifier)
+    bool sanctionsPassed,             // Sanctions check result
+    bool isOver18,                    // Age verification result  
+    bool faceMatchPassed,             // Face match result
+    string calldata ipfsMetadataHash  // IPFS hash for NFT metadata
 ) external returns (uint256 tokenId) {
     // Check if user already has a passport
     if (balanceOf(msg.sender) > 0) {
         revert AlreadyHasPassport();
     }
 
+    // Hash identifier for storage (contract handles this internally)
+    bytes32 identifierHash = keccak256(bytes(uniqueIdentifier));
+
     // Check if identifier has been used (sybil resistance)
-    if (passportIdentifierToAddress[uniqueIdentifier] != address(0)) {
+    if (passportIdentifierToAddress[identifierHash] != address(0)) {
         revert IdentifierAlreadyUsed();
     }
 
@@ -811,7 +812,7 @@ function getVerifiedIdentity(address holder) external view returns (VerifiedIden
 
 // Returns:
 struct VerifiedIdentity {
-    bytes32 uniqueIdentifier;      // Cryptographic identifier
+    bytes32 identifierHash;        // keccak256 hash of uniqueIdentifier string
     bytes32 personhoodProof;       // Nullifier from ZKPassport
     uint256 verifiedAt;            // Contract verification timestamp
     uint256 zkPassportTimestamp;   // Original ZKPassport verification time
@@ -905,7 +906,7 @@ Before minting, check:
 - [ ] Set up environment variables
 - [ ] Initialize ZKPassport with app domain
 - [ ] Create verification request function
-- [ ] Implement `extractUniqueIdentifier()` helper
+- [ ] Use `uniqueIdentifier` directly from ZKPassport callback (DO NOT compute manually!)
 - [ ] Create verification component
 - [ ] Create mint NFT component
 - [ ] Add ETH balance check

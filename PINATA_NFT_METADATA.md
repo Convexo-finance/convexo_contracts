@@ -255,8 +255,10 @@ For dynamic traits (like credit scores), consider:
 ### Minting with IPFS
 
 ```solidity
+// uniqueIdentifier is passed directly as string from ZKPassport SDK
+// Contract hashes it internally with keccak256 for storage efficiency
 function safeMintWithVerification(
-    bytes32 uniqueIdentifier,
+    string calldata uniqueIdentifier, // Use string directly from ZKPassport SDK!
     bytes32 personhoodProof,
     bool sanctionsPassed,
     bool isOver18,

@@ -1,6 +1,6 @@
 # Convexo Contracts Reference
 
-**Version 3.0** | Solidity ^0.8.27 | **Privacy-Enhanced Verification**
+**Version 3.16** | Solidity ^0.8.27 | **String uniqueIdentifier Support**
 
 > **📍 Contract Addresses:** See [addresses.json](./addresses.json)
 
@@ -73,13 +73,15 @@ function getReputationDetails(address user) returns (
 
 ```solidity
 // Simplified mint with verification results and IPFS metadata
+// uniqueIdentifier is passed directly as string from ZKPassport SDK
+// Contract hashes it internally with keccak256 for storage efficiency
 function safeMintWithVerification(
-    bytes32 uniqueIdentifier,     // Unique ID from ZKPassport
-    bytes32 personhoodProof,      // Personhood proof from ZKPassport
-    bool sanctionsPassed,         // Sanctions check result
-    bool isOver18,                // Age verification result
-    bool faceMatchPassed,         // Private face match result
-    string calldata ipfsMetadataHash // IPFS hash for NFT metadata
+    string calldata uniqueIdentifier, // Unique ID string from ZKPassport SDK (use directly!)
+    bytes32 personhoodProof,          // Personhood proof from ZKPassport
+    bool sanctionsPassed,             // Sanctions check result
+    bool isOver18,                    // Age verification result
+    bool faceMatchPassed,             // Private face match result
+    string calldata ipfsMetadataHash  // IPFS hash for NFT metadata
 ) returns (uint256 tokenId)
 
 // Revoke passport
@@ -91,7 +93,7 @@ function revokePassport(uint256 tokenId) // REVOKER_ROLE
 ```solidity
 function holdsActivePassport(address holder) returns (bool)
 function getVerifiedIdentity(address holder) returns (VerifiedIdentity memory)
-function isIdentifierUsed(bytes32 uniqueIdentifier) returns (bool)
+function isIdentifierUsed(string calldata uniqueIdentifier) returns (bool) // Pass string, hashed internally
 function getActivePassportCount() returns (uint256)
 ```
 
@@ -99,7 +101,7 @@ function getActivePassportCount() returns (uint256)
 
 ```solidity
 struct VerifiedIdentity {
-    bytes32 uniqueIdentifier;
+    bytes32 identifierHash;   // keccak256 hash of uniqueIdentifier string
     bytes32 personhoodProof;
     uint256 verifiedAt;
     uint256 zkPassportTimestamp;
@@ -782,8 +784,8 @@ event VerificationMinted(address indexed user, uint256 tokenId, uint256 timestam
 
 ### Passport Events
 ```solidity
-event PassportMinted(address indexed holder, uint256 tokenId, bytes32 uniqueIdentifier, ...)
-event PassportRevoked(address indexed holder, uint256 tokenId, bytes32 uniqueIdentifier)
+event PassportMinted(address indexed holder, uint256 tokenId, bytes32 identifierHash, ...)
+event PassportRevoked(address indexed holder, uint256 tokenId, bytes32 identifierHash)
 ```
 
 ### Vault Events
