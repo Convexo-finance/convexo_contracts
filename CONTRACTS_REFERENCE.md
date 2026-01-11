@@ -65,22 +65,22 @@ function getReputationDetails(address user) returns (
 
 ## Convexo_Passport
 
-Soulbound NFT for ZKPassport-verified individuals (Tier 1).
+**Purpose**: Soulbound NFT for ZKPassport-verified individuals (Tier 1)  
+**IPFS Integration**: Pinata with custom gateway `lime-famous-condor-7.mypinata.cloud`  
+**Image Hash**: `bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4`
 
 ### Write Functions
 
 ```solidity
-// Self-mint with ZKPassport proof (on-chain verification)
-function safeMintWithZKPassport(
-    ProofVerificationParams calldata params,
-    bool isIDCard
+// Simplified mint with verification results and IPFS metadata
+function safeMintWithVerification(
+    bytes32 uniqueIdentifier,     // Unique ID from ZKPassport
+    bytes32 personhoodProof,      // Personhood proof from ZKPassport
+    bool sanctionsPassed,         // Sanctions check result
+    bool isOver18,                // Age verification result
+    bool faceMatchPassed,         // Private face match result
+    string calldata ipfsMetadataHash // IPFS hash for NFT metadata
 ) returns (uint256 tokenId)
-
-// Self-mint with unique identifier (off-chain verification)
-function safeMintWithIdentifier(bytes32 uniqueIdentifier) returns (uint256 tokenId)
-
-// Admin mint
-function safeMint(address to, string memory uri) returns (uint256 tokenId)
 
 // Revoke passport
 function revokePassport(uint256 tokenId) // REVOKER_ROLE
@@ -535,7 +535,9 @@ function hasMinterCallback(address account) returns (bool)
 
 ## Limited_Partners_Individuals (NFT Contract)
 
-**Purpose:** Soulbound NFT for verified individual Limited Partners (Tier 2).
+**Purpose:** Soulbound NFT for verified individual Limited Partners (Tier 2)  
+**IPFS Integration**: Pinata with custom gateway `lime-famous-condor-7.mypinata.cloud`  
+**Image Hash**: `bafkreib7mkjzpdm3id6st6d5vsxpn7v5h6sxeiswejjmrbcb5yoagaf4em`
 
 **Architecture:** This is the ERC721 NFT contract with verifier callback:
 - Admin manually mints after verification approval
@@ -582,7 +584,9 @@ function verifierContract() returns (address) // Immutable verifier address
 
 ## Limited_Partners_Business (NFT Contract)
 
-**Purpose:** Soulbound NFT for verified business Limited Partners (Tier 2).
+**Purpose:** Soulbound NFT for verified business Limited Partners (Tier 2)  
+**IPFS Integration**: Pinata with custom gateway `lime-famous-condor-7.mypinata.cloud`  
+**Image Hash**: `bafkreiejesvgsvohwvv7q5twszrbu5z6dnpke6sg5cdiwgn2rq7dilu33m`
 
 **Architecture:** This is the ERC721 NFT contract with verifier callback:
 - Admin manually mints after verification approval
@@ -632,6 +636,49 @@ function getTokenState(uint256 tokenId) returns (bool)
 function getCompanyName(uint256 tokenId) returns (string memory) // Public
 function getBusinessInfo(uint256 tokenId) returns (BusinessInfo memory) // Admin only
 function verifierContract() returns (address) // Immutable verifier address
+```
+
+---
+
+## Ecreditscoring (NFT Contract)
+
+**Purpose:** Soulbound NFT for users with AI Credit Score approval (Tier 3)  
+**IPFS Integration**: Pinata with custom gateway `lime-famous-condor-7.mypinata.cloud`  
+**Image Hash**: `bafkreignxas6gqi7it5ng6muoykujxlgxxc4g7rr6sqvwgdfwveqf2zw3e`  
+**Prerequisites**: Must hold LP_Individuals OR LP_Business NFT
+
+### Write Functions
+
+```solidity
+// Mint credit NFT (requires LP NFT)
+function safeMint(
+    address to,
+    uint256 score,                // Credit score (0-100)
+    CreditTier tier,             // Bronze, Silver, Gold, Platinum
+    uint256 maxLoanAmount,       // Maximum loan amount allowed
+    string memory referenceId,   // External reference ID
+    string memory uri            // IPFS metadata URI
+) returns (uint256) // MINTER_ROLE
+
+// Update credit info for re-scoring
+function updateCreditInfo(
+    uint256 tokenId,
+    uint256 score,
+    CreditTier tier,
+    uint256 maxLoanAmount,
+    string memory referenceId,
+    uint256 scoredAt
+) // MINTER_ROLE
+```
+
+### Read Functions
+
+```solidity
+function hasLPStatus(address user) returns (bool)
+function canReceiveEcreditscoringNFT(address user) returns (bool)
+function getCreditInfo(uint256 tokenId) returns (CreditInfo memory)
+function getCreditTier(uint256 tokenId) returns (CreditTier)
+function getMaxLoanAmount(uint256 tokenId) returns (uint256)
 ```
 
 ---

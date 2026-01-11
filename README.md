@@ -3,7 +3,7 @@
 **Reducing the Gap funding for SMEs in Latin America using stablecoins, NFT-permissioned liquidity pools and vaults.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/Tests-91%2F91%20Passing-brightgreen)](./test)
+[![Tests](https://img.shields.io/badge/Tests-87%2F87%20Passing-brightgreen)](./test)
 [![Deployed](https://img.shields.io/badge/Deployed-Base%20Mainnet-blue)](https://basescan.org)
 [![Deployed](https://img.shields.io/badge/Deployed-Unichain%20Mainnet-success)](https://unichain.blockscout.com)
 [![Version](https://img.shields.io/badge/Version-3.0-purple)](./CONTRACTS_REFERENCE.md)
@@ -273,7 +273,7 @@ forge test --gas-report
 forge test -vvv
 ```
 
-**Test Results:** ✅ 91/91 tests passing (100% coverage)
+**Test Results:** ✅ 87/87 tests passing (100% coverage)
 
 ---
 
@@ -337,7 +337,7 @@ forge test -vvv
 forge test --gas-report
 ```
 
-**Test Results:** ✅ 91/91 tests passing (100% coverage)
+**Test Results:** ✅ 87/87 tests passing (100% coverage)
 
 ### Available Scripts
 
@@ -454,7 +454,7 @@ If you modify contract code and need new addresses, bump the version:
 
 ```bash
 # Option 1: Use environment variable (recommended)
-DEPLOY_VERSION=convexo.v3.1 ./scripts/deploy.sh ethereum-sepolia
+DEPLOY_VERSION=convexo.v3.15 ./scripts/deploy.sh ethereum-sepolia
 
 # Option 2: Edit default version in script/DeployDeterministic.s.sol
 # Change: string public constant DEFAULT_VERSION = "convexo.v3.1";
@@ -776,7 +776,7 @@ All 14 contracts deployed, verified, and ready for production.
 
 **Development Status:**
 - ✅ 14 smart contracts implemented
-- ✅ Comprehensive testing (91 tests, 100% coverage)
+- ✅ Comprehensive testing (87 tests, 100% coverage)
 - ✅ Deployment scripts unified (deterministic via CREATE2)
 - ✅ Documentation complete
 - ✅ Security review complete
@@ -794,10 +794,10 @@ All 14 contracts deployed, verified, and ready for production.
 - ✅ Flexible repayment system
 
 **Test Results:**
-- ✅ NFT Tests: 46/46 passing
-- ✅ Verifier Tests: 21/21 passing
-- ✅ Integration Tests: 24/24 passing
-- ✅ Total: 91/91 tests passing (100% coverage)
+- ✅ NFT Tests: 37/37 passing
+- ✅ Verifier Tests: 30/30 passing  
+- ✅ Integration Tests: 20/20 passing
+- ✅ Total: 87/87 tests passing (100% coverage)
 
 ---
 

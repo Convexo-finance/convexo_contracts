@@ -8,7 +8,7 @@
 #   ./scripts/update-addresses.sh <chain_id>   # Update specific chain
 #
 # Environment:
-#   DEPLOY_VERSION=convexo.v3.1  # Optional: specify version for address computation
+#   DEPLOY_VERSION - Read from .env file automatically
 
 set -e
 
@@ -16,6 +16,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BROADCAST_DIR="$PROJECT_DIR/broadcast/DeployDeterministic.s.sol"
 ADDRESSES_FILE="$PROJECT_DIR/addresses.json"
+
+# Load .env file if it exists
+if [ -f "$PROJECT_DIR/.env" ]; then
+    source "$PROJECT_DIR/.env"
+fi
 
 # Check if jq is installed
 if ! command -v jq &> /dev/null; then
@@ -127,7 +132,7 @@ update_chain_addresses() {
 
     local temp_json=$(mktemp)
     local deploy_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    local version="${DEPLOY_VERSION:-convexo.v3.1}"
+    local version="${DEPLOY_VERSION:-convexo.v3.15}"
 
     # Start fresh for this chain (remove legacy data)
     if [ -f "$ADDRESSES_FILE" ]; then

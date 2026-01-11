@@ -48,7 +48,7 @@ contract DeployDeterministic is Script {
     /// @notice Default salt version - can be overridden via DEPLOY_VERSION env var
     /// @dev Change version to get new addresses after contract changes
     ///      Example: DEPLOY_VERSION=v3.1 ./scripts/deploy.sh ethereum-sepolia
-    string public constant DEFAULT_VERSION = "convexo.v3.11";
+    string public constant DEFAULT_VERSION = "convexo.v3.15";
 
     /// @notice Admin address - MUST be same across all chains for same addresses
     address public constant ADMIN = 0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8;
@@ -181,12 +181,11 @@ contract DeployDeterministic is Script {
         console.log("========================================\n");
 
         // Predict addresses in deployment order
-        address zkVerifier = getZKPassportVerifier();
 
-        // 1. Convexo Passport
+        // 1. Convexo Passport (constructor takes: admin, initialBaseURI)
         address predictedPassport = SafeSingletonDeployer.computeAddress(
             type(Convexo_Passport).creationCode,
-            abi.encode(ADMIN, zkVerifier, CONVEXO_PASSPORT_METADATA_URI),
+            abi.encode(ADMIN, CONVEXO_PASSPORT_METADATA_URI),
             getSalt("ConvexoPassport")
         );
         console.log("Convexo_Passport:", predictedPassport);
@@ -296,12 +295,11 @@ contract DeployDeterministic is Script {
         // ========================================================================
         console.log("Phase 1: Deploying Core Contracts...\n");
 
-        // 1. Convexo Passport (no dependencies)
-        address zkVerifier = getZKPassportVerifier();
+        // 1. Convexo Passport (constructor takes: admin, initialBaseURI)
         convexoPassport = deployIfNeeded(
             deployerPrivateKey,
             type(Convexo_Passport).creationCode,
-            abi.encode(ADMIN, zkVerifier, CONVEXO_PASSPORT_METADATA_URI),
+            abi.encode(ADMIN, CONVEXO_PASSPORT_METADATA_URI),
             getSalt("ConvexoPassport"),
             "Convexo_Passport"
         );

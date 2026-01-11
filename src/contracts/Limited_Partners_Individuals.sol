@@ -65,7 +65,7 @@ contract Limited_Partners_Individuals is ERC721, ERC721Burnable, ERC721URIStorag
     /// @dev After minting, calls verifier to update status to Minted
     /// @param to Address to mint to
     /// @param verificationId The Veriff session ID used for verification
-    /// @param uri Token metadata URI
+    /// @param uri Token metadata URI (use: https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreib7mkjzpdm3id6st6d5vsxpn7v5h6sxeiswejjmrbcb5yoagaf4em)
     /// @return tokenId The minted token ID
     function safeMint(address to, string memory verificationId, string memory uri)
         public

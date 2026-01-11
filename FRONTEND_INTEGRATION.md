@@ -1,6 +1,7 @@
 # Frontend Integration Guide
 
-**Version**: 3.0 | **Solidity**: ^0.8.27 | **Framework**: React + Viem + Wagmi
+**Version**: 3.0 | **Solidity**: ^0.8.27 | **Framework**: React + Viem + Wagmi  
+**IPFS**: Pinata Gateway `lime-famous-condor-7.mypinata.cloud`
 
 ---
 
@@ -8,10 +9,11 @@
 
 1. [Quick Setup](#quick-setup)
 2. [Contract Addresses](#contract-addresses)
-3. [Tier System](#tier-system)
-4. [Contract Functions Reference](#contract-functions-reference)
-5. [React Hooks](#react-hooks)
-6. [Complete Examples](#complete-examples)
+3. [IPFS Integration](#ipfs-integration)
+4. [Tier System](#tier-system)
+5. [Contract Functions Reference](#contract-functions-reference)
+6. [React Hooks](#react-hooks)
+7. [Complete Examples](#complete-examples)
 
 ---
 
@@ -57,6 +59,93 @@ export {
   ContractSignerABI,
   PoolRegistryABI,
   PriceFeedManagerABI,
+};
+```
+
+---
+
+## IPFS Integration
+
+### Pinata Configuration
+
+```typescript
+// config/ipfs.ts
+export const PINATA_CONFIG = {
+  gateway: 'lime-famous-condor-7.mypinata.cloud',
+  apiKey: process.env.PINATA_API_KEY,
+  secretKey: process.env.PINATA_SECRET_KEY,
+};
+
+export const NFT_IMAGES = {
+  convexoPassport: 'bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4',
+  lpBusiness: 'bafkreiejesvgsvohwvv7q5twszrbu5z6dnpke6sg5cdiwgn2rq7dilu33m',
+  lpIndividuals: 'bafkreib7mkjzpdm3id6st6d5vsxpn7v5h6sxeiswejjmrbcb5yoagaf4em',
+  ecreditscoring: 'bafkreignxas6gqi7it5ng6muoykujxlgxxc4g7rr6sqvwgdfwveqf2zw3e'
+};
+
+// Helper function to build IPFS URLs
+export const buildIPFSUrl = (hash: string): string => 
+  `https://${PINATA_CONFIG.gateway}/ipfs/${hash}`;
+```
+
+### Upload NFT Metadata
+
+```typescript
+// utils/metadata.ts
+import { PINATA_CONFIG, NFT_IMAGES, buildIPFSUrl } from '../config/ipfs';
+
+export interface NFTMetadata {
+  name: string;
+  description: string;
+  image: string;
+  external_url: string;
+  attributes: Array<{
+    trait_type: string;
+    value: string;
+  }>;
+}
+
+export const createPassportMetadata = (tokenId: number, traits: {
+  kycVerified: boolean;
+  faceMatchPassed: boolean;
+  sanctionsPassed: boolean;
+  isOver18: boolean;
+}): NFTMetadata => ({
+  name: `Convexo Passport #${tokenId}`,
+  description: "Soulbound NFT representing verified identity for Tier 1 access in the Convexo Protocol. It represents a privacy-compliant verification of identity without storing personal information. This passport enables swap and liquidity provision in gated Uniswap V4 liquidity pools, create OTC and P2P orders and lending options within the vaults created by verified lenders.",
+  image: buildIPFSUrl(NFT_IMAGES.convexoPassport),
+  external_url: "https://convexo.io",
+  attributes: [
+    { trait_type: "Tier", value: "1" },
+    { trait_type: "Type", value: "Passport" },
+    { trait_type: "KYC Verified", value: traits.kycVerified ? "Yes" : "No" },
+    { trait_type: "Face Match Passed", value: traits.faceMatchPassed ? "Yes" : "No" },
+    { trait_type: "Sanctions Check Passed", value: traits.sanctionsPassed ? "Yes" : "No" },
+    { trait_type: "Age Verification", value: traits.isOver18 ? "18+" : "Under 18" },
+    { trait_type: "Soulbound", value: "True" },
+    { trait_type: "Network Access", value: "LP Pools" },
+    { trait_type: "Verification Method", value: "ZKPassport" }
+  ]
+});
+
+export const uploadMetadataToPinata = async (metadata: NFTMetadata): Promise<string> => {
+  const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'pinata_api_key': PINATA_CONFIG.apiKey!,
+      'pinata_secret_api_key': PINATA_CONFIG.secretKey!,
+    },
+    body: JSON.stringify({
+      pinataContent: metadata,
+      pinataMetadata: {
+        name: `${metadata.name} Metadata`
+      }
+    })
+  });
+
+  const result = await response.json();
+  return result.IpfsHash;
 };
 ```
 
@@ -207,20 +296,13 @@ function getReputationDetails(address user) returns (
 
 ```typescript
 // Self-mint with ZKPassport proof (on-chain verification)
-function safeMintWithZKPassport(
-    ProofVerificationParams calldata params,
-    bool isIDCard
-) returns (uint256 tokenId)
-
-// Self-mint with unique identifier (off-chain verification)
-function safeMintWithIdentifier(
-    bytes32 uniqueIdentifier
-) returns (uint256 tokenId)
-
-// Admin mint (MINTER_ROLE required)
-function safeMint(
-    address to,
-    string memory uri
+// Self-mint with verification results (simplified)
+function safeMintWithVerification(
+    bytes32 uniqueIdentifier,     // Unique ID from ZKPassport
+    bytes32 personhoodProof,      // Personhood proof from ZKPassport
+    bool sanctionsPassed,         // Sanctions check result
+    bool isOver18,                // Age verification result
+    bool faceMatchPassed          // Private face match result
 ) returns (uint256 tokenId)
 
 // Revoke passport (REVOKER_ROLE required)
@@ -880,22 +962,22 @@ export function useMintPassport(chainId: number) {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  const mintWithIdentifier = async (uniqueIdentifier: `0x${string}`) => {
+  const mintWithZKPassport = async (params: ProofVerificationParams, isIDCard: boolean) => {
     await writeContract({
       address: contracts.CONVEXO_PASSPORT as `0x${string}`,
       abi: ConvexoPassportABI,
-      functionName: 'safeMintWithIdentifier',
-      args: [uniqueIdentifier],
+      functionName: 'safeMintWithZKPassport',
+      args: [params, isIDCard],
     });
   };
 
   const generateIdentifier = (publicKey: string, scope: string): `0x${string}` => {
     const combined = publicKey + scope.replace('0x', '');
     return keccak256(toBytes(combined));
-  };
-
+  };Verification,
+    createVerificationResults
   return {
-    mintWithIdentifier,
+    mintWithZKPassport,
     generateIdentifier,
     hash,
     isPending,
@@ -1274,7 +1356,7 @@ export function VaultCard({ vaultAddress }: VaultCardProps) {
 ┌─────────────────────────────────────────────────────────────────┐
 │  TIER 1: PASSPORT (Self-Mint via ZKPassport)                    │
 │  ─────────────────────────────────────────                      │
-│  User → ZKPassport Verify → safeMintWithIdentifier() → NFT      │
+│  User → ZKPassport Verify → safeMintWithVerification() → NFT       │
 │  Access: LP Pools, Vault Investments, Treasury Creation         │
 └─────────────────────────────────────────────────────────────────┘
 

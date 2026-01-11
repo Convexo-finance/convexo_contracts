@@ -4,7 +4,7 @@ out/
 
 # Broadcast deployment logs
 # Track broadcast directory structure
-!/broadcast
+/broadcast
 # Track only run-latest.json files (most recent deployments per network)
 !/broadcast/**/run-latest.json
 # Ignore all timestamped deployment files (historical records)

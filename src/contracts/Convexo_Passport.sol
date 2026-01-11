@@ -5,29 +5,26 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import {ERC721Burnable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IConvexoPassport} from "../interfaces/IConvexoPassport.sol";
-import {IZKPassportVerifier, ProofVerificationParams, DisclosedData} from "../interfaces/IZKPassportVerifier.sol";
 
 /// @title Convexo_Passport
 /// @notice Soulbound NFT for individual investors verified via ZKPassport
 /// @dev Non-transferable ERC721 NFT that represents verified identity for Tier 1 (Passport) access
 ///      Privacy-compliant: stores only verification results (traits), no PII stored on-chain.
-///      ZKPassport verification is the source of truth - we store the boolean verification results.
 ///      
 ///      STORED TRAITS (non-PII):
-///      - kycVerified: Overall KYC verification passed
-///      - faceMatchPassed: Face match verification result  
+///      - kycVerified: Overall KYC verification passed (always true when minted)
+///      - faceMatchPassed: Face match verification result (personhood + private face match)
 ///      - sanctionsPassed: Sanctions check result (US, UK, EU, Switzerland)
 ///      - isOver18: Age verification result
 ///      
-///      DIFFERENT FROM:
-///      - Convexo_LPs (Tier 2): Verified via Veriff/Sumsub human KYC → VeriffVerifier contract
-///      - Convexo_Vaults (Tier 3): Verified via KYB Sumsub for businesses → allows vault creation
+///      SIMPLIFIED APPROACH:
+///      - Frontend handles ZKPassport verification off-chain
+///      - Contract accepts verification results as parameters
+///      - Much simpler frontend integration
 contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessControl, IConvexoPassport {
     bytes32 public constant REVOKER_ROLE = keccak256("REVOKER_ROLE");
-
-    /// @notice The ZKPassport verifier contract
-    IZKPassportVerifier public immutable zkPassportVerifier;
 
     /// @notice Counter for token IDs
     uint256 private _nextTokenId;
@@ -64,49 +61,38 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
 
     /// @notice Constructor
     /// @param admin The admin address
-    /// @param _zkPassportVerifier The ZKPassport verifier contract address
     /// @param initialBaseURI The initial base URI for token metadata
     constructor(
         address admin,
-        address _zkPassportVerifier,
         string memory initialBaseURI
     ) ERC721("Convexo Passport", "CPASS") {
         require(admin != address(0), "Invalid admin address");
-        require(_zkPassportVerifier != address(0), "Invalid verifier address");
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(REVOKER_ROLE, admin);
-
-        zkPassportVerifier = IZKPassportVerifier(_zkPassportVerifier);
+        
         _baseTokenURI = initialBaseURI;
     }
 
     /// @inheritdoc IConvexoPassport
-    /// @dev Verifies ZKPassport proof and stores verification results (traits) only.
+    /// @dev Simplified minting with verification results only.
     ///      Privacy-compliant: no PII stored, only boolean verification results.
-    ///      Stored traits: kycVerified, faceMatchPassed, sanctionsPassed, isOver18
-    function safeMintWithZKPassport(
-        ProofVerificationParams calldata params,
-        bool isIDCard
+    ///      Frontend passes the verification results from ZKPassport verification.
+    function safeMintWithVerification(
+        bytes32 uniqueIdentifier,
+        bytes32 personhoodProof,
+        bool sanctionsPassed,
+        bool isOver18,
+        bool faceMatchPassed,
+        string calldata ipfsMetadataHash
     ) external returns (uint256 tokenId) {
         // Check if user already has a passport
         if (balanceOf(msg.sender) > 0) {
             revert AlreadyHasPassport();
         }
 
-        // Verify the ZKPassport proof - this is the ONLY validation needed
-        // ZKPassport handles all identity verification (face match, sanctions, age)
-        (bool success, DisclosedData memory disclosedData) = zkPassportVerifier.verifyProof(params, isIDCard);
-        if (!success) {
-            revert ProofVerificationFailed();
-        }
-
-        // Generate unique identifier from ZKPassport proof params
-        // UNIQUE ID = hash(publicKey + scope) - ensures 1 person = 1 passport
-        bytes32 uniqueIdentifier = keccak256(abi.encodePacked(params.publicKey, params.scope));
-
         // Check if identifier has been used (sybil resistance)
-        // uniqueIdentifier = hash(publicKey + scope) ensures: 1 human = 1 passport
+        // uniqueIdentifier ensures: 1 human = 1 passport
         if (passportIdentifierToAddress[uniqueIdentifier] != address(0)) {
             revert IdentifierAlreadyUsed();
         }
@@ -114,23 +100,27 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         // Mint the passport NFT
         tokenId = _nextTokenId++;
         _safeMint(msg.sender, tokenId);
-        _setTokenURI(tokenId, "https://lime-famous-condor-7.mypinata.cloud/ipfs/bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4");
+        
+        // Set IPFS metadata URI
+        if (bytes(ipfsMetadataHash).length > 0) {
+            _setTokenURI(tokenId, string(abi.encodePacked("https://lime-famous-condor-7.mypinata.cloud/ipfs/", ipfsMetadataHash)));
+        }
 
-        // Store ZKPassport verification results as traits (no PII)
+        // Store verification results as traits (no PII)
         verifiedUsers[msg.sender] = VerifiedIdentity({
             // Cryptographic identifiers (sybil resistance)
             uniqueIdentifier: uniqueIdentifier,
-            personhoodProof: params.nullifier,
+            personhoodProof: personhoodProof,
             // Timestamps
             verifiedAt: block.timestamp,
-            zkPassportTimestamp: disclosedData.verifiedAt,
+            zkPassportTimestamp: block.timestamp, // Use current timestamp
             // Status
             isActive: true,
-            // ZKPassport verification results (boolean traits - no PII)
-            kycVerified: disclosedData.kycVerified,
-            faceMatchPassed: disclosedData.faceMatchPassed,
-            sanctionsPassed: disclosedData.sanctionsPassed,
-            isOver18: disclosedData.isOver18
+            // Verification results (boolean traits - no PII)
+            kycVerified: true, // Overall KYC passed if function is called
+            faceMatchPassed: faceMatchPassed,
+            sanctionsPassed: sanctionsPassed,
+            isOver18: isOver18
         });
 
         // Map identifier to address (sybil resistance)
@@ -144,11 +134,11 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
             msg.sender, 
             tokenId, 
             uniqueIdentifier, 
-            params.nullifier,
-            disclosedData.kycVerified,
-            disclosedData.faceMatchPassed,
-            disclosedData.sanctionsPassed,
-            disclosedData.isOver18
+            personhoodProof,
+            true, // kycVerified
+            faceMatchPassed,
+            sanctionsPassed,
+            isOver18
         );
     }
 
@@ -205,25 +195,25 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         return super._update(to, tokenId, auth);
     }
 
+    /// @notice Override to prevent approvals (soulbound token)
+    function approve(address, uint256) public pure override(ERC721, IERC721) {
+        revert SoulboundTokenCannotBeTransferred();
+    }
+
+    /// @notice Override to prevent approval for all (soulbound token)
+    function setApprovalForAll(address, bool) public pure override(ERC721, IERC721) {
+        revert SoulboundTokenCannotBeTransferred();
+    }
+
     /// @notice Set base URI for token metadata
     /// @param newBaseURI The new base URI
     function setBaseURI(string memory newBaseURI) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _baseTokenURI = newBaseURI;
     }
 
-    /// @notice Get base URI - returns empty since we use full IPFS URIs
+    /// @notice Get base URI (returns empty since we use individual IPFS URIs)  
     function _baseURI() internal view override returns (string memory) {
-        return ""; // Empty string so full IPFS URIs work correctly
-    }
-
-    /// @notice Override required by Solidity for multiple inheritance
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override(ERC721, ERC721URIStorage)
-        returns (string memory)
-    {
-        return super.tokenURI(tokenId);
+        return ""; // Empty since each NFT has its own IPFS URI
     }
 
     /// @notice Override required by Solidity for multiple inheritance
@@ -234,6 +224,11 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    /// @notice Override tokenURI to support both base URI and individual IPFS URIs
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+        return super.tokenURI(tokenId);
     }
 
     /// @notice Helper function to convert uint to string

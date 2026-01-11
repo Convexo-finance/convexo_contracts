@@ -30,16 +30,13 @@ import {PassportGatedHook} from "../src/hooks/PassportGatedHook.sol";
 ///
 contract PredictAddresses is Script {
     /// @notice Default version - can be overridden via DEPLOY_VERSION env var
-    string public constant DEFAULT_VERSION = "convexo.v3.1";
+    string public constant DEFAULT_VERSION = "convexo.v3.15";
 
     /// @notice Admin address - MUST be same across all chains
     address public constant ADMIN = 0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8;
 
     /// @notice Metadata URI for Convexo Passport
     string public constant CONVEXO_PASSPORT_METADATA_URI = "https://metadata.convexo.finance/passport";
-
-    /// @notice ZKPassport verifier address (same on all chains)
-    address public constant ZK_PASSPORT_VERIFIER = 0x1D000001000EFD9a6371f4d90bB8920D5431c0D8;
 
     function getSaltPrefix() internal view returns (bytes32) {
         string memory version = vm.envOr("DEPLOY_VERSION", DEFAULT_VERSION);
@@ -77,10 +74,10 @@ contract PredictAddresses is Script {
         console.log("    NFT CONTRACTS");
         console.log("================================================================");
 
-        // 1. Convexo Passport
+        // 1. Convexo Passport (constructor takes: admin, initialBaseURI)
         address convexoPassport = SafeSingletonDeployer.computeAddress(
             type(Convexo_Passport).creationCode,
-            abi.encode(ADMIN, ZK_PASSPORT_VERIFIER, CONVEXO_PASSPORT_METADATA_URI),
+            abi.encode(ADMIN, CONVEXO_PASSPORT_METADATA_URI),
             getSalt("ConvexoPassport")
         );
         console.log("");

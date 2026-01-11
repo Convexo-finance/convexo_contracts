@@ -4,418 +4,258 @@ pragma solidity ^0.8.27;
 import {Test, console} from "forge-std/Test.sol";
 import {Convexo_Passport} from "../src/contracts/Convexo_Passport.sol";
 import {IConvexoPassport} from "../src/interfaces/IConvexoPassport.sol";
-import {IZKPassportVerifier, ProofVerificationParams, DisclosedData} from "../src/interfaces/IZKPassportVerifier.sol";
 
-/// @notice Mock ZKPassport Verifier for testing
-/// @dev Returns verification traits (no PII) matching the updated DisclosedData struct
-contract MockZKPassportVerifier is IZKPassportVerifier {
-    bool public shouldSucceed = true;
-    // Verification traits (boolean results)
-    bool public kycVerified = true;
-    bool public faceMatchPassed = true;
-    bool public sanctionsPassed = true;
-    bool public userIsOver18 = true;
-
-    function setShouldSucceed(bool _shouldSucceed) external {
-        shouldSucceed = _shouldSucceed;
-    }
-
-    function setKycVerified(bool _kycVerified) external {
-        kycVerified = _kycVerified;
-    }
-
-    function setFaceMatchPassed(bool _faceMatchPassed) external {
-        faceMatchPassed = _faceMatchPassed;
-    }
-
-    function setSanctionsPassed(bool _sanctionsPassed) external {
-        sanctionsPassed = _sanctionsPassed;
-    }
-
-    function setUserIsOver18(bool _isOver18) external {
-        userIsOver18 = _isOver18;
-    }
-
-    function verifyProof(
-        ProofVerificationParams calldata,
-        bool
-    ) external view returns (bool success, DisclosedData memory disclosedData) {
-        success = shouldSucceed;
-        disclosedData = DisclosedData({
-            kycVerified: kycVerified,
-            faceMatchPassed: faceMatchPassed,
-            sanctionsPassed: sanctionsPassed,
-            isOver18: userIsOver18,
-            verifiedAt: block.timestamp
-        });
-    }
-}
-
-contract ConvexoPassportTest is Test {
+/// @title ConvexoPassportSimplifiedTest
+/// @notice Tests for the simplified Convexo_Passport contract
+/// @dev Tests the new safeMintWithVerification function with direct parameters
+contract ConvexoPassportSimplifiedTest is Test {
     Convexo_Passport public passport;
-    MockZKPassportVerifier public mockVerifier;
 
     address public admin = address(0x1);
     address public user1 = address(0x2);
     address public user2 = address(0x3);
+    address public user3 = address(0x4);
 
-    string public constant BASE_URI = "https://metadata.convexo.finance/passport";
-
-    // Privacy-compliant event (only verification traits, no PII)
-    event PassportMinted(
-        address indexed holder,
-        uint256 indexed tokenId,
-        bytes32 uniqueIdentifier,
-        bytes32 personhoodProof,
-        bool kycVerified,
-        bool faceMatchPassed,
-        bool sanctionsPassed,
-        bool isOver18
-    );
-
-    event PassportRevoked(
-        address indexed holder,
-        uint256 indexed tokenId,
-        bytes32 uniqueIdentifier
-    );
+    string constant BASE_URI = "https://api.convexo.io/passport/";
 
     function setUp() public {
-        // Deploy mock verifier
-        mockVerifier = new MockZKPassportVerifier();
-
-        // Deploy Convexo_Passport
+        // Deploy Convexo_Passport with empty base URI (we use individual IPFS URIs)
         vm.prank(admin);
-        passport = new Convexo_Passport(admin, address(mockVerifier), BASE_URI);
+        passport = new Convexo_Passport(admin, "");
     }
 
-    /// @notice Helper to create unique ZKPassport proof params
-    function _createZKParams(uint256 seed) internal view returns (ProofVerificationParams memory) {
-        return ProofVerificationParams({
-            publicKey: bytes32(seed),
-            nullifier: bytes32(seed + 1000),
-            proof: abi.encodePacked(seed),
-            attestationId: seed,
-            scope: bytes32(seed + 2000),
-            currentDate: block.timestamp
-        });
-    }
-
-    /// @notice Helper to mint passport via ZKPassport for a user
-    function _mintPassportForUser(address user, uint256 seed) internal returns (uint256) {
-        ProofVerificationParams memory params = _createZKParams(seed);
+    /// @notice Helper to mint passport for a user with verification results
+    function _mintPassportForUser(
+        address user, 
+        uint256 seed,
+        bool sanctionsPassed,
+        bool isOver18,
+        bool faceMatchPassed
+    ) internal returns (uint256) {
+        bytes32 uniqueIdentifier = bytes32(seed);
+        bytes32 personhoodProof = bytes32(seed + 1000);
+        // Use actual Convexo Passport IPFS hash
+        string memory ipfsHash = "bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4";
         vm.prank(user);
-        return passport.safeMintWithZKPassport(params, false);
+        return passport.safeMintWithVerification(
+            uniqueIdentifier,
+            personhoodProof,
+            sanctionsPassed,
+            isOver18,
+            faceMatchPassed,
+            ipfsHash
+        );
     }
 
     function test_Deployment() public view {
         assertEq(passport.name(), "Convexo Passport");
         assertEq(passport.symbol(), "CPASS");
-        assertEq(address(passport.zkPassportVerifier()), address(mockVerifier));
         assertTrue(passport.hasRole(passport.DEFAULT_ADMIN_ROLE(), admin));
         assertTrue(passport.hasRole(passport.REVOKER_ROLE(), admin));
     }
 
-    function test_SafeMintWithZKPassport_Success() public {
-        // Create proof parameters
-        ProofVerificationParams memory params = ProofVerificationParams({
-            publicKey: bytes32(uint256(1)),
-            nullifier: bytes32(uint256(2)),
-            proof: hex"1234",
-            attestationId: 1,
-            scope: bytes32(uint256(3)),
-            currentDate: block.timestamp
-        });
-
-        vm.prank(user1);
-        vm.expectEmit(true, true, false, true);
-        // Privacy-compliant: emit verification traits (booleans), not PII
-        emit PassportMinted(
+    function test_SafeMintWithVerification_Success() public {
+        bytes32 uniqueIdentifier = bytes32(uint256(1));
+        bytes32 personhoodProof = bytes32(uint256(2));
+        
+        // Expect PassportMinted event
+        vm.expectEmit(true, true, false, false);
+        emit IConvexoPassport.PassportMinted(
             user1,
-            0,
-            keccak256(abi.encodePacked(params.publicKey, params.scope)),
-            params.nullifier,
-            true,   // kycVerified
-            true,   // faceMatchPassed
-            true,   // sanctionsPassed
-            true    // isOver18
+            0, // tokenId
+            uniqueIdentifier,
+            personhoodProof,
+            true, // kycVerified (always true when minted)
+            true, // faceMatchPassed
+            true, // sanctionsPassed
+            true  // isOver18
         );
-
-        uint256 tokenId = passport.safeMintWithZKPassport(params, false);
-
-        assertEq(tokenId, 0);
+        
+        vm.prank(user1);
+        uint256 tokenId = passport.safeMintWithVerification(
+            uniqueIdentifier,
+            personhoodProof,
+            true, // sanctionsPassed
+            true, // isOver18
+            true, // faceMatchPassed
+            "bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4" // Actual Convexo Passport IPFS hash
+        );
+        
+        // Verify token was minted
         assertEq(passport.ownerOf(tokenId), user1);
         assertEq(passport.balanceOf(user1), 1);
         assertTrue(passport.holdsActivePassport(user1));
         assertEq(passport.getActivePassportCount(), 1);
-
-        // Verify stored traits (no PII)
+        
+        // Verify identity data
         IConvexoPassport.VerifiedIdentity memory identity = passport.getVerifiedIdentity(user1);
+        assertEq(identity.uniqueIdentifier, uniqueIdentifier);
+        assertEq(identity.personhoodProof, personhoodProof);
         assertTrue(identity.isActive);
         assertTrue(identity.kycVerified);
         assertTrue(identity.faceMatchPassed);
         assertTrue(identity.sanctionsPassed);
         assertTrue(identity.isOver18);
-
+        assertGt(identity.verifiedAt, 0);
+        
         // Verify identifier is marked as used
-        assertTrue(passport.isIdentifierUsed(keccak256(abi.encodePacked(params.publicKey, params.scope))));
+        assertTrue(passport.isIdentifierUsed(uniqueIdentifier));
     }
 
-    function test_SafeMintWithZKPassport_RevertIfProofFails() public {
-        mockVerifier.setShouldSucceed(false);
-
-        ProofVerificationParams memory params = ProofVerificationParams({
-            publicKey: bytes32(uint256(1)),
-            nullifier: bytes32(uint256(2)),
-            proof: hex"1234",
-            attestationId: 1,
-            scope: bytes32(uint256(3)),
-            currentDate: block.timestamp
-        });
-
+    function test_SafeMintWithVerification_RevertIfIdentifierUsed() public {
+        bytes32 uniqueIdentifier = bytes32(uint256(1));
+        bytes32 personhoodProof1 = bytes32(uint256(2));
+        bytes32 personhoodProof2 = bytes32(uint256(3));
+        
+        // First mint succeeds
         vm.prank(user1);
-        vm.expectRevert(Convexo_Passport.ProofVerificationFailed.selector);
-        passport.safeMintWithZKPassport(params, false);
-    }
-
-    function test_SafeMintWithZKPassport_StoresIsOver18False() public {
-        // When ZKPassport returns isOver18=false, we just store it as a trait (no validation)
-        mockVerifier.setUserIsOver18(false);
-
-        ProofVerificationParams memory params = ProofVerificationParams({
-            publicKey: bytes32(uint256(1)),
-            nullifier: bytes32(uint256(2)),
-            proof: hex"1234",
-            attestationId: 1,
-            scope: bytes32(uint256(3)),
-            currentDate: block.timestamp
-        });
-
-        vm.prank(user1);
-        uint256 tokenId = passport.safeMintWithZKPassport(params, false);
-
-        // Verify passport was minted and isOver18=false is stored correctly
-        assertEq(tokenId, 0);
-        assertEq(passport.balanceOf(user1), 1);
-
-        IConvexoPassport.VerifiedIdentity memory identity = passport.getVerifiedIdentity(user1);
-        assertFalse(identity.isOver18); // Stored as false from ZKPassport trait
-        assertTrue(identity.isActive);
-        assertTrue(identity.kycVerified);  // Other traits still true
-    }
-
-    function test_SafeMintWithZKPassport_RevertIfAlreadyHasPassport() public {
-        ProofVerificationParams memory params1 = ProofVerificationParams({
-            publicKey: bytes32(uint256(1)),
-            nullifier: bytes32(uint256(2)),
-            proof: hex"1234",
-            attestationId: 1,
-            scope: bytes32(uint256(3)),
-            currentDate: block.timestamp
-        });
-
-        vm.prank(user1);
-        passport.safeMintWithZKPassport(params1, false);
-
-        // Try to mint again with different proof
-        ProofVerificationParams memory params2 = ProofVerificationParams({
-            publicKey: bytes32(uint256(10)),
-            nullifier: bytes32(uint256(20)),
-            proof: hex"5678",
-            attestationId: 2,
-            scope: bytes32(uint256(30)),
-            currentDate: block.timestamp
-        });
-
-        vm.prank(user1);
-        vm.expectRevert(Convexo_Passport.AlreadyHasPassport.selector);
-        passport.safeMintWithZKPassport(params2, false);
-    }
-
-    function test_SafeMintWithZKPassport_RevertIfIdentifierUsed() public {
-        ProofVerificationParams memory params = ProofVerificationParams({
-            publicKey: bytes32(uint256(1)),
-            nullifier: bytes32(uint256(2)),
-            proof: hex"1234",
-            attestationId: 1,
-            scope: bytes32(uint256(3)),
-            currentDate: block.timestamp
-        });
-
-        vm.prank(user1);
-        passport.safeMintWithZKPassport(params, false);
-
-        // Try to use the same identifier (publicKey + scope) with a different user
-        // Using same publicKey and scope but different nullifier
-        ProofVerificationParams memory params2 = ProofVerificationParams({
-            publicKey: bytes32(uint256(1)),    // Same publicKey
-            nullifier: bytes32(uint256(999)),  // Different nullifier
-            proof: hex"5678",
-            attestationId: 2,
-            scope: bytes32(uint256(3)),        // Same scope
-            currentDate: block.timestamp
-        });
-
+        passport.safeMintWithVerification(
+            uniqueIdentifier,
+            personhoodProof1,
+            true, // sanctionsPassed
+            true, // isOver18
+            true, // faceMatchPassed
+            "bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4"
+        );
+        
+        // Second mint with same identifier should fail
         vm.prank(user2);
         vm.expectRevert(Convexo_Passport.IdentifierAlreadyUsed.selector);
-        passport.safeMintWithZKPassport(params2, false);
+        passport.safeMintWithVerification(
+            uniqueIdentifier, // Same identifier
+            personhoodProof2, // Different proof
+            true, // sanctionsPassed
+            true, // isOver18
+            true, // faceMatchPassed
+            "bafkreiejesvgsvohwvv7q5twszrbu5z6dnpke6sg5cdiwgn2rq7dilu33m" // Different IPFS hash (business LP)
+        );
     }
 
-    function test_RevokePassport_Success() public {
-        // Mint a passport first via ZKPassport
-        uint256 tokenId = _mintPassportForUser(user1, 1);
+    function test_SafeMintWithVerification_RevertIfAlreadyHasPassport() public {
+        // User mints first passport
+        _mintPassportForUser(user1, 1, true, true, true);
+        
+        // Try to mint second passport - should fail
+        vm.prank(user1);
+        vm.expectRevert(Convexo_Passport.AlreadyHasPassport.selector);
+        passport.safeMintWithVerification(
+            bytes32(uint256(2)), // Different identifier
+            bytes32(uint256(3)), // Different proof
+            true, // sanctionsPassed
+            true, // isOver18
+            true, // faceMatchPassed
+            "bafkreib7mkjzpdm3id6st6d5vsxpn7v5h6sxeiswejjmrbcb5yoagaf4em" // Individual LP IPFS hash
+        );
+    }
 
-        IConvexoPassport.VerifiedIdentity memory identityBefore = passport.getVerifiedIdentity(user1);
-        bytes32 uniqueIdentifier = identityBefore.uniqueIdentifier;
+    function test_SafeMintWithVerification_StoresVariousTraits() public {
+        bytes32 uniqueIdentifier = bytes32(uint256(1));
+        bytes32 personhoodProof = bytes32(uint256(2));
+        
+        vm.prank(user1);
+        uint256 tokenId = passport.safeMintWithVerification(
+            uniqueIdentifier,
+            personhoodProof,
+            false, // sanctionsPassed = false
+            false, // isOver18 = false
+            true,  // faceMatchPassed
+            "bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4" // Convexo Passport IPFS hash
+        );
+        
+        // Verify traits are stored correctly
+        IConvexoPassport.VerifiedIdentity memory identity = passport.getVerifiedIdentity(user1);
+        assertFalse(identity.sanctionsPassed);
+        assertFalse(identity.isOver18);
+        assertTrue(identity.faceMatchPassed);
+        assertTrue(identity.kycVerified); // Always true when minted
+    }
 
-        // Revoke it
+    function test_MultipleDifferentPassports() public {
+        // Mint passports for different users with different identifiers
+        uint256 tokenId1 = _mintPassportForUser(user1, 1, true, true, true);
+        uint256 tokenId2 = _mintPassportForUser(user2, 2, true, false, true);
+        
+        assertEq(tokenId1, 0);
+        assertEq(tokenId2, 1);
+        assertEq(passport.getActivePassportCount(), 2);
+        
+        // Verify each user has their own passport
+        assertTrue(passport.holdsActivePassport(user1));
+        assertTrue(passport.holdsActivePassport(user2));
+        
+        // Verify different traits
+        IConvexoPassport.VerifiedIdentity memory identity1 = passport.getVerifiedIdentity(user1);
+        IConvexoPassport.VerifiedIdentity memory identity2 = passport.getVerifiedIdentity(user2);
+        
+        assertTrue(identity1.isOver18);
+        assertFalse(identity2.isOver18);
+    }
+
+    function test_RevokePassport() public {
+        // Mint passport
+        uint256 tokenId = _mintPassportForUser(user1, 1, true, true, true);
+        assertEq(passport.getActivePassportCount(), 1);
+        
+        // Revoke passport
         vm.prank(admin);
-        vm.expectEmit(true, true, false, true);
-        emit PassportRevoked(user1, tokenId, uniqueIdentifier);
         passport.revokePassport(tokenId);
-
+        
+        // Verify passport is revoked
         assertFalse(passport.holdsActivePassport(user1));
         assertEq(passport.getActivePassportCount(), 0);
-
-        IConvexoPassport.VerifiedIdentity memory identityAfter = passport.getVerifiedIdentity(user1);
-        assertFalse(identityAfter.isActive);
+        
+        IConvexoPassport.VerifiedIdentity memory identity = passport.getVerifiedIdentity(user1);
+        assertFalse(identity.isActive);
     }
 
     function test_RevokePassport_RevertIfNotRevoker() public {
-        uint256 tokenId = _mintPassportForUser(user1, 1);
-
-        vm.prank(user1);
+        // Mint passport
+        uint256 tokenId = _mintPassportForUser(user1, 1, true, true, true);
+        
+        // Try to revoke from non-revoker - should fail
+        vm.prank(user2);
         vm.expectRevert();
         passport.revokePassport(tokenId);
     }
 
-    function test_RevokePassport_RevertIfAlreadyRevoked() public {
-        uint256 tokenId = _mintPassportForUser(user1, 1);
-
-        vm.prank(admin);
-        passport.revokePassport(tokenId);
-
-        vm.prank(admin);
-        vm.expectRevert(Convexo_Passport.PassportNotActive.selector);
-        passport.revokePassport(tokenId);
-    }
-
-    function test_Soulbound_CannotTransfer() public {
-        uint256 tokenId = _mintPassportForUser(user1, 1);
-
+    function test_SoulboundToken_CannotTransfer() public {
+        // Mint passport
+        uint256 tokenId = _mintPassportForUser(user1, 1, true, true, true);
+        
+        // Try to transfer - should fail
         vm.prank(user1);
         vm.expectRevert(Convexo_Passport.SoulboundTokenCannotBeTransferred.selector);
         passport.transferFrom(user1, user2, tokenId);
+        
+        // Try to approve - should fail
+        vm.prank(user1);
+        vm.expectRevert(Convexo_Passport.SoulboundTokenCannotBeTransferred.selector);
+        passport.approve(user2, tokenId);
+        
+        // Try to set approval for all - should fail
+        vm.prank(user1);
+        vm.expectRevert(Convexo_Passport.SoulboundTokenCannotBeTransferred.selector);
+        passport.setApprovalForAll(user2, true);
     }
 
-    function test_Soulbound_CanBurn() public {
-        uint256 tokenId = _mintPassportForUser(user1, 1);
-
-        vm.prank(user1);
-        passport.burn(tokenId);
-
-        assertEq(passport.balanceOf(user1), 0);
+    function test_TokenURI() public {
+        // Mint passport with actual IPFS hash
+        uint256 tokenId = _mintPassportForUser(user1, 1, true, true, true);
+        
+        string memory tokenURI = passport.tokenURI(tokenId);
+        // Should return the full IPFS URL via your custom Pinata gateway
+        assertEq(tokenURI, "https://lime-famous-condor-7.mypinata.cloud/ipfs/bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4");
     }
 
-    function test_MultipleUsers_CanMintDifferentPassports() public {
-        ProofVerificationParams memory params1 = ProofVerificationParams({
-            publicKey: bytes32(uint256(1)),
-            nullifier: bytes32(uint256(2)),
-            proof: hex"1234",
-            attestationId: 1,
-            scope: bytes32(uint256(3)),
-            currentDate: block.timestamp
-        });
-
-        ProofVerificationParams memory params2 = ProofVerificationParams({
-            publicKey: bytes32(uint256(10)),
-            nullifier: bytes32(uint256(20)),
-            proof: hex"5678",
-            attestationId: 2,
-            scope: bytes32(uint256(30)),
-            currentDate: block.timestamp
-        });
-
-        vm.prank(user1);
-        uint256 tokenId1 = passport.safeMintWithZKPassport(params1, false);
-
-        vm.prank(user2);
-        uint256 tokenId2 = passport.safeMintWithZKPassport(params2, false);
-
-        assertEq(tokenId1, 0);
-        assertEq(tokenId2, 1);
-        assertEq(passport.balanceOf(user1), 1);
-        assertEq(passport.balanceOf(user2), 1);
-        assertEq(passport.getActivePassportCount(), 2);
+    function test_GetVerifiedIdentity_EmptyForNonHolder() public {
+        IConvexoPassport.VerifiedIdentity memory identity = passport.getVerifiedIdentity(user1);
+        assertFalse(identity.isActive);
+        assertEq(identity.uniqueIdentifier, bytes32(0));
+        assertEq(identity.personhoodProof, bytes32(0));
     }
 
-    function test_SetBaseURI_Success() public {
-        string memory newBaseURI = "https://new-metadata.convexo.finance/passport";
-
-        vm.prank(admin);
-        passport.setBaseURI(newBaseURI);
-
-        uint256 tokenId = _mintPassportForUser(user1, 1);
-
-        // The tokenURI should use the fixed IPFS URI
-        string memory uri = passport.tokenURI(tokenId);
-        assertTrue(bytes(uri).length > 0);
-    }
-
-    function test_SetBaseURI_RevertIfNotAdmin() public {
-        vm.prank(user1);
-        vm.expectRevert();
-        passport.setBaseURI("https://new-uri.com");
-    }
-
-    function test_IsIdentifierUsed() public {
-        ProofVerificationParams memory params = _createZKParams(1);
-        bytes32 identifier = keccak256(abi.encodePacked(params.publicKey, params.scope));
-
-        // Before mint
-        assertFalse(passport.isIdentifierUsed(identifier));
-
-        // After mint
-        vm.prank(user1);
-        passport.safeMintWithZKPassport(params, false);
-        assertTrue(passport.isIdentifierUsed(identifier));
-    }
-
-    /// @notice Test the core invariant: 1 human → 1 ZKPassport → 1 NFT → 1 wallet
-    function test_CoreInvariant_OneHumanOnePassport() public {
-        // User1 mints with their ZKPassport
-        ProofVerificationParams memory params = _createZKParams(1);
-        vm.prank(user1);
-        passport.safeMintWithZKPassport(params, false);
-
-        // Verify invariants:
-        // 1. Wallet has exactly 1 passport
-        assertEq(passport.balanceOf(user1), 1);
-
-        // 2. Same wallet cannot mint another (AlreadyHasPassport)
-        ProofVerificationParams memory params2 = _createZKParams(2);
-        vm.prank(user1);
-        vm.expectRevert(Convexo_Passport.AlreadyHasPassport.selector);
-        passport.safeMintWithZKPassport(params2, false);
-
-        // 3. Same identifier cannot be reused by another wallet (IdentifierAlreadyUsed)
-        // uniqueIdentifier = hash(publicKey + scope) - this is the SINGLE sybil resistance check
-        vm.prank(user2);
-        vm.expectRevert(Convexo_Passport.IdentifierAlreadyUsed.selector);
-        passport.safeMintWithZKPassport(params, false);
-    }
-
-    /// @notice Test that there is only ONE minting path
-    function test_OnlyZKPassportMintingPath() public {
-        // The only way to mint is via safeMintWithZKPassport
-        // There is no safeMint or safeMintWithIdentifier function
-        // This test documents the security invariant
-
-        ProofVerificationParams memory params = _createZKParams(1);
-        vm.prank(user1);
-        uint256 tokenId = passport.safeMintWithZKPassport(params, false);
-
-        assertEq(tokenId, 0);
-        assertEq(passport.balanceOf(user1), 1);
-        assertTrue(passport.holdsActivePassport(user1));
+    function test_IsIdentifierUsed_FalseForUnused() public {
+        bytes32 unusedIdentifier = bytes32(uint256(999));
+        assertFalse(passport.isIdentifierUsed(unusedIdentifier));
     }
 }

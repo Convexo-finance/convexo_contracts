@@ -1,24 +1,34 @@
 # ZKPassport Frontend Integration Guide
 
-**Version 2.1** - Simplified off-chain verification + on-chain minting with privacy-compliant traits
+**Version 3.1** - Simplified verification with direct verification results  
+**IPFS**: Pinata Gateway `lime-famous-condor-7.mypinata.cloud`
 
 ---
 
 ## 📋 Overview
 
-This guide implements a **simplified two-step process** for individual investor verification:
+This guide implements a **simplified process** for individual investor verification with **full IPFS metadata integration**:
 
-1. **Step 1**: Identity verification with ZKPassport (OFF-CHAIN) → Get unique identifier
-2. **Step 2**: Mint Convexo Passport NFT (ON-CHAIN) → Provide unique identifier
+1. **Step 1**: User completes ZKPassport verification (off-chain)
+2. **Step 2**: Frontend creates NFT metadata and uploads to Pinata IPFS
+3. **Step 3**: Frontend calls contract with verification results + IPFS metadata hash
 
 **Key Points:**
-- ✅ ZKPassport verification happens **off-chain** (no on-chain proof verification)
-- ✅ User gets a **unique identifier** from ZKPassport
-- ✅ User mints NFT by providing the unique identifier
-- ✅ Contract enforces: **1 wallet = 1 unique identifier**
-- ✅ Users pay for gas fees
+- ✅ ZKPassport verification happens **off-chain** (simpler frontend integration)
+- ✅ **IPFS Integration**: Individual NFT metadata stored on Pinata
+- ✅ **Custom Gateway**: Uses `lime-famous-condor-7.mypinata.cloud` for fast access
+- ✅ Contract accepts verification results as simple parameters + IPFS hash
+- ✅ Much easier frontend development - no complex proof handling
 - ✅ **Privacy-compliant**: Only verification traits stored (no PII)
-- ✅ Grants **Tier 1 (Passport)** access - Treasury creation + Vault investments
+- ✅ Grants **Tier 1 (Passport)** access - Treasury creation, Vault investments, and Uniswap V4 swaps
+
+**Parameters Required:**
+- `uniqueIdentifier` - Unique ID from ZKPassport verification
+- `personhoodProof` - Personhood proof (private face match)
+- `sanctionsPassed` - Boolean: Sanctions check result
+- `isOver18` - Boolean: Age verification result  
+- `faceMatchPassed` - Boolean: Face match verification result
+- `ipfsMetadataHash` - IPFS hash for NFT metadata
 
 ---
 
@@ -32,6 +42,85 @@ This guide implements a **simplified two-step process** for individual investor 
 | **Tier 3** | Convexo_Vaults | Vault Creator | All above + Vault creation |
 
 **Note:** Tier 1 (Passport) is the entry-level tier for individuals. Highest tier wins (progressive KYC).
+
+---
+
+## 🎨 IPFS & Pinata Integration
+
+### Pinata Configuration
+
+```typescript
+// config/pinata.ts
+export const PINATA_CONFIG = {
+  gateway: 'lime-famous-condor-7.mypinata.cloud',
+  apiKey: process.env.NEXT_PUBLIC_PINATA_API_KEY,
+  secretKey: process.env.PINATA_SECRET_KEY,
+  passportImageHash: 'bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4'
+};
+
+// Build IPFS URL with custom gateway
+export const buildIPFSUrl = (hash: string): string => 
+  `https://${PINATA_CONFIG.gateway}/ipfs/${hash}`;
+```
+
+### NFT Metadata Creation
+
+```typescript
+// utils/passportMetadata.ts
+import { PINATA_CONFIG, buildIPFSUrl } from '../config/pinata';
+
+interface PassportTraits {
+  kycVerified: boolean;
+  faceMatchPassed: boolean;
+  sanctionsPassed: boolean;
+  isOver18: boolean;
+}
+
+export const createPassportMetadata = (tokenId: number, traits: PassportTraits) => {
+  return {
+    name: `Convexo Passport #${tokenId}`,
+    description: "Soulbound NFT representing verified identity for Tier 1 access in the Convexo Protocol. It represents a privacy-compliant verification of identity without storing personal information. This passport enables swap and liquidity provision in gated Uniswap V4 liquidity pools, create OTC and P2P orders and lending options within the vaults created by verified lenders.",
+    image: buildIPFSUrl(PINATA_CONFIG.passportImageHash),
+    external_url: "https://convexo.io",
+    attributes: [
+      { trait_type: "Tier", value: "1" },
+      { trait_type: "Type", value: "Passport" },
+      { trait_type: "KYC Verified", value: traits.kycVerified ? "Yes" : "No" },
+      { trait_type: "Face Match Passed", value: traits.faceMatchPassed ? "Yes" : "No" },
+      { trait_type: "Sanctions Check Passed", value: traits.sanctionsPassed ? "Yes" : "No" },
+      { trait_type: "Age Verification", value: traits.isOver18 ? "18+" : "Under 18" },
+      { trait_type: "Soulbound", value: "True" },
+      { trait_type: "Network Access", value: "LP Pools" },
+      { trait_type: "Verification Method", value: "ZKPassport" }
+    ]
+  };
+};
+
+export const uploadMetadataToPinata = async (metadata: any): Promise<string> => {
+  const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'pinata_api_key': PINATA_CONFIG.apiKey!,
+      'pinata_secret_api_key': PINATA_CONFIG.secretKey!,
+    },
+    body: JSON.stringify({
+      pinataContent: metadata,
+      pinataMetadata: {
+        name: `${metadata.name} Metadata`
+      }
+    })
+  });
+
+  const result = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(`Pinata upload failed: ${result.error}`);
+  }
+  
+  return result.IpfsHash;
+};
+```
 
 ---
 
@@ -362,8 +451,15 @@ export function MintPassportNFT({ uniqueIdentifier }: MintPassportNFTProps) {
   } = useContractWrite({
     address: contractAddress as `0x${string}`,
     abi: ConvexoPassportABI,
-    functionName: 'safeMintWithIdentifier',
-    args: [uniqueIdentifier],
+    functionName: 'safeMintWithVerification',
+    args: [
+      uniqueIdentifier,
+      personhoodProof,
+      sanctionsPassed,
+      isOver18,
+      faceMatchPassed,
+      ipfsMetadataHash // New parameter for IPFS metadata
+    ],
     gas: BigInt(300000), // Simpler function = less gas (~200k-300k)
     onError: (error) => {
       const errorMsg = error.message || error.toString();
@@ -533,13 +629,13 @@ export function PassportOnboarding() {
 ### Flow Diagram
 
 ```
-1. User verifies identity with ZKPassport (OFF-CHAIN)
+1. User verifies identity wVerification(uniqueIdentifier, personhoodProof, sanctionsPassed, isOver18, faceMatchPasse
    ↓
 2. ZKPassport returns: publicKey + scope + verification traits
    ↓
 3. Frontend calculates: uniqueIdentifier = keccak256(publicKey + scope)
    ↓
-4. User calls: safeMintWithIdentifier(uniqueIdentifier)
+4. User calls: safeMintWithZKPassport(proofParams, isIDCard)
    ↓
 5. Contract checks:
    - User doesn't have passport? ✅
@@ -579,24 +675,113 @@ The contract enforces:
 
 ---
 
-## 🔧 Contract Functions
+## � Complete Minting Workflow with IPFS
 
-### Self-Mint with Identifier (Simplified)
+```typescript
+// components/PassportMinter.tsx
+import { useState } from 'react';
+import { createPassportMetadata, uploadMetadataToPinata } from '../utils/passportMetadata';
+
+const MintPassportWithIPFS = ({ verificationResults }) => {
+  const [uploading, setUploading] = useState(false);
+  const [ipfsHash, setIpfsHash] = useState<string>('');
+  
+  const handleMintWithMetadata = async () => {
+    try {
+      setUploading(true);
+      
+      // 1. Create metadata based on verification results
+      const metadata = createPassportMetadata(1, {
+        kycVerified: true,
+        faceMatchPassed: verificationResults.faceMatchPassed,
+        sanctionsPassed: verificationResults.sanctionsPassed,
+        isOver18: verificationResults.isOver18
+      });
+      
+      // 2. Upload metadata to Pinata
+      const metadataHash = await uploadMetadataToPinata(metadata);
+      setIpfsHash(metadataHash);
+      
+      // 3. Mint NFT with IPFS hash
+      await contract.safeMintWithVerification(
+        verificationResults.uniqueIdentifier,
+        verificationResults.personhoodProof,
+        verificationResults.sanctionsPassed,
+        verificationResults.isOver18,
+        verificationResults.faceMatchPassed,
+        metadataHash // IPFS metadata hash
+      );
+      
+      console.log('✅ Passport minted successfully!');
+      
+    } catch (error) {
+      console.error('❌ Minting failed:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div>
+      <button 
+        onClick={handleMintWithMetadata}
+        disabled={uploading}
+      >
+        {uploading ? 'Uploading & Minting...' : 'Mint Passport NFT'}
+      </button>
+      
+      {ipfsHash && (
+        <div className="mt-4">
+          <p>✅ Metadata uploaded to IPFS:</p>
+          <a 
+            href={`https://lime-famous-condor-7.mypinata.cloud/ipfs/${ipfsHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 underline"
+          >
+            View Metadata
+          </a>
+        </div>
+      )}
+    </div>
+  );
+};
+```
+
+---
+
+## �🔧 Contract Functions
+
+### Simplified Contract Interface
 
 ```solidity
-function safeMintWithIdentifier(bytes32 uniqueIdentifier) external returns (uint256 tokenId) {
+function safeMintWithVerification(
+    bytes32 uniqueIdentifier,     // Unique ID from ZKPassport
+    bytes32 personhoodProof,      // Personhood proof (nullifier)
+    bool sanctionsPassed,         // Sanctions check result
+    bool isOver18,                // Age verification result  
+    bool faceMatchPassed,         // Face match result
+    string calldata ipfsMetadataHash // IPFS hash for NFT metadata
+) external returns (uint256 tokenId) {
     // Check if user already has a passport
     if (balanceOf(msg.sender) > 0) {
         revert AlreadyHasPassport();
     }
 
-    // Check if identifier has been used (prevents duplicate passports)
+    // Check if identifier has been used (sybil resistance)
     if (passportIdentifierToAddress[uniqueIdentifier] != address(0)) {
         revert IdentifierAlreadyUsed();
     }
 
-    // Mint NFT, store identifier, emit event
-    // Stores: kycVerified=true, faceMatchPassed=true, sanctionsPassed=true, isOver18=true
+    // Set IPFS metadata URI
+    if (bytes(ipfsMetadataHash).length > 0) {
+        _setTokenURI(tokenId, string(abi.encodePacked(
+            "https://lime-famous-condor-7.mypinata.cloud/ipfs/", 
+            ipfsMetadataHash
+        )));
+    }
+
+    // Mint NFT and store verification traits (no complex proof verification)
     // ...
 }
 ```

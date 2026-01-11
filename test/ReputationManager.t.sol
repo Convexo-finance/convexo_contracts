@@ -8,24 +8,6 @@ import {Limited_Partners_Individuals} from "../src/contracts/Limited_Partners_In
 import {Limited_Partners_Business} from "../src/contracts/Limited_Partners_Business.sol";
 import {Ecreditscoring} from "../src/contracts/Ecreditscoring.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {IZKPassportVerifier, ProofVerificationParams, DisclosedData} from "../src/interfaces/IZKPassportVerifier.sol";
-
-/// @notice Mock ZKPassport verifier for testing
-contract MockZKPassportVerifier is IZKPassportVerifier {
-    function verifyProof(
-        ProofVerificationParams calldata,
-        bool
-    ) external view returns (bool success, DisclosedData memory disclosedData) {
-        success = true;
-        disclosedData = DisclosedData({
-            kycVerified: true,
-            faceMatchPassed: true,
-            sanctionsPassed: true,
-            isOver18: true,
-            verifiedAt: block.timestamp
-        });
-    }
-}
 
 contract ReputationManagerTest is Test {
     ReputationManager public reputationManager;
@@ -33,7 +15,6 @@ contract ReputationManagerTest is Test {
     Limited_Partners_Individuals public lpIndividuals;
     Limited_Partners_Business public lpBusiness;
     Ecreditscoring public ecreditscoring;
-    MockZKPassportVerifier public mockVerifier;
 
     address public admin = address(0x1);
     address public minter = address(0x2);
@@ -44,11 +25,8 @@ contract ReputationManagerTest is Test {
     address public noNFTHolder = address(0x7);
 
     function setUp() public {
-        // Deploy mock verifier
-        mockVerifier = new MockZKPassportVerifier();
-
         // Deploy NFT contracts - use address(this) as admin for test convenience
-        passport = new Convexo_Passport(address(this), address(mockVerifier), "https://metadata");
+        passport = new Convexo_Passport(address(this), "https://metadata");
         lpIndividuals = new Limited_Partners_Individuals(address(this), address(this), address(0));
         lpBusiness = new Limited_Partners_Business(address(this), address(this), address(0));
         ecreditscoring = new Ecreditscoring(
@@ -98,16 +76,17 @@ contract ReputationManagerTest is Test {
 
     /// @notice Helper to mint passport via ZKPassport for a user
     function _mintPassportForUser(address user, uint256 seed) internal {
-        ProofVerificationParams memory params = ProofVerificationParams({
-            publicKey: bytes32(seed),
-            nullifier: bytes32(seed + 1000),
-            proof: abi.encodePacked(seed),
-            attestationId: seed,
-            scope: bytes32(seed + 2000),
-            currentDate: block.timestamp
-        });
+        bytes32 uniqueIdentifier = bytes32(seed);
+        bytes32 personhoodProof = bytes32(seed + 1000);
         vm.prank(user);
-        passport.safeMintWithZKPassport(params, false);
+        passport.safeMintWithVerification(
+            uniqueIdentifier,
+            personhoodProof,
+            true, // sanctionsPassed
+            true, // isOver18
+            true, // faceMatchPassed
+            "bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4" // Convexo Passport IPFS hash
+        );
     }
 
     function test_TierNone() public view {

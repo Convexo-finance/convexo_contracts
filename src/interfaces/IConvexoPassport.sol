@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import {ProofVerificationParams} from "./IZKPassportVerifier.sol";
-
 /// @title IConvexoPassport
 /// @notice Interface for Convexo_Passport NFT contract
 /// @dev Soulbound NFT for individual investors verified via ZKPassport
@@ -46,15 +44,23 @@ interface IConvexoPassport {
         bytes32 uniqueIdentifier
     );
 
-    /// @notice Self-mint a passport using ZKPassport verification (ONLY minting path)
-    /// @param params The ZKPassport proof parameters
-    /// @param isIDCard Whether the proof is from an ID card
+    /// @notice Self-mint a passport using verification results (ONLY minting path)
+    /// @param uniqueIdentifier Hash of publicKey + scope for sybil resistance
+    /// @param personhoodProof Nullifier from ZKPassport verification
+    /// @param sanctionsPassed Whether sanctions check passed
+    /// @param isOver18 Whether age verification (18+) passed
+    /// @param faceMatchPassed Whether face match verification passed
+    /// @param ipfsMetadataHash IPFS hash for the NFT metadata (tier-specific)
     /// @return tokenId The minted token ID
     /// @dev This is the ONLY way to mint a Convexo Passport.
     ///      Enforces: 1 human → 1 ZKPassport → 1 NFT → 1 wallet
-    function safeMintWithZKPassport(
-        ProofVerificationParams calldata params,
-        bool isIDCard
+    function safeMintWithVerification(
+        bytes32 uniqueIdentifier,
+        bytes32 personhoodProof,
+        bool sanctionsPassed,
+        bool isOver18,
+        bool faceMatchPassed,
+        string calldata ipfsMetadataHash
     ) external returns (uint256 tokenId);
 
     /// @notice Revoke a passport

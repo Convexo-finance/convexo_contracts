@@ -87,7 +87,7 @@ contract Limited_Partners_Business is ERC721, ERC721Burnable, ERC721URIStorage, 
     /// @param jurisdiction Jurisdiction of incorporation
     /// @param businessType Type of business entity
     /// @param sumsubApplicantId Sumsub applicant ID
-    /// @param uri Token metadata URI
+    /// @param uri Token metadata URI (use: https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreiejesvgsvohwvv7q5twszrbu5z6dnpke6sg5cdiwgn2rq7dilu33m)
     /// @return tokenId The minted token ID
     function safeMint(
         address to,
