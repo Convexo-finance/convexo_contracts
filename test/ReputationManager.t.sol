@@ -2,11 +2,11 @@
 pragma solidity ^0.8.27;
 
 import {Test} from "forge-std/Test.sol";
-import {ReputationManager} from "../src/contracts/ReputationManager.sol";
-import {Convexo_Passport} from "../src/contracts/Convexo_Passport.sol";
-import {Limited_Partners_Individuals} from "../src/contracts/Limited_Partners_Individuals.sol";
-import {Limited_Partners_Business} from "../src/contracts/Limited_Partners_Business.sol";
-import {Ecreditscoring} from "../src/contracts/Ecreditscoring.sol";
+import {ReputationManager} from "../src/contracts/identity/ReputationManager.sol";
+import {Convexo_Passport} from "../src/contracts/identity/Convexo_Passport.sol";
+import {Limited_Partners_Individuals} from "../src/contracts/identity/Limited_Partners_Individuals.sol";
+import {Limited_Partners_Business} from "../src/contracts/identity/Limited_Partners_Business.sol";
+import {Ecreditscoring} from "../src/contracts/credits/Ecreditscoring.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract ReputationManagerTest is Test {
@@ -84,7 +84,6 @@ contract ReputationManagerTest is Test {
             personhoodProof,
             true, // sanctionsPassed
             true, // isOver18
-            true, // faceMatchPassed
             "bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4" // Convexo Passport IPFS hash
         );
     }

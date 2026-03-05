@@ -5,18 +5,24 @@ import {Script, console} from "forge-std/Script.sol";
 import {SafeSingletonDeployer} from "safe-singleton-deployer-sol/SafeSingletonDeployer.sol";
 
 // Import all contracts
-import {Convexo_Passport} from "../src/contracts/Convexo_Passport.sol";
-import {Limited_Partners_Individuals} from "../src/contracts/Limited_Partners_Individuals.sol";
-import {Limited_Partners_Business} from "../src/contracts/Limited_Partners_Business.sol";
-import {Ecreditscoring} from "../src/contracts/Ecreditscoring.sol";
-import {ReputationManager} from "../src/contracts/ReputationManager.sol";
-import {ContractSigner} from "../src/contracts/ContractSigner.sol";
-import {VeriffVerifier} from "../src/contracts/VeriffVerifier.sol";
-import {SumsubVerifier} from "../src/contracts/SumsubVerifier.sol";
-import {PoolRegistry} from "../src/contracts/PoolRegistry.sol";
-import {PriceFeedManager} from "../src/contracts/PriceFeedManager.sol";
-import {VaultFactory} from "../src/contracts/VaultFactory.sol";
-import {TreasuryFactory} from "../src/contracts/TreasuryFactory.sol";
+// identity/
+import {Convexo_Passport} from "../src/contracts/identity/Convexo_Passport.sol";
+import {Limited_Partners_Individuals} from "../src/contracts/identity/Limited_Partners_Individuals.sol";
+import {Limited_Partners_Business} from "../src/contracts/identity/Limited_Partners_Business.sol";
+import {ReputationManager} from "../src/contracts/identity/ReputationManager.sol";
+import {VeriffVerifier} from "../src/contracts/identity/VeriffVerifier.sol";
+import {SumsubVerifier} from "../src/contracts/identity/SumsubVerifier.sol";
+
+// credits/
+import {Ecreditscoring} from "../src/contracts/credits/Ecreditscoring.sol";
+import {ContractSigner} from "../src/contracts/credits/ContractSigner.sol";
+import {VaultFactory} from "../src/contracts/credits/VaultFactory.sol";
+
+// trading/
+import {PoolRegistry} from "../src/contracts/trading/PoolRegistry.sol";
+import {PriceFeedManager} from "../src/contracts/trading/PriceFeedManager.sol";
+
+// hooks
 import {HookDeployer} from "../src/hooks/HookDeployer.sol";
 import {PassportGatedHook} from "../src/hooks/PassportGatedHook.sol";
 
@@ -48,7 +54,7 @@ contract DeployDeterministic is Script {
     /// @notice Default salt version - can be overridden via DEPLOY_VERSION env var
     /// @dev Change version to get new addresses after contract changes
     ///      Example: DEPLOY_VERSION=v3.1 ./scripts/deploy.sh ethereum-sepolia
-    string public constant DEFAULT_VERSION = "convexo.v3.16";
+    string public constant DEFAULT_VERSION = "convexo.v3.17";
 
     /// @notice Admin address - MUST be same across all chains for same addresses
     address public constant ADMIN = 0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8;
@@ -82,7 +88,6 @@ contract DeployDeterministic is Script {
     address public priceFeedManager;
     address public contractSigner;
     address public vaultFactory;
-    address public treasuryFactory;
     address public hookDeployer;
     address public passportGatedHook;
 
@@ -166,6 +171,14 @@ contract DeployDeterministic is Script {
             networkName = "Unichain Mainnet";
             poolManager = vm.envOr("POOL_MANAGER_ADDRESS_UNIMAINNET", 0x1F98400000000000000000000000000000000004);
             usdc = vm.envOr("USDC_ADDRESS_UNIMAINNET", 0x078D782b760474a361dDA0AF3839290b0EF57AD6);
+        } else if (chainId == 421614) {
+            networkName = "Arbitrum Sepolia";
+            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_ARBSEPOLIA", 0xFB3e0C6F74eB1a21CC1Da29aeC80D2Dfe6C9a317);
+            usdc = vm.envOr("USDC_ADDRESS_ARBSEPOLIA", 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d);
+        } else if (chainId == 42161) {
+            networkName = "Arbitrum One";
+            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_ARBONE", 0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32);
+            usdc = vm.envOr("USDC_ADDRESS_ARBONE", 0xaf88d065e77c8cC2239327C5EDb3A432268e5831);
         } else {
             revert("Unsupported network");
         }
@@ -428,14 +441,6 @@ contract DeployDeterministic is Script {
                 keccak256(abi.encodePacked(chainSalt, "VaultFactory")),
                 "VaultFactory"
             );
-
-            treasuryFactory = deployIfNeeded(
-                deployerPrivateKey,
-                type(TreasuryFactory).creationCode,
-                abi.encode(usdc, reputationManager),
-                keccak256(abi.encodePacked(chainSalt, "TreasuryFactory")),
-                "TreasuryFactory"
-            );
         }
 
         // ========================================================================
@@ -485,7 +490,6 @@ contract DeployDeterministic is Script {
         console.log("\n--- CHAIN-SPECIFIC ADDRESSES ---");
         console.log("PassportGatedHook:", passportGatedHook);
         console.log("VaultFactory:", vaultFactory);
-        console.log("TreasuryFactory:", treasuryFactory);
 
         console.log("\n========================================");
         console.log("NOTE: LP contracts deployed without verifier callback");

@@ -1,6 +1,6 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# ABI Extraction Script for Convexo Protocol v3.0
+# ABI Extraction Script for Convexo Protocol v3.17
 # Extracts ABIs only for existing contracts
 # ═══════════════════════════════════════════════════════════════
 
@@ -11,7 +11,7 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 ABI_OUTPUT_DIR="$PROJECT_DIR/abis"
 
 echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║              Convexo ABI Extraction v3.0                  ║"
+echo "║              Convexo ABI Extraction v3.17                 ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -47,7 +47,7 @@ echo ""
 echo "📦 Extracting ABIs..."
 
 # ═══════════════════════════════════════════════════════════════
-# DEPLOYED CONTRACTS (14 total)
+# DEPLOYED CONTRACTS (12 total)
 # ═══════════════════════════════════════════════════════════════
 
 echo ""
@@ -74,10 +74,6 @@ extract_abi "ContractSigner" "ContractSigner.sol"
 extract_abi "VaultFactory" "VaultFactory.sol"
 
 echo ""
-echo "Treasury System:"
-extract_abi "TreasuryFactory" "TreasuryFactory.sol"
-
-echo ""
 echo "Verification System:"
 extract_abi "VeriffVerifier" "VeriffVerifier.sol"
 extract_abi "SumsubVerifier" "SumsubVerifier.sol"
@@ -89,7 +85,6 @@ extract_abi "SumsubVerifier" "SumsubVerifier.sol"
 echo ""
 echo "Factory Templates (not deployed, created by factories):"
 extract_abi "TokenizedBondVault" "TokenizedBondVault.sol"
-extract_abi "TreasuryVault" "TreasuryVault.sol"
 
 # ═══════════════════════════════════════════════════════════════
 # CREATE COMBINED JSON
@@ -100,7 +95,7 @@ echo "📋 Creating combined.json..."
 
 cat > "$ABI_OUTPUT_DIR/combined.json" << 'EOF'
 {
-  "version": "3.0",
+  "version": "3.17",
   "description": "Convexo Protocol ABIs",
   "contracts": {}
 }
@@ -132,14 +127,13 @@ echo "📁 Output: $ABI_OUTPUT_DIR"
 echo "📄 Files: $ABI_COUNT ABIs extracted"
 echo ""
 echo "Contracts:"
-echo "  Deployed (14):"
+echo "  Deployed (12):"
 echo "    - Convexo_Passport, Limited_Partners_Individuals"
 echo "    - Limited_Partners_Business, Ecreditscoring"
 echo "    - ReputationManager, HookDeployer, PassportGatedHook"
 echo "    - PoolRegistry, PriceFeedManager, ContractSigner"
-echo "    - VaultFactory, TreasuryFactory"
-echo "    - VeriffVerifier, SumsubVerifier"
+echo "    - VaultFactory, VeriffVerifier, SumsubVerifier"
 echo ""
-echo "  Templates (2):"
-echo "    - TokenizedBondVault, TreasuryVault"
+echo "  Template (1):"
+echo "    - TokenizedBondVault"
 echo ""

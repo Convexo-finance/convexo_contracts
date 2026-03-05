@@ -7,22 +7,22 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {ERC721Burnable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {ISumsubVerifier} from "../interfaces/ISumsubVerifier.sol";
+import {IVeriffVerifier} from "../../interfaces/IVeriffVerifier.sol";
 
-/// @title Limited Partners Business NFT
-/// @notice Soulbound NFT for business Limited Partners verified via Sumsub KYB
-/// @dev Tier 2 NFT - Business KYB verification
+/// @title Limited Partners Individuals NFT
+/// @notice Soulbound NFT for individual Limited Partners verified via Veriff
+/// @dev Tier 2 NFT - Individual KYC verification
 ///
 /// ═══════════════════════════════════════════════════════════════════════════════
 /// MINTING FLOW (PRIVACY-ENHANCED):
 /// ═══════════════════════════════════════════════════════════════════════════════
-/// 1. Business completes Sumsub KYB verification
-/// 2. Backend receives verification result with company details
+/// 1. Individual completes Veriff identity verification
+/// 2. Backend receives verification result
 /// 3. Admin reviews PRIVATE verification data
 /// 4. Admin approves verification (status = Approved)
 /// 5. Admin manually calls safeMint() on this contract
-/// 6. NFT minted → Auto-callback to SumsubVerifier.markAsMinted()
-/// 7. Business wallet receives Limited Partners Business NFT
+/// 6. NFT minted → Auto-callback to VeriffVerifier.markAsMinted()
+/// 7. User receives Limited Partners Individuals NFT
 ///
 /// ACCESS GRANTED:
 /// - LP Pools (via PassportGatedHook)
@@ -30,7 +30,7 @@ import {ISumsubVerifier} from "../interfaces/ISumsubVerifier.sol";
 /// - Investment in vaults
 /// - Can request Credit Score for Ecreditscoring NFT (Tier 3)
 /// ═══════════════════════════════════════════════════════════════════════════════
-contract Limited_Partners_Business is ERC721, ERC721Burnable, ERC721URIStorage, AccessControl {
+contract Limited_Partners_Individuals is ERC721, ERC721Burnable, ERC721URIStorage, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     uint256 private _nextTokenId;
 
@@ -39,32 +39,14 @@ contract Limited_Partners_Business is ERC721, ERC721Burnable, ERC721URIStorage, 
         NonActive
     }
 
-    /// @notice Business type for KYB
-    enum BusinessType {
-        Corporation,
-        LLC,
-        Partnership,
-        SoleProprietor,
-        Other
-    }
-
-    /// @notice Business information stored with the token
-    struct BusinessInfo {
-        string companyName;
-        string registrationNumber;
-        string jurisdiction;
-        BusinessType businessType;
-        string sumsubApplicantId;
-    }
-
-    /// @notice The SumsubVerifier contract for callback
+    /// @notice The VeriffVerifier contract for callback
     address public immutable verifierContract;
 
     /// @notice Mapping from token ID to token state
     mapping(uint256 => TokenState) private _tokenStates;
 
-    /// @notice Mapping from token ID to business information
-    mapping(uint256 => BusinessInfo) private _businessInfo;
+    /// @notice Mapping from token ID to verification ID (Veriff session ID)
+    mapping(uint256 => string) private _verificationIds;
 
     error SoulboundToken();
     error AlreadyHoldsNFT();
@@ -72,32 +54,20 @@ contract Limited_Partners_Business is ERC721, ERC721Burnable, ERC721URIStorage, 
     /// @notice Constructor
     /// @param defaultAdmin Address to receive DEFAULT_ADMIN_ROLE
     /// @param minter Address to receive MINTER_ROLE (typically admin for manual minting)
-    /// @param _verifier Address of the SumsubVerifier contract for callback
-    constructor(address defaultAdmin, address minter, address _verifier) ERC721("Limited_Partners_Business", "LPB") {
+    /// @param _verifier Address of the VeriffVerifier contract for callback
+    constructor(address defaultAdmin, address minter, address _verifier) ERC721("Limited_Partners_Individuals", "LPI") {
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
         _grantRole(MINTER_ROLE, minter);
         verifierContract = _verifier;
     }
 
-    /// @notice Mint a new Limited Partners Business NFT
+    /// @notice Mint a new Limited Partners Individuals NFT
     /// @dev After minting, calls verifier to update status to Minted
-    /// @param to Address to mint to (business wallet)
-    /// @param companyName Registered company name
-    /// @param registrationNumber Company registration number
-    /// @param jurisdiction Jurisdiction of incorporation
-    /// @param businessType Type of business entity
-    /// @param sumsubApplicantId Sumsub applicant ID
-    /// @param uri Token metadata URI (use: https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreiejesvgsvohwvv7q5twszrbu5z6dnpke6sg5cdiwgn2rq7dilu33m)
+    /// @param to Address to mint to
+    /// @param verificationId The Veriff session ID used for verification
+    /// @param uri Token metadata URI (use: https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreib7mkjzpdm3id6st6d5vsxpn7v5h6sxeiswejjmrbcb5yoagaf4em)
     /// @return tokenId The minted token ID
-    function safeMint(
-        address to,
-        string memory companyName,
-        string memory registrationNumber,
-        string memory jurisdiction,
-        BusinessType businessType,
-        string memory sumsubApplicantId,
-        string memory uri
-    )
+    function safeMint(address to, string memory verificationId, string memory uri)
         public
         onlyRole(MINTER_ROLE)
         returns (uint256)
@@ -111,17 +81,11 @@ contract Limited_Partners_Business is ERC721, ERC721Burnable, ERC721URIStorage, 
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
         _tokenStates[tokenId] = TokenState.Active;
-        _businessInfo[tokenId] = BusinessInfo({
-            companyName: companyName,
-            registrationNumber: registrationNumber,
-            jurisdiction: jurisdiction,
-            businessType: businessType,
-            sumsubApplicantId: sumsubApplicantId
-        });
+        _verificationIds[tokenId] = verificationId;
 
         // Callback to verifier to update status to Minted
         if (verifierContract != address(0)) {
-            ISumsubVerifier(verifierContract).markAsMinted(to, tokenId);
+            IVeriffVerifier(verifierContract).markAsMinted(to, tokenId);
         }
 
         return tokenId;
@@ -143,20 +107,12 @@ contract Limited_Partners_Business is ERC721, ERC721Burnable, ERC721URIStorage, 
         return _tokenStates[tokenId] == TokenState.Active;
     }
 
-    /// @notice Get business information for a token (admin only)
+    /// @notice Get verification ID for a token (admin only)
     /// @param tokenId Token ID to query
-    /// @return info The business information
-    function getBusinessInfo(uint256 tokenId) public view onlyRole(DEFAULT_ADMIN_ROLE) returns (BusinessInfo memory info) {
+    /// @return The Veriff session ID
+    function getVerificationId(uint256 tokenId) public view onlyRole(DEFAULT_ADMIN_ROLE) returns (string memory) {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
-        return _businessInfo[tokenId];
-    }
-
-    /// @notice Get company name for a token (public)
-    /// @param tokenId Token ID to query
-    /// @return The company name
-    function getCompanyName(uint256 tokenId) public view returns (string memory) {
-        require(_ownerOf(tokenId) != address(0), "Token does not exist");
-        return _businessInfo[tokenId].companyName;
+        return _verificationIds[tokenId];
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════

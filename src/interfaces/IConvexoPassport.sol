@@ -19,7 +19,6 @@ interface IConvexoPassport {
         bool isActive;                  // Whether passport is currently active
         // ZKPassport verification results (boolean traits - no PII)
         bool kycVerified;               // Overall KYC verification passed
-        bool faceMatchPassed;           // Face match verification result
         bool sanctionsPassed;           // Sanctions check result
         bool isOver18;                  // Age verification result
     }
@@ -32,7 +31,6 @@ interface IConvexoPassport {
         bytes32 identifierHash,         // keccak256 hash of uniqueIdentifier (not PII)
         bytes32 personhoodProof,        // Nullifier (not PII)
         bool kycVerified,               // Verification trait
-        bool faceMatchPassed,           // Verification trait
         bool sanctionsPassed,           // Verification trait
         bool isOver18                   // Verification trait
     );
@@ -49,7 +47,6 @@ interface IConvexoPassport {
     /// @param personhoodProof Nullifier from ZKPassport verification
     /// @param sanctionsPassed Whether sanctions check passed
     /// @param isOver18 Whether age verification (18+) passed
-    /// @param faceMatchPassed Whether face match verification passed
     /// @param ipfsMetadataHash IPFS hash for the NFT metadata (tier-specific)
     /// @return tokenId The minted token ID
     /// @dev This is the ONLY way to mint a Convexo Passport.
@@ -60,7 +57,6 @@ interface IConvexoPassport {
         bytes32 personhoodProof,
         bool sanctionsPassed,
         bool isOver18,
-        bool faceMatchPassed,
         string calldata ipfsMetadataHash
     ) external returns (uint256 tokenId);
 

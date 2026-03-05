@@ -2,7 +2,7 @@
 pragma solidity ^0.8.27;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {IAggregatorV3} from "../interfaces/IAggregatorV3.sol";
+import {IAggregatorV3} from "../../interfaces/IAggregatorV3.sol";
 
 /// @title PriceFeedManager
 /// @notice Manages Chainlink price feeds for currency conversions

@@ -1,6 +1,6 @@
 # ZKPassport Frontend Integration Guide
 
-**Version 3.16** - String uniqueIdentifier support (pass SDK value directly!)  
+**Version 3.17** - faceMatchPassed removed, Arbitrum support added  
 **IPFS**: Pinata Gateway `lime-famous-condor-7.mypinata.cloud`
 
 ---
@@ -20,25 +20,24 @@ This guide implements a **simplified process** for individual investor verificat
 - ✅ Contract accepts verification results as simple parameters + IPFS hash
 - ✅ Much easier frontend development - no complex proof handling
 - ✅ **Privacy-compliant**: Only verification traits stored (no PII)
-- ✅ Grants **Tier 1 (Passport)** access - Treasury creation, Vault investments, and Uniswap V4 swaps
+- ✅ Grants **Tier 1 (Passport)** access - LP Pool Swaps, Vault investments, and Uniswap V4 swaps
 
 **Parameters Required:**
 - `uniqueIdentifier` - Unique ID from ZKPassport verification
-- `personhoodProof` - Personhood proof (private face match)
+- `personhoodProof` - Personhood proof (nullifier)
 - `sanctionsPassed` - Boolean: Sanctions check result
 - `isOver18` - Boolean: Age verification result  
-- `faceMatchPassed` - Boolean: Face match verification result
 - `ipfsMetadataHash` - IPFS hash for NFT metadata
 
 ---
 
-## 🏆 Tier System Overview (v2.1)
+## 🏆 Tier System Overview (v3.17)
 
 | Tier | NFT Required | User Type | Access |
 |------|--------------|-----------|--------|
 | **Tier 0** | None | Unverified | No access |
-| **Tier 1** | Convexo_Passport | Individual | Treasury creation + Vault investments |
-| **Tier 2** | Convexo_LPs | Limited Partner | LP pools + Vault investments |
+| **Tier 1** | Convexo_Passport | Individual | LP Pool Swaps + Vault investments |
+| **Tier 2** | Convexo_LPs | Limited Partner | LP pools + Vault investments + Credit Score |
 | **Tier 3** | Convexo_Vaults | Vault Creator | All above + Vault creation |
 
 **Note:** Tier 1 (Passport) is the entry-level tier for individuals. Highest tier wins (progressive KYC).
@@ -71,7 +70,6 @@ import { PINATA_CONFIG, buildIPFSUrl } from '../config/pinata';
 
 interface PassportTraits {
   kycVerified: boolean;
-  faceMatchPassed: boolean;
   sanctionsPassed: boolean;
   isOver18: boolean;
 }
@@ -86,7 +84,6 @@ export const createPassportMetadata = (tokenId: number, traits: PassportTraits) 
       { trait_type: "Tier", value: "1" },
       { trait_type: "Type", value: "Passport" },
       { trait_type: "KYC Verified", value: traits.kycVerified ? "Yes" : "No" },
-      { trait_type: "Face Match Passed", value: traits.faceMatchPassed ? "Yes" : "No" },
       { trait_type: "Sanctions Check Passed", value: traits.sanctionsPassed ? "Yes" : "No" },
       { trait_type: "Age Verification", value: traits.isOver18 ? "18+" : "Under 18" },
       { trait_type: "Soulbound", value: "True" },
@@ -221,9 +218,6 @@ export async function createVerificationRequest() {
 export interface VerificationResult {
   verified: boolean;
   result: {
-    facematch: {
-      passed: boolean;
-    };
     sanctions: {
       passed: boolean;
     };
@@ -255,9 +249,6 @@ export function onResult(callback: (result: VerificationResult) => void) {
     const verificationResult: VerificationResult = {
       verified,
       result: {
-        facematch: {
-          passed: result.facematch?.passed ?? false,
-        },
         sanctions: {
           passed: result.sanctions?.passed ?? false,
         },
@@ -298,11 +289,6 @@ export function IdentityVerification({ onVerified }: { onVerified: (uniqueIdenti
       // Check all requirements
       if (!result.verified) {
         setError("Verification proof invalid");
-        return;
-      }
-
-      if (!result.result.facematch.passed) {
-        setError("Face match failed. Please try again.");
         return;
       }
 
@@ -376,17 +362,22 @@ export function IdentityVerification({ onVerified }: { onVerified: (uniqueIdenti
 
 ```typescript
 // lib/constants.ts
-export const CONVEXO_PASSPORT_ADDRESSES = {
+// Load from addresses.json or use getContracts(chainId) from FRONTEND_INTEGRATION.md
+export const CONVEXO_PASSPORT_ADDRESSES: Record<number, `0x${string}`> = {
   // Testnets
-  11155111: '0x259adc4917c442dd9a509cb8333a9bed88fe5c70', // Ethereum Sepolia
-  84532: '0x5078300fa7e2d29c2e2145beb8a6eb5ad0d45e0c', // Base Sepolia
-  1301: '0xab83ce760054c1d048d5a9de5194b05398a09d41', // Unichain Sepolia
+  11155111: '0x...', // Ethereum Sepolia - check addresses.json
+  84532: '0x...',   // Base Sepolia - check addresses.json
+  1301: '0x...',    // Unichain Sepolia - check addresses.json
+  421614: '0x...',  // Arbitrum Sepolia - check addresses.json
   // Mainnets
-  1: '0x6b51adc34a503b23db99444048ac7c2dc735a12e', // Ethereum Mainnet
-  8453: '0x16d8a264aa305c5b0fc2551a3baf8b8602aa1710', // Base Mainnet
-  130: '0x04aeb36d5fa2fb0b0df8b9561d9ee88273d3bc76', // Unichain Mainnet
+  1: '0x...',       // Ethereum Mainnet - check addresses.json
+  8453: '0x...',    // Base Mainnet - check addresses.json
+  130: '0x...',     // Unichain Mainnet - check addresses.json
+  42161: '0x...',   // Arbitrum One - check addresses.json
 } as const;
 ```
+
+> **Note:** Always load addresses from `addresses.json` or the `getContracts(chainId)` helper. Addresses change with each version salt bump.
 
 ### Mint NFT Component
 
@@ -452,7 +443,6 @@ export function MintPassportNFT({ uniqueIdentifier }: MintPassportNFTProps) {
       personhoodProof,
       sanctionsPassed,
       isOver18,
-      faceMatchPassed,
       ipfsMetadataHash // New parameter for IPFS metadata
     ],
     gas: BigInt(300000), // Simpler function = less gas (~200k-300k)
@@ -520,7 +510,7 @@ export function MintPassportNFT({ uniqueIdentifier }: MintPassportNFTProps) {
       <div className="alert alert-success mb-4">
         <p>✅ Identity verified successfully</p>
         <p className="text-sm">
-          Face match: ✅ Passed | Sanctions: ✅ Passed
+          Sanctions: ✅ Passed
         </p>
         <p className="text-xs mt-2">
           Unique Identifier: {uniqueIdentifier.slice(0, 10)}...{uniqueIdentifier.slice(-8)}
@@ -546,8 +536,8 @@ export function MintPassportNFT({ uniqueIdentifier }: MintPassportNFTProps) {
       <div className="info-box mt-4">
         <p className="text-sm"><strong>Tier 1 Benefits:</strong></p>
         <ul className="text-xs space-y-1 mt-2">
-          <li>• Create personal treasuries</li>
           <li>• Invest in tokenized bond vaults</li>
+          <li>• Access Uniswap V4 LP Pools</li>
           <li>• Track investments in real-time</li>
         </ul>
       </div>
@@ -651,7 +641,6 @@ The contract stores only **verification results** (boolean traits), **NOT person
 | Trait | Description | Example Value |
 |-------|-------------|---------------|
 | `kycVerified` | Overall KYC verification passed | `true` |
-| `faceMatchPassed` | Face match verification result | `true` |
 | `sanctionsPassed` | Sanctions check passed | `true` |
 | `isOver18` | Age verification result | `true` |
 
@@ -689,7 +678,6 @@ const MintPassportWithIPFS = ({ verificationResults }) => {
       // 1. Create metadata based on verification results
       const metadata = createPassportMetadata(1, {
         kycVerified: true,
-        faceMatchPassed: verificationResults.faceMatchPassed,
         sanctionsPassed: verificationResults.sanctionsPassed,
         isOver18: verificationResults.isOver18
       });
@@ -704,7 +692,6 @@ const MintPassportWithIPFS = ({ verificationResults }) => {
         verificationResults.personhoodProof,
         verificationResults.sanctionsPassed,
         verificationResults.isOver18,
-        verificationResults.faceMatchPassed,
         metadataHash // IPFS metadata hash
       );
       
@@ -758,7 +745,6 @@ function safeMintWithVerification(
     bytes32 personhoodProof,          // Personhood proof (nullifier)
     bool sanctionsPassed,             // Sanctions check result
     bool isOver18,                    // Age verification result  
-    bool faceMatchPassed,             // Face match result
     string calldata ipfsMetadataHash  // IPFS hash for NFT metadata
 ) external returns (uint256 tokenId) {
     // Check if user already has a passport
@@ -798,7 +784,7 @@ function safeMintWithZKPassport(
     (bool success, DisclosedData memory disclosedData) = zkPassportVerifier.verifyProof(params, isIDCard);
     
     // Store actual verification results from ZKPassport
-    // Stores: kycVerified, faceMatchPassed, sanctionsPassed, isOver18
+    // Stores: kycVerified, sanctionsPassed, isOver18
     // ...
 }
 ```
@@ -818,7 +804,6 @@ struct VerifiedIdentity {
     uint256 zkPassportTimestamp;   // Original ZKPassport verification time
     bool isActive;                 // Passport active status
     bool kycVerified;              // KYC passed
-    bool faceMatchPassed;          // Face match passed
     bool sanctionsPassed;          // Sanctions check passed
     bool isOver18;                 // Age verification passed
 }
@@ -939,24 +924,27 @@ Before minting, check:
 
 ---
 
-## 🆕 What's New in v2.1
+## 🆕 What's New in v3.17
 
-### Tier System Changes
-- **Passport is now Tier 1** (previously Tier 3)
-- **LPs is now Tier 2** (previously Tier 1)
-- **Vaults is now Tier 3** (previously Tier 2)
-- **Highest tier wins** (no mutual exclusivity)
+### Breaking Changes
+- **`faceMatchPassed` removed** from `safeMintWithVerification()` (was the 5th param) - now 5 params total (string, bytes32, bool, bool, string)
+- **`faceMatchPassed` removed** from `VerifiedIdentity` struct
+- **Treasury deprecated** - TreasuryFactory and TreasuryVault contracts removed
+- **New chains** - Arbitrum Sepolia (421614) and Arbitrum One (42161) added
+- **New contract addresses** - version salt `convexo.v3.17` means all addresses changed
 
-### New Features
-- ✅ **TreasuryFactory**: Tier 1+ can create treasuries
-- ✅ **Privacy-compliant traits**: Only verification results stored
-- ✅ **Progressive KYC**: Start as individual, upgrade to business
+### Frontend Migration
+```typescript
+// BEFORE (v3.16)
+await contract.safeMintWithVerification(
+  uniqueIdentifier, personhoodProof, sanctionsPassed, isOver18,
+  faceMatchPassed,  // ← REMOVE THIS
+  ipfsMetadataHash
+);
 
-### Benefits for Passport Holders (Tier 1)
-- ✅ Create personal treasuries (new!)
-- ✅ Invest in tokenized bond vaults
-- ✅ Upgrade to Tier 2/3 via Veriff verification
-
----
-
-**Last Updated**: v2.1 - Simplified Identifier-Based Minting with Privacy-Compliant Traits
+// AFTER (v3.17)
+await contract.safeMintWithVerification(
+  uniqueIdentifier, personhoodProof, sanctionsPassed, isOver18,
+  ipfsMetadataHash  // only 5 args now
+);
+```

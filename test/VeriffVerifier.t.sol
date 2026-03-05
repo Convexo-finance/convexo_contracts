@@ -2,8 +2,8 @@
 pragma solidity ^0.8.27;
 
 import {Test} from "forge-std/Test.sol";
-import {VeriffVerifier} from "../src/contracts/VeriffVerifier.sol";
-import {Limited_Partners_Individuals} from "../src/contracts/Limited_Partners_Individuals.sol";
+import {VeriffVerifier} from "../src/contracts/identity/VeriffVerifier.sol";
+import {Limited_Partners_Individuals} from "../src/contracts/identity/Limited_Partners_Individuals.sol";
 import {ILimitedPartnersIndividuals} from "../src/interfaces/ILimitedPartnersIndividuals.sol";
 
 contract VeriffVerifierTest is Test {

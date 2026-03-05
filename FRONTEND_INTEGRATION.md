@@ -1,6 +1,6 @@
 # Frontend Integration Guide
 
-**Version**: 3.0 | **Solidity**: ^0.8.27 | **Framework**: React + Viem + Wagmi  
+**Version**: 3.17 | **Solidity**: ^0.8.27 | **Framework**: React + Viem + Wagmi  
 **IPFS**: Pinata Gateway `lime-famous-condor-7.mypinata.cloud`
 
 ---
@@ -38,8 +38,6 @@ import VeriffVerifierABI from '../abis/VeriffVerifier.json';
 import SumsubVerifierABI from '../abis/SumsubVerifier.json';
 import VaultFactoryABI from '../abis/VaultFactory.json';
 import TokenizedBondVaultABI from '../abis/TokenizedBondVault.json';
-import TreasuryFactoryABI from '../abis/TreasuryFactory.json';
-import TreasuryVaultABI from '../abis/TreasuryVault.json';
 import ContractSignerABI from '../abis/ContractSigner.json';
 import PoolRegistryABI from '../abis/PoolRegistry.json';
 import PriceFeedManagerABI from '../abis/PriceFeedManager.json';
@@ -54,8 +52,6 @@ export {
   SumsubVerifierABI,
   VaultFactoryABI,
   TokenizedBondVaultABI,
-  TreasuryFactoryABI,
-  TreasuryVaultABI,
   ContractSignerABI,
   PoolRegistryABI,
   PriceFeedManagerABI,
@@ -107,7 +103,6 @@ export interface NFTMetadata {
 
 export const createPassportMetadata = (tokenId: number, traits: {
   kycVerified: boolean;
-  faceMatchPassed: boolean;
   sanctionsPassed: boolean;
   isOver18: boolean;
 }): NFTMetadata => ({
@@ -119,7 +114,6 @@ export const createPassportMetadata = (tokenId: number, traits: {
     { trait_type: "Tier", value: "1" },
     { trait_type: "Type", value: "Passport" },
     { trait_type: "KYC Verified", value: traits.kycVerified ? "Yes" : "No" },
-    { trait_type: "Face Match Passed", value: traits.faceMatchPassed ? "Yes" : "No" },
     { trait_type: "Sanctions Check Passed", value: traits.sanctionsPassed ? "Yes" : "No" },
     { trait_type: "Age Verification", value: traits.isOver18 ? "18+" : "Under 18" },
     { trait_type: "Soulbound", value: "True" },
@@ -172,7 +166,6 @@ export function getContracts(chainId: number) {
     VERIFF_VERIFIER: chain.veriff_verifier?.address,
     SUMSUB_VERIFIER: chain.sumsub_verifier?.address,
     VAULT_FACTORY: chain.vault_factory?.address,
-    TREASURY_FACTORY: chain.treasury_factory?.address,
     CONTRACT_SIGNER: chain.contract_signer?.address,
     POOL_REGISTRY: chain.pool_registry?.address,
     PRICE_FEED_MANAGER: chain.price_feed_manager?.address,
@@ -188,6 +181,8 @@ export const SUPPORTED_CHAINS = {
   BASE_SEPOLIA: 84532,
   UNICHAIN_MAINNET: 130,
   UNICHAIN_SEPOLIA: 1301,
+  ARBITRUM_ONE: 42161,
+  ARBITRUM_SEPOLIA: 421614,
 };
 ```
 
@@ -200,7 +195,7 @@ export const SUPPORTED_CHAINS = {
 | Tier | NFT Required | Verification Method | Access |
 |------|--------------|---------------------|--------|
 | **0** | None | - | No access |
-| **1** | Convexo_Passport | ZKPassport (self-mint) | LP Pools, Vault investments, Treasury |
+| **1** | Convexo_Passport | ZKPassport (self-mint) | LP Pools, Vault investments |
 | **2** | LP_Individuals | Veriff KYC (admin-mint) | Tier 1 + Credit Score request, OTC |
 | **2** | LP_Business | Sumsub KYB (admin-mint) | Tier 1 + Credit Score request, OTC |
 | **3** | Ecreditscoring | AI Credit Score (backend-mint) | All above + Vault creation |
@@ -223,7 +218,6 @@ export interface UserReputation {
   lpBusinessBalance: bigint;
   ecreditscoringBalance: bigint;
   canAccessLPPools: boolean;
-  canCreateTreasury: boolean;
   canInvestInVaults: boolean;
   canRequestCreditScore: boolean;
   canCreateVaults: boolean;
@@ -264,7 +258,6 @@ function getReputationTierNumeric(address user) returns (uint256)
 
 // Permission checks
 function canAccessLPPools(address user) returns (bool)      // Tier 1+
-function canCreateTreasury(address user) returns (bool)     // Tier 1+
 function canInvestInVaults(address user) returns (bool)     // Tier 1+
 function canRequestCreditScore(address user) returns (bool) // Tier 2+
 function canCreateVaults(address user) returns (bool)       // Tier 3 only
@@ -303,7 +296,7 @@ function safeMintWithVerification(
     bytes32 personhoodProof,      // Personhood proof from ZKPassport
     bool sanctionsPassed,         // Sanctions check result
     bool isOver18,                // Age verification result
-    bool faceMatchPassed          // Private face match result
+    string calldata ipfsMetadataHash  // IPFS hash for NFT metadata
 ) returns (uint256 tokenId)
 
 // Revoke passport (REVOKER_ROLE required)
@@ -331,7 +324,6 @@ struct VerifiedIdentity {
     uint256 zkPassportTimestamp;
     bool isActive;
     bool kycVerified;      // Public trait
-    bool faceMatchPassed;  // Public trait
     bool sanctionsPassed;  // Public trait
     bool isOver18;         // Public trait
 }
@@ -707,67 +699,6 @@ function balanceOf(address account) returns (uint256) // ERC20 shares
 
 ---
 
-### TreasuryFactory
-
-**Purpose**: Create personal treasuries. Requires Tier 1+.
-
-#### Write Functions
-
-```typescript
-// Create treasury (Tier 1+ required)
-function createTreasury(
-    address[] memory signers,      // Empty for single-sig
-    uint256 signaturesRequired     // 0 for single-sig
-) returns (uint256 treasuryId, address treasuryAddress)
-```
-
-#### Read Functions
-
-```typescript
-function getTreasury(uint256 treasuryId) returns (address)
-function getTreasuryCount() returns (uint256)
-function getTreasuriesByOwner(address owner) returns (uint256[] memory)
-function getTreasuryCountByOwner(address owner) returns (uint256)
-```
-
----
-
-### TreasuryVault
-
-**Purpose**: Multi-sig USDC treasury.
-
-#### Write Functions
-
-```typescript
-// Deposit USDC
-function deposit(uint256 amount)
-
-// Propose withdrawal (owner or signer)
-function proposeWithdrawal(
-    address recipient,
-    uint256 amount,
-    string calldata reason
-) returns (uint256 proposalId)
-
-// Approve withdrawal (signer only, multi-sig)
-function approveWithdrawal(uint256 proposalId)
-
-// Execute approved withdrawal
-function executeWithdrawal(uint256 proposalId)
-```
-
-#### Read Functions
-
-```typescript
-function getBalance() returns (uint256)
-function getProposal(uint256 proposalId) returns (Proposal memory)
-function owner() returns (address)
-function signers(uint256 index) returns (address)
-function signaturesRequired() returns (uint256)
-```
-
----
-
 ### ContractSigner
 
 **Purpose**: On-chain multi-party contract signing.
@@ -850,12 +781,6 @@ export function useUserReputation(address: `0x${string}` | undefined, chainId: n
       {
         address: contracts.REPUTATION_MANAGER as `0x${string}`,
         abi: ReputationManagerABI,
-        functionName: 'canCreateTreasury',
-        args: [address],
-      },
-      {
-        address: contracts.REPUTATION_MANAGER as `0x${string}`,
-        abi: ReputationManagerABI,
         functionName: 'canInvestInVaults',
         args: [address],
       },
@@ -881,10 +806,9 @@ export function useUserReputation(address: `0x${string}` | undefined, chainId: n
     lpBusinessBalance: data[0].result?.[3] ?? 0n,
     ecreditscoringBalance: data[0].result?.[4] ?? 0n,
     canAccessLPPools: data[1].result ?? false,
-    canCreateTreasury: data[2].result ?? false,
-    canInvestInVaults: data[3].result ?? false,
-    canRequestCreditScore: data[4].result ?? false,
-    canCreateVaults: data[5].result ?? false,
+    canInvestInVaults: data[2].result ?? false,
+    canRequestCreditScore: data[3].result ?? false,
+    canCreateVaults: data[4].result ?? false,
   } : null;
 
   return { reputation, isLoading, error, refetch };
@@ -1126,41 +1050,6 @@ export function useCreateVault(chainId: number) {
 }
 ```
 
-### useCreateTreasury
-
-```typescript
-// hooks/useCreateTreasury.ts
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { TreasuryFactoryABI } from '../config/abis';
-import { getContracts } from '../config/contracts';
-
-export function useCreateTreasury(chainId: number) {
-  const contracts = getContracts(chainId);
-
-  const { writeContract, data: hash, isPending, error } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess, data: receipt } = useWaitForTransactionReceipt({ hash });
-
-  const createTreasury = async (signers: `0x${string}`[] = [], signaturesRequired = 0) => {
-    await writeContract({
-      address: contracts.TREASURY_FACTORY as `0x${string}`,
-      abi: TreasuryFactoryABI,
-      functionName: 'createTreasury',
-      args: [signers, BigInt(signaturesRequired)],
-    });
-  };
-
-  return {
-    createTreasury,
-    hash,
-    isPending,
-    isConfirming,
-    isSuccess,
-    receipt,
-    error,
-  };
-}
-```
-
 ---
 
 ## Complete Examples
@@ -1216,7 +1105,6 @@ export function Dashboard() {
         <h2 className="text-lg font-semibold mb-4">Permissions</h2>
         <div className="grid grid-cols-2 gap-3">
           <PermissionItem label="LP Pools" enabled={reputation?.canAccessLPPools} />
-          <PermissionItem label="Create Treasury" enabled={reputation?.canCreateTreasury} />
           <PermissionItem label="Invest in Vaults" enabled={reputation?.canInvestInVaults} />
           <PermissionItem label="Request Credit Score" enabled={reputation?.canRequestCreditScore} />
           <PermissionItem label="Create Vaults" enabled={reputation?.canCreateVaults} />
@@ -1394,7 +1282,6 @@ export function VaultCard({ vaultAddress }: VaultCardProps) {
 | Feature | Required Tier | Contract | Function |
 |---------|---------------|----------|----------|
 | Uniswap V4 LP Swaps | 1+ | PassportGatedHook | (automatic) |
-| Create Treasury | 1+ | TreasuryFactory | `createTreasury()` |
 | Invest in Vaults | 1+ | TokenizedBondVault | `purchaseShares()` |
 | Request Credit Score | 2+ | Backend | (API call) |
 | OTC Orders | 2+ | (OTC contracts) | - |
@@ -1402,4 +1289,4 @@ export function VaultCard({ vaultAddress }: VaultCardProps) {
 
 ---
 
-*Version 3.16 | Updated January 2026 - String uniqueIdentifier support*
+*Version 3.17 | Updated March 2026 - Arbitrum support, faceMatchPassed removed, Treasury deprecated*

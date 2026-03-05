@@ -5,19 +5,18 @@ import {Script, console} from "forge-std/Script.sol";
 import {SafeSingletonDeployer} from "safe-singleton-deployer-sol/SafeSingletonDeployer.sol";
 
 // Import all contracts for bytecode
-import {Convexo_Passport} from "../src/contracts/Convexo_Passport.sol";
-import {Limited_Partners_Individuals} from "../src/contracts/Limited_Partners_Individuals.sol";
-import {Limited_Partners_Business} from "../src/contracts/Limited_Partners_Business.sol";
-import {Ecreditscoring} from "../src/contracts/Ecreditscoring.sol";
-import {ReputationManager} from "../src/contracts/ReputationManager.sol";
-import {ContractSigner} from "../src/contracts/ContractSigner.sol";
-import {VeriffVerifier} from "../src/contracts/VeriffVerifier.sol";
-import {SumsubVerifier} from "../src/contracts/SumsubVerifier.sol";
-import {PoolRegistry} from "../src/contracts/PoolRegistry.sol";
-import {PriceFeedManager} from "../src/contracts/PriceFeedManager.sol";
+import {Convexo_Passport} from "../src/contracts/identity/Convexo_Passport.sol";
+import {Limited_Partners_Individuals} from "../src/contracts/identity/Limited_Partners_Individuals.sol";
+import {Limited_Partners_Business} from "../src/contracts/identity/Limited_Partners_Business.sol";
+import {Ecreditscoring} from "../src/contracts/credits/Ecreditscoring.sol";
+import {ReputationManager} from "../src/contracts/identity/ReputationManager.sol";
+import {ContractSigner} from "../src/contracts/credits/ContractSigner.sol";
+import {VeriffVerifier} from "../src/contracts/identity/VeriffVerifier.sol";
+import {SumsubVerifier} from "../src/contracts/identity/SumsubVerifier.sol";
+import {PoolRegistry} from "../src/contracts/trading/PoolRegistry.sol";
+import {PriceFeedManager} from "../src/contracts/trading/PriceFeedManager.sol";
 import {HookDeployer} from "../src/hooks/HookDeployer.sol";
-import {VaultFactory} from "../src/contracts/VaultFactory.sol";
-import {TreasuryFactory} from "../src/contracts/TreasuryFactory.sol";
+import {VaultFactory} from "../src/contracts/credits/VaultFactory.sol";
 import {PassportGatedHook} from "../src/hooks/PassportGatedHook.sol";
 
 /// @title PredictAddresses
@@ -230,20 +229,12 @@ contract PredictAddresses is Script {
             keccak256(abi.encodePacked(chainSalt, "VaultFactory"))
         );
 
-        address treasuryFactory = SafeSingletonDeployer.computeAddress(
-            type(TreasuryFactory).creationCode,
-            abi.encode(usdc, reputationManager),
-            keccak256(abi.encodePacked(chainSalt, "TreasuryFactory"))
-        );
-
         console.log("");
         console.log(chainName, "(Chain ID:", chainId, ")");
         console.log("  PassportGatedHook:");
         console.log("    Address:", passportGatedHook);
         console.log("  VaultFactory:");
         console.log("    Address:", vaultFactory);
-        console.log("  TreasuryFactory:");
-        console.log("    Address:", treasuryFactory);
     }
 
     function _getChainConfig(uint256 chainId) internal pure returns (address usdc, address poolManager) {
@@ -265,6 +256,12 @@ contract PredictAddresses is Script {
         } else if (chainId == 130) {
             usdc = 0x078D782b760474a361dDA0AF3839290b0EF57AD6;
             poolManager = 0x1F98400000000000000000000000000000000004;
+        } else if (chainId == 421614) {
+            usdc = 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d;
+            poolManager = 0xFB3e0C6F74eB1a21CC1Da29aeC80D2Dfe6C9a317;
+        } else if (chainId == 42161) {
+            usdc = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
+            poolManager = 0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32;
         }
     }
 }

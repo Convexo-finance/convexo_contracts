@@ -26,11 +26,13 @@ if [ -z "$NETWORK" ]; then
     echo "  ethereum-sepolia  (Chain ID: 11155111)"
     echo "  base-sepolia      (Chain ID: 84532)"
     echo "  unichain-sepolia  (Chain ID: 1301)"
+    echo "  arbitrum-sepolia  (Chain ID: 421614)"
     echo ""
     echo "Mainnets:"
     echo "  ethereum          (Chain ID: 1)"
     echo "  base              (Chain ID: 8453)"
     echo "  unichain          (Chain ID: 130)"
+    echo "  arbitrum          (Chain ID: 42161)"
     exit 1
 fi
 
@@ -90,6 +92,24 @@ case $NETWORK in
         IS_MAINNET=true
         EXTRA_FLAGS="--legacy --skip-simulation"
         ;;
+    "arbitrum-sepolia")
+        CHAIN_NAME="Arbitrum Sepolia"
+        CHAIN_ID="421614"
+        RPC_VAR="ARBITRUM_SEPOLIA_RPC_URL"
+        RPC_FALLBACK="https://sepolia-rollup.arbitrum.io/rpc"
+        EXPLORER="https://sepolia.arbiscan.io"
+        IS_MAINNET=false
+        EXTRA_FLAGS=""
+        ;;
+    "arbitrum")
+        CHAIN_NAME="Arbitrum One"
+        CHAIN_ID="42161"
+        RPC_VAR="ARBITRUM_MAINNET_RPC_URL"
+        RPC_FALLBACK="https://arb1.arbitrum.io/rpc"
+        EXPLORER="https://arbiscan.io"
+        IS_MAINNET=true
+        EXTRA_FLAGS=""
+        ;;
     *)
         echo "Unknown network: $NETWORK"
         echo "Run ./scripts/deploy.sh without arguments to see available networks."
@@ -99,7 +119,7 @@ esac
 
 echo "╔═══════════════════════════════════════════════════════════╗"
 echo "║  Deploying to $CHAIN_NAME"
-echo "║  Chain ID: $CHAIN_ID | 14 Contracts"
+echo "║  Chain ID: $CHAIN_ID | 12 Contracts"
 echo "║  Mode: Deterministic (CREATE2)"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo ""

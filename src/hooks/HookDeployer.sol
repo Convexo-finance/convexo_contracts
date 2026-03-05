@@ -3,7 +3,7 @@ pragma solidity ^0.8.27;
 
 import {PassportGatedHook} from "./PassportGatedHook.sol";
 import {IPoolManager} from "../interfaces/IPoolManager.sol";
-import {ReputationManager} from "../contracts/ReputationManager.sol";
+import {ReputationManager} from "../contracts/identity/ReputationManager.sol";
 
 /// @title HookDeployer
 /// @notice Deploys Uniswap V4 hooks using CREATE2 for deterministic addresses

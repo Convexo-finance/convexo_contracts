@@ -52,10 +52,6 @@ This document describes the metadata structure for Convexo Protocol NFTs stored 
       "value": "Yes"
     },
     {
-      "trait_type": "Face Match Passed",
-      "value": "Yes"
-    },
-    {
       "trait_type": "Sanctions Check Passed",
       "value": "Yes"
     },
@@ -228,7 +224,6 @@ const mintPassport = async (verificationData, metadataHash) => {
     verificationData.personhoodProof,
     verificationData.sanctionsPassed,
     verificationData.isOver18,
-    verificationData.faceMatchPassed,
     metadataHash // IPFS hash from Pinata
   );
   return tx;
@@ -262,7 +257,6 @@ function safeMintWithVerification(
     bytes32 personhoodProof,
     bool sanctionsPassed,
     bool isOver18,
-    bool faceMatchPassed,
     string calldata ipfsMetadataHash
 ) external returns (uint256 tokenId)
 ```

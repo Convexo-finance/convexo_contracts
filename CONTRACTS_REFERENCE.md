@@ -1,6 +1,6 @@
 # Convexo Contracts Reference
 
-**Version 3.16** | Solidity ^0.8.27 | **String uniqueIdentifier Support**
+**Version 3.17** | Solidity ^0.8.27 | **Arbitrum support + Treasury deprecated + Folder reorganization**
 
 > **📍 Contract Addresses:** See [addresses.json](./addresses.json)
 
@@ -39,7 +39,6 @@ function getReputationTierNumeric(address user) returns (uint256)
 
 // Access checks
 function canAccessLPPools(address user) returns (bool)      // Tier 1+
-function canCreateTreasury(address user) returns (bool)     // Tier 1+
 function canInvestInVaults(address user) returns (bool)     // Tier 1+
 function canRequestCreditScore(address user) returns (bool) // Tier 2+
 function canCreateVaults(address user) returns (bool)       // Tier 3
@@ -80,7 +79,6 @@ function safeMintWithVerification(
     bytes32 personhoodProof,          // Personhood proof from ZKPassport
     bool sanctionsPassed,             // Sanctions check result
     bool isOver18,                    // Age verification result
-    bool faceMatchPassed,             // Private face match result
     string calldata ipfsMetadataHash  // IPFS hash for NFT metadata
 ) returns (uint256 tokenId)
 
@@ -107,7 +105,6 @@ struct VerifiedIdentity {
     uint256 zkPassportTimestamp;
     bool isActive;
     bool kycVerified;
-    bool faceMatchPassed;
     bool sanctionsPassed;
     bool isOver18;
 }
@@ -214,52 +211,6 @@ function createVault(
 function getVault(uint256 vaultId) returns (address)
 function getVaultCount() returns (uint256)
 function getVaultAddressAtIndex(uint256 index) returns (address)
-```
-
----
-
-## TreasuryFactory
-
-Creates personal TreasuryVault instances. Requires Tier 1+.
-
-### Write Functions
-
-```solidity
-function createTreasury(
-    address[] memory signers,      // Empty for single-sig
-    uint256 signaturesRequired     // 0 for single-sig
-) returns (uint256 treasuryId, address treasuryAddress)
-```
-
-### Read Functions
-
-```solidity
-function getTreasury(uint256 treasuryId) returns (address)
-function getTreasuryCount() returns (uint256)
-function getTreasuriesByOwner(address owner) returns (uint256[] memory)
-function getTreasuryCountByOwner(address owner) returns (uint256)
-```
-
----
-
-## TreasuryVault
-
-Multi-sig USDC treasury management.
-
-### Write Functions
-
-```solidity
-function deposit(uint256 amount)
-function proposeWithdrawal(address recipient, uint256 amount, string calldata reason) returns (uint256 proposalId)
-function approveWithdrawal(uint256 proposalId)
-function executeWithdrawal(uint256 proposalId)
-```
-
-### Read Functions
-
-```solidity
-function getBalance() returns (uint256)
-function getProposal(uint256 proposalId) returns (Proposal memory)
 ```
 
 ---
@@ -802,7 +753,6 @@ event FundsWithdrawn(address indexed borrower, uint256 amount)
 ### Factory Events
 ```solidity
 event VaultCreated(uint256 indexed vaultId, address indexed vaultAddress, address indexed borrower, ...)
-event TreasuryCreated(uint256 indexed treasuryId, address indexed treasuryAddress, address indexed owner, ...)
 ```
 
 ---

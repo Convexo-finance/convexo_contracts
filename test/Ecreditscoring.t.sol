@@ -2,9 +2,9 @@
 pragma solidity ^0.8.27;
 
 import {Test} from "forge-std/Test.sol";
-import {Ecreditscoring} from "../src/contracts/Ecreditscoring.sol";
-import {Limited_Partners_Individuals} from "../src/contracts/Limited_Partners_Individuals.sol";
-import {Limited_Partners_Business} from "../src/contracts/Limited_Partners_Business.sol";
+import {Ecreditscoring} from "../src/contracts/credits/Ecreditscoring.sol";
+import {Limited_Partners_Individuals} from "../src/contracts/identity/Limited_Partners_Individuals.sol";
+import {Limited_Partners_Business} from "../src/contracts/identity/Limited_Partners_Business.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract EcreditscoringTest is Test {

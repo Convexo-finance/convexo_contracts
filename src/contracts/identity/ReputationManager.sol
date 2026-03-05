@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import {IConvexoPassport} from "../interfaces/IConvexoPassport.sol";
+import {IConvexoPassport} from "../../interfaces/IConvexoPassport.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 /// @title ReputationManager
@@ -15,17 +15,17 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 /// 1. CONVEXO PASSPORT (Tier 1) - Convexo_Passport.sol
 ///    └─ Verification: ZKPassport (International KYC)
 ///    └─ Purpose: Basic identity verification for international users
-///    └─ Access: LP pools, Treasury, Invest in vaults
+///    └─ Access: LP pools, Invest in vaults
 ///
 /// 2. LIMITED PARTNERS - INDIVIDUALS (Tier 2) - Limited_Partners_Individuals.sol
 ///    └─ Verification: Veriff (Individual KYC)
 ///    └─ Purpose: Verified individuals who can request loans
-///    └─ Access: LP pools, Treasury, Invest + Can REQUEST Credit Score
+///    └─ Access: LP pools, Invest + Can REQUEST Credit Score
 ///
 /// 3. LIMITED PARTNERS - BUSINESS (Tier 2) - Limited_Partners_Business.sol
 ///    └─ Verification: Sumsub (Business KYB)
 ///    └─ Purpose: Verified businesses who can request loans
-///    └─ Access: LP pools, Treasury, Invest + Can REQUEST Credit Score
+///    └─ Access: LP pools, Invest + Can REQUEST Credit Score
 ///
 /// 4. ECREDITSCORING (Tier 3) - Ecreditscoring.sol
 ///    └─ Verification: AI Credit Scoring
@@ -36,12 +36,12 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 /// ═══════════════════════════════════════════════════════════════════════════════
 /// ACCESS MATRIX:
 /// ═══════════════════════════════════════════════════════════════════════════════
-/// | NFT                  | LP Pools | Treasury | Invest | Request Credit | Create Vaults |
-/// |----------------------|----------|----------|--------|----------------|---------------|
-/// | Passport             | ✓        | ✓        | ✓      | ✗              | ✗             |
-/// | LP Individuals       | ✓        | ✓        | ✓      | ✓              | ✗             |
-/// | LP Business          | ✓        | ✓        | ✓      | ✓              | ✗             |
-/// | Ecreditscoring       | ✓        | ✓        | ✓      | ✓              | ✓             |
+/// | NFT                  | LP Pools | Invest | Request Credit | Create Vaults |
+/// |----------------------|----------|--------|----------------|---------------|
+/// | Passport             | ✓        | ✓      | ✗              | ✗             |
+/// | LP Individuals       | ✓        | ✓      | ✓              | ✗             |
+/// | LP Business          | ✓        | ✓      | ✓              | ✗             |
+/// | Ecreditscoring       | ✓        | ✓      | ✓              | ✓             |
 /// ═══════════════════════════════════════════════════════════════════════════════
 contract ReputationManager {
     /// @notice Reputation tiers - Progressive verification system
@@ -138,13 +138,6 @@ contract ReputationManager {
     /// @param user The address to check
     /// @return True if user has any NFT (Passport, LP, or Ecreditscoring)
     function canAccessLPPools(address user) external view returns (bool) {
-        return getReputationTier(user) >= ReputationTier.Passport;
-    }
-
-    /// @notice Check if user can create treasuries (Tier 1+)
-    /// @param user The address to check
-    /// @return True if user has Tier 1 or higher
-    function canCreateTreasury(address user) external view returns (bool) {
         return getReputationTier(user) >= ReputationTier.Passport;
     }
 

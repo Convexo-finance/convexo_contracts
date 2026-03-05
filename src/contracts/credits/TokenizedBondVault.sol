@@ -5,8 +5,8 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IContractSigner} from "../interfaces/IContractSigner.sol";
-import {ReputationManager} from "./ReputationManager.sol";
+import {IContractSigner} from "../../interfaces/IContractSigner.sol";
+import {ReputationManager} from "../identity/ReputationManager.sol";
 
 /// @title TokenizedBondVault
 /// @notice Core vault contract for tokenized bonds with ERC20 share tokens

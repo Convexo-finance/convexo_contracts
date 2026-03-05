@@ -6,7 +6,7 @@ import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/
 import {ERC721Burnable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {IConvexoPassport} from "../interfaces/IConvexoPassport.sol";
+import {IConvexoPassport} from "../../interfaces/IConvexoPassport.sol";
 
 /// @title Convexo_Passport
 /// @notice Soulbound NFT for individual investors verified via ZKPassport
@@ -15,7 +15,6 @@ import {IConvexoPassport} from "../interfaces/IConvexoPassport.sol";
 ///      
 ///      STORED TRAITS (non-PII):
 ///      - kycVerified: Overall KYC verification passed (always true when minted)
-///      - faceMatchPassed: Face match verification result (personhood + private face match)
 ///      - sanctionsPassed: Sanctions check result (US, UK, EU, Switzerland)
 ///      - isOver18: Age verification result
 ///      
@@ -89,7 +88,6 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         bytes32 personhoodProof,
         bool sanctionsPassed,
         bool isOver18,
-        bool faceMatchPassed,
         string calldata ipfsMetadataHash
     ) external returns (uint256 tokenId) {
         // Validate unique identifier is not empty
@@ -132,7 +130,6 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
             isActive: true,
             // Verification results (boolean traits - no PII)
             kycVerified: true, // Overall KYC passed if function is called
-            faceMatchPassed: faceMatchPassed,
             sanctionsPassed: sanctionsPassed,
             isOver18: isOver18
         });
@@ -150,7 +147,6 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
             identifierHash, 
             personhoodProof,
             true, // kycVerified
-            faceMatchPassed,
             sanctionsPassed,
             isOver18
         );

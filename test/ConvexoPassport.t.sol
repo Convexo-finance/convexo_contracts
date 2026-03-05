@@ -2,7 +2,7 @@
 pragma solidity ^0.8.27;
 
 import {Test, console} from "forge-std/Test.sol";
-import {Convexo_Passport} from "../src/contracts/Convexo_Passport.sol";
+import {Convexo_Passport} from "../src/contracts/identity/Convexo_Passport.sol";
 import {IConvexoPassport} from "../src/interfaces/IConvexoPassport.sol";
 
 /// @title ConvexoPassportSimplifiedTest
@@ -29,8 +29,7 @@ contract ConvexoPassportSimplifiedTest is Test {
         address user, 
         uint256 seed,
         bool sanctionsPassed,
-        bool isOver18,
-        bool faceMatchPassed
+        bool isOver18
     ) internal returns (uint256) {
         string memory uniqueIdentifier = string(abi.encodePacked("zkpassport-id-", vm.toString(seed)));
         bytes32 personhoodProof = bytes32(seed + 1000);
@@ -42,7 +41,6 @@ contract ConvexoPassportSimplifiedTest is Test {
             personhoodProof,
             sanctionsPassed,
             isOver18,
-            faceMatchPassed,
             ipfsHash
         );
     }
@@ -67,7 +65,6 @@ contract ConvexoPassportSimplifiedTest is Test {
             identifierHash,
             personhoodProof,
             true, // kycVerified (always true when minted)
-            true, // faceMatchPassed
             true, // sanctionsPassed
             true  // isOver18
         );
@@ -78,7 +75,6 @@ contract ConvexoPassportSimplifiedTest is Test {
             personhoodProof,
             true, // sanctionsPassed
             true, // isOver18
-            true, // faceMatchPassed
             "bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4" // Actual Convexo Passport IPFS hash
         );
         
@@ -94,7 +90,6 @@ contract ConvexoPassportSimplifiedTest is Test {
         assertEq(identity.personhoodProof, personhoodProof);
         assertTrue(identity.isActive);
         assertTrue(identity.kycVerified);
-        assertTrue(identity.faceMatchPassed);
         assertTrue(identity.sanctionsPassed);
         assertTrue(identity.isOver18);
         assertGt(identity.verifiedAt, 0);
@@ -115,7 +110,6 @@ contract ConvexoPassportSimplifiedTest is Test {
             personhoodProof1,
             true, // sanctionsPassed
             true, // isOver18
-            true, // faceMatchPassed
             "bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4"
         );
         
@@ -127,14 +121,13 @@ contract ConvexoPassportSimplifiedTest is Test {
             personhoodProof2, // Different proof
             true, // sanctionsPassed
             true, // isOver18
-            true, // faceMatchPassed
             "bafkreiejesvgsvohwvv7q5twszrbu5z6dnpke6sg5cdiwgn2rq7dilu33m" // Different IPFS hash (business LP)
         );
     }
 
     function test_SafeMintWithVerification_RevertIfAlreadyHasPassport() public {
         // User mints first passport
-        _mintPassportForUser(user1, 1, true, true, true);
+        _mintPassportForUser(user1, 1, true, true);
         
         // Try to mint second passport - should fail
         vm.prank(user1);
@@ -144,7 +137,6 @@ contract ConvexoPassportSimplifiedTest is Test {
             bytes32(uint256(3)), // Different proof
             true, // sanctionsPassed
             true, // isOver18
-            true, // faceMatchPassed
             "bafkreib7mkjzpdm3id6st6d5vsxpn7v5h6sxeiswejjmrbcb5yoagaf4em" // Individual LP IPFS hash
         );
     }
@@ -159,7 +151,6 @@ contract ConvexoPassportSimplifiedTest is Test {
             personhoodProof,
             false, // sanctionsPassed = false
             false, // isOver18 = false
-            true,  // faceMatchPassed
             "bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4" // Convexo Passport IPFS hash
         );
         
@@ -167,14 +158,13 @@ contract ConvexoPassportSimplifiedTest is Test {
         IConvexoPassport.VerifiedIdentity memory identity = passport.getVerifiedIdentity(user1);
         assertFalse(identity.sanctionsPassed);
         assertFalse(identity.isOver18);
-        assertTrue(identity.faceMatchPassed);
         assertTrue(identity.kycVerified); // Always true when minted
     }
 
     function test_MultipleDifferentPassports() public {
         // Mint passports for different users with different identifiers
-        uint256 tokenId1 = _mintPassportForUser(user1, 1, true, true, true);
-        uint256 tokenId2 = _mintPassportForUser(user2, 2, true, false, true);
+        uint256 tokenId1 = _mintPassportForUser(user1, 1, true, true);
+        uint256 tokenId2 = _mintPassportForUser(user2, 2, true, false);
         
         assertEq(tokenId1, 0);
         assertEq(tokenId2, 1);
@@ -194,7 +184,7 @@ contract ConvexoPassportSimplifiedTest is Test {
 
     function test_RevokePassport() public {
         // Mint passport
-        uint256 tokenId = _mintPassportForUser(user1, 1, true, true, true);
+        uint256 tokenId = _mintPassportForUser(user1, 1, true, true);
         assertEq(passport.getActivePassportCount(), 1);
         
         // Revoke passport
@@ -211,7 +201,7 @@ contract ConvexoPassportSimplifiedTest is Test {
 
     function test_RevokePassport_RevertIfNotRevoker() public {
         // Mint passport
-        uint256 tokenId = _mintPassportForUser(user1, 1, true, true, true);
+        uint256 tokenId = _mintPassportForUser(user1, 1, true, true);
         
         // Try to revoke from non-revoker - should fail
         vm.prank(user2);
@@ -221,7 +211,7 @@ contract ConvexoPassportSimplifiedTest is Test {
 
     function test_SoulboundToken_CannotTransfer() public {
         // Mint passport
-        uint256 tokenId = _mintPassportForUser(user1, 1, true, true, true);
+        uint256 tokenId = _mintPassportForUser(user1, 1, true, true);
         
         // Try to transfer - should fail
         vm.prank(user1);
@@ -241,7 +231,7 @@ contract ConvexoPassportSimplifiedTest is Test {
 
     function test_TokenURI() public {
         // Mint passport with actual IPFS hash
-        uint256 tokenId = _mintPassportForUser(user1, 1, true, true, true);
+        uint256 tokenId = _mintPassportForUser(user1, 1, true, true);
         
         string memory tokenURI = passport.tokenURI(tokenId);
         // Should return the full IPFS URL via your custom Pinata gateway

@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 import {BaseHook} from "./BaseHook.sol";
 import {IHooks, PoolKey, BeforeSwapDelta, ModifyLiquidityParams, SwapParams, Permissions} from "../interfaces/IHooks.sol";
 import {IPoolManager} from "../interfaces/IPoolManager.sol";
-import {ReputationManager} from "../contracts/ReputationManager.sol";
+import {ReputationManager} from "../contracts/identity/ReputationManager.sol";
 
 /// @title PassportGatedHook
 /// @notice Uniswap V4 hook that gates LP pool access to verified KYC/KYB holders

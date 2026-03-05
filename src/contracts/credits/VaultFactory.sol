@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {TokenizedBondVault} from "./TokenizedBondVault.sol";
 import {ContractSigner} from "./ContractSigner.sol";
-import {ReputationManager} from "./ReputationManager.sol";
+import {ReputationManager} from "../identity/ReputationManager.sol";
 
 /// @title VaultFactory
 /// @notice Factory contract for creating TokenizedBondVault instances

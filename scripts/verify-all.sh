@@ -1,5 +1,6 @@
 #!/bin/bash
 # Verify all Convexo contracts on block explorers
+# v3.17 - 12 contracts, 8 chains (Ethereum, Base, Unichain, Arbitrum)
 #
 # Usage:
 #   ./scripts/verify-all.sh <chain_id>
@@ -8,32 +9,15 @@
 #   ./scripts/verify-all.sh 11155111  # Ethereum Sepolia
 #   ./scripts/verify-all.sh 84532     # Base Sepolia
 #   ./scripts/verify-all.sh 1301      # Unichain Sepolia
+#   ./scripts/verify-all.sh 421614    # Arbitrum Sepolia
 #   ./scripts/verify-all.sh 1         # Ethereum Mainnet
 #   ./scripts/verify-all.sh 8453      # Base Mainnet
 #   ./scripts/verify-all.sh 130       # Unichain Mainnet
+#   ./scripts/verify-all.sh 42161     # Arbitrum One
 #
 # Prerequisites:
 #   - jq installed (brew install jq)
-#   - .env file with API keys: ETHERSCAN_API_KEY, BASESCAN_API_KEY
-#   - addresses.json with deployed contract addresses
-
-#!/bin/bash
-# Verify all Convexo contracts on block explorers
-#
-# Usage:
-#   ./scripts/verify-all.sh <chain_id>
-#
-# Examples:
-#   ./scripts/verify-all.sh 11155111  # Ethereum Sepolia
-#   ./scripts/verify-all.sh 84532     # Base Sepolia
-#   ./scripts/verify-all.sh 1301      # Unichain Sepolia
-#   ./scripts/verify-all.sh 1         # Ethereum Mainnet
-#   ./scripts/verify-all.sh 8453      # Base Mainnet
-#   ./scripts/verify-all.sh 130       # Unichain Mainnet
-#
-# Prerequisites:
-#   - jq installed
-#   - .env file with API keys
+#   - .env file with API keys: ETHERSCAN_API_KEY, BASESCAN_API_KEY, ARBISCAN_API_KEY
 #   - addresses.json with deployed contract addresses
 
 set -e
@@ -72,6 +56,10 @@ case $CHAIN_ID in
         API_KEY="$UNISCAN_API_KEY"
         VERIFIER="uniscan"
         ;;
+    42161|421614)
+        API_KEY="$ARBISCAN_API_KEY"
+        VERIFIER="etherscan"
+        ;;
     *)
         echo "Unsupported chain ID: $CHAIN_ID"
         exit 1
@@ -109,7 +97,6 @@ POOL_REGISTRY=$(jq -r ".\"$CHAIN_ID\".contracts.pool_registry.address // empty" 
 PRICE_FEED_MANAGER=$(jq -r ".\"$CHAIN_ID\".contracts.price_feed_manager.address // empty" $ADDRESSES_FILE)
 HOOK_DEPLOYER=$(jq -r ".\"$CHAIN_ID\".contracts.hook_deployer.address // empty" $ADDRESSES_FILE)
 VAULT_FACTORY=$(jq -r ".\"$CHAIN_ID\".contracts.vault_factory.address // empty" $ADDRESSES_FILE)
-TREASURY_FACTORY=$(jq -r ".\"$CHAIN_ID\".contracts.treasury_factory.address // empty" $ADDRESSES_FILE)
 PASSPORT_GATED_HOOK=$(jq -r ".\"$CHAIN_ID\".contracts.passport_gated_hook.address // empty" $ADDRESSES_FILE)
 
 # -----------------------------
@@ -158,24 +145,24 @@ verify_contract() {
 # Phase 1: Core NFT Contracts
 # =============================
 
-ARGS=$(cast abi-encode "constructor(address,address,string)" \
-    "$ADMIN" "$ZK_PASSPORT_VERIFIER" "$METADATA_URI")
+ARGS=$(cast abi-encode "constructor(address,string)" \
+    "$ADMIN" "$METADATA_URI")
 verify_contract "$CONVEXO_PASSPORT" \
-    "src/contracts/Convexo_Passport.sol:Convexo_Passport" "$ARGS" "Convexo_Passport"
+    "src/contracts/identity/Convexo_Passport.sol:Convexo_Passport" "$ARGS" "Convexo_Passport"
 
 ARGS=$(cast abi-encode "constructor(address,address,address)" \
     "$ADMIN" "$MINTER" "0x0000000000000000000000000000000000000000")
 verify_contract "$LP_INDIVIDUALS" \
-    "src/contracts/Limited_Partners_Individuals.sol:Limited_Partners_Individuals" "$ARGS" "LP_Individuals"
+    "src/contracts/identity/Limited_Partners_Individuals.sol:Limited_Partners_Individuals" "$ARGS" "LP_Individuals"
 
 verify_contract "$LP_BUSINESS" \
-    "src/contracts/Limited_Partners_Business.sol:Limited_Partners_Business" "$ARGS" "LP_Business"
+    "src/contracts/identity/Limited_Partners_Business.sol:Limited_Partners_Business" "$ARGS" "LP_Business"
 
 if [ -n "$LP_INDIVIDUALS" ] && [ -n "$LP_BUSINESS" ]; then
     ARGS=$(cast abi-encode "constructor(address,address,address,address)" \
         "$ADMIN" "$MINTER" "$LP_INDIVIDUALS" "$LP_BUSINESS")
     verify_contract "$ECREDITSCORING" \
-        "src/contracts/Ecreditscoring.sol:Ecreditscoring" "$ARGS" "Ecreditscoring"
+        "src/contracts/credits/Ecreditscoring.sol:Ecreditscoring" "$ARGS" "Ecreditscoring"
 fi
 
 # =============================
@@ -185,13 +172,13 @@ fi
 if [ -n "$LP_INDIVIDUALS" ]; then
     ARGS=$(cast abi-encode "constructor(address,address)" "$ADMIN" "$LP_INDIVIDUALS")
     verify_contract "$VERIFF_VERIFIER" \
-        "src/contracts/VeriffVerifier.sol:VeriffVerifier" "$ARGS" "VeriffVerifier"
+        "src/contracts/identity/VeriffVerifier.sol:VeriffVerifier" "$ARGS" "VeriffVerifier"
 fi
 
 if [ -n "$LP_BUSINESS" ]; then
     ARGS=$(cast abi-encode "constructor(address,address)" "$ADMIN" "$LP_BUSINESS")
     verify_contract "$SUMSUB_VERIFIER" \
-        "src/contracts/SumsubVerifier.sol:SumsubVerifier" "$ARGS" "SumsubVerifier"
+        "src/contracts/identity/SumsubVerifier.sol:SumsubVerifier" "$ARGS" "SumsubVerifier"
 fi
 
 # =============================
@@ -202,18 +189,18 @@ if [ -n "$CONVEXO_PASSPORT" ] && [ -n "$LP_INDIVIDUALS" ] && [ -n "$LP_BUSINESS"
     ARGS=$(cast abi-encode "constructor(address,address,address,address)" \
         "$CONVEXO_PASSPORT" "$LP_INDIVIDUALS" "$LP_BUSINESS" "$ECREDITSCORING")
     verify_contract "$REPUTATION_MANAGER" \
-        "src/contracts/ReputationManager.sol:ReputationManager" "$ARGS" "ReputationManager"
+        "src/contracts/identity/ReputationManager.sol:ReputationManager" "$ARGS" "ReputationManager"
 fi
 
 ARGS=$(cast abi-encode "constructor(address)" "$ADMIN")
 verify_contract "$CONTRACT_SIGNER" \
-    "src/contracts/ContractSigner.sol:ContractSigner" "$ARGS" "ContractSigner"
+    "src/contracts/credits/ContractSigner.sol:ContractSigner" "$ARGS" "ContractSigner"
 
 verify_contract "$POOL_REGISTRY" \
-    "src/contracts/PoolRegistry.sol:PoolRegistry" "$ARGS" "PoolRegistry"
+    "src/contracts/trading/PoolRegistry.sol:PoolRegistry" "$ARGS" "PoolRegistry"
 
 verify_contract "$PRICE_FEED_MANAGER" \
-    "src/contracts/PriceFeedManager.sol:PriceFeedManager" "$ARGS" "PriceFeedManager"
+    "src/contracts/trading/PriceFeedManager.sol:PriceFeedManager" "$ARGS" "PriceFeedManager"
 
 verify_contract "$HOOK_DEPLOYER" \
     "src/hooks/HookDeployer.sol:HookDeployer" "" "HookDeployer"
@@ -226,13 +213,7 @@ if [ -n "$USDC" ] && [ -n "$CONTRACT_SIGNER" ] && [ -n "$REPUTATION_MANAGER" ]; 
     ARGS=$(cast abi-encode "constructor(address,address,address,address,address)" \
         "$ADMIN" "$USDC" "$ADMIN" "$CONTRACT_SIGNER" "$REPUTATION_MANAGER")
     verify_contract "$VAULT_FACTORY" \
-        "src/contracts/VaultFactory.sol:VaultFactory" "$ARGS" "VaultFactory"
-fi
-
-if [ -n "$USDC" ] && [ -n "$REPUTATION_MANAGER" ]; then
-    ARGS=$(cast abi-encode "constructor(address,address)" "$USDC" "$REPUTATION_MANAGER")
-    verify_contract "$TREASURY_FACTORY" \
-        "src/contracts/TreasuryFactory.sol:TreasuryFactory" "$ARGS" "TreasuryFactory"
+        "src/contracts/credits/VaultFactory.sol:VaultFactory" "$ARGS" "VaultFactory"
 fi
 
 if [ -n "$POOL_MANAGER" ] && [ -n "$REPUTATION_MANAGER" ]; then

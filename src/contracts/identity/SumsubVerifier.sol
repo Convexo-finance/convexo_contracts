@@ -2,33 +2,33 @@
 pragma solidity ^0.8.27;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {ILimitedPartnersIndividuals} from "../interfaces/ILimitedPartnersIndividuals.sol";
+import {ILimitedPartnersBusiness} from "../../interfaces/ILimitedPartnersBusiness.sol";
 
-/// @title VeriffVerifier
-/// @notice Human-approved KYC verification system for INDIVIDUAL Limited Partners
-/// @dev For INDIVIDUALS only - uses Veriff platform for identity verification
-///      Upon approval, admin manually mints Limited_Partners_Individuals NFT (Tier 2)
+/// @title SumsubVerifier
+/// @notice Human-approved KYB verification system for BUSINESS Limited Partners
+/// @dev For BUSINESSES only - uses Sumsub platform for KYB verification
+///      Upon approval, admin manually mints Limited_Partners_Business NFT (Tier 2)
 ///
 /// ═══════════════════════════════════════════════════════════════════════════════
 /// VERIFICATION FLOW (PRIVACY-ENHANCED):
 /// ═══════════════════════════════════════════════════════════════════════════════
-/// 1. Individual completes Veriff identity verification on frontend
-/// 2. Backend receives webhook with verification result
-/// 3. Backend calls submitVerification() with session details
+/// 1. Business completes Sumsub KYB verification on frontend
+/// 2. Backend receives webhook with verification result and company details
+/// 3. Backend calls submitVerification() with applicant and company details
 /// 4. Admin reviews PRIVATE data and calls approveVerification() or rejectVerification()
 /// 5. On approval: Status changes to Approved (NO auto-mint)
-/// 6. Admin manually calls Limited_Partners_Individuals.safeMint()
+/// 6. Admin manually calls Limited_Partners_Business.safeMint()
 /// 7. NFT contract calls markAsMinted() to update status to Minted
-/// 8. User becomes Limited Partner → Can access LP pools, Treasury, Invest
+/// 8. Business becomes Limited Partner → Can access LP pools, Treasury, Invest
 ///
 /// PRIVACY MODEL:
 /// - All verification data is PRIVATE (admin-only access)
 /// - Public can only check hasVerificationRecord() (existence, not details)
 /// - Events are emitted for monitoring but contain no sensitive data
 ///
-/// For BUSINESS KYB, use SumsubVerifier instead
+/// For INDIVIDUAL KYC, use VeriffVerifier instead
 /// ═══════════════════════════════════════════════════════════════════════════════
-contract VeriffVerifier is AccessControl {
+contract SumsubVerifier is AccessControl {
     bytes32 public constant VERIFIER_ROLE = keccak256("VERIFIER_ROLE");
     bytes32 public constant MINTER_CALLBACK_ROLE = keccak256("MINTER_CALLBACK_ROLE");
 
@@ -41,10 +41,23 @@ contract VeriffVerifier is AccessControl {
         Minted      // 4 - Approved and NFT minted
     }
 
-    /// @notice Verification record for a user
+    /// @notice Business type for KYB (mirrors NFT contract)
+    enum BusinessType {
+        Corporation,
+        LLC,
+        Partnership,
+        SoleProprietor,
+        Other
+    }
+
+    /// @notice Verification record for a business
     struct VerificationRecord {
-        address user;
-        string veriffSessionId;
+        address user;                   // Wallet address representing the business
+        string sumsubApplicantId;       // Sumsub applicant ID
+        string companyName;             // Registered company name
+        string companyRegistrationNumber; // Company registration number
+        string jurisdiction;            // Jurisdiction of incorporation
+        BusinessType businessType;      // Type of business entity
         VerificationStatus status;
         uint256 submittedAt;
         uint256 processedAt;
@@ -54,14 +67,17 @@ contract VeriffVerifier is AccessControl {
         uint256 mintedAt;
     }
 
-    /// @notice The Limited Partners Individuals NFT contract
-    ILimitedPartnersIndividuals public immutable lpIndividuals;
+    /// @notice The Limited Partners Business NFT contract
+    ILimitedPartnersBusiness public immutable lpBusiness;
 
     /// @notice Mapping from user address to verification record (PRIVATE)
     mapping(address => VerificationRecord) private verifications;
 
-    /// @notice Mapping from Veriff session ID to user address (PRIVATE)
-    mapping(string => address) private sessionIdToUser;
+    /// @notice Mapping from Sumsub applicant ID to user address (PRIVATE)
+    mapping(string => address) private applicantIdToUser;
+
+    /// @notice Mapping from company registration number to user address (PRIVATE)
+    mapping(string => address) private registrationToUser;
 
     /// @notice Emitted when a verification is submitted
     event VerificationSubmitted(
@@ -92,34 +108,53 @@ contract VeriffVerifier is AccessControl {
 
     /// @notice Constructor
     /// @param admin Address to receive admin and verifier roles
-    /// @param _lpIndividuals Limited Partners Individuals NFT contract address
-    constructor(address admin, ILimitedPartnersIndividuals _lpIndividuals) {
+    /// @param _lpBusiness Limited Partners Business NFT contract address
+    constructor(address admin, ILimitedPartnersBusiness _lpBusiness) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(VERIFIER_ROLE, admin);
-        lpIndividuals = _lpIndividuals;
+        lpBusiness = _lpBusiness;
     }
 
-    /// @notice Submit a verification result from Veriff platform
-    /// @param user The address of the user being verified
-    /// @param sessionId The Veriff session ID
+    /// @notice Submit a KYB verification result from Sumsub platform
+    /// @param user The address representing the business
+    /// @param applicantId The Sumsub applicant ID
+    /// @param companyName The registered company name
+    /// @param registrationNumber The company registration number
+    /// @param jurisdiction The jurisdiction of incorporation (e.g., "US-DE", "UK", "SG")
+    /// @param businessType The type of business entity
     function submitVerification(
         address user,
-        string calldata sessionId
+        string calldata applicantId,
+        string calldata companyName,
+        string calldata registrationNumber,
+        string calldata jurisdiction,
+        BusinessType businessType
     ) external onlyRole(VERIFIER_ROLE) {
         require(user != address(0), "Invalid user address");
-        require(bytes(sessionId).length > 0, "Invalid session ID");
+        require(bytes(applicantId).length > 0, "Invalid applicant ID");
+        require(bytes(companyName).length > 0, "Invalid company name");
+        require(bytes(registrationNumber).length > 0, "Invalid registration number");
+        require(bytes(jurisdiction).length > 0, "Invalid jurisdiction");
         require(
             verifications[user].status == VerificationStatus.None,
             "User already has a verification"
         );
         require(
-            sessionIdToUser[sessionId] == address(0),
-            "Session ID already used"
+            applicantIdToUser[applicantId] == address(0),
+            "Applicant ID already used"
+        );
+        require(
+            registrationToUser[registrationNumber] == address(0),
+            "Company registration already verified"
         );
 
         verifications[user] = VerificationRecord({
             user: user,
-            veriffSessionId: sessionId,
+            sumsubApplicantId: applicantId,
+            companyName: companyName,
+            companyRegistrationNumber: registrationNumber,
+            jurisdiction: jurisdiction,
+            businessType: businessType,
             status: VerificationStatus.Pending,
             submittedAt: block.timestamp,
             processedAt: 0,
@@ -129,14 +164,15 @@ contract VeriffVerifier is AccessControl {
             mintedAt: 0
         });
 
-        sessionIdToUser[sessionId] = user;
+        applicantIdToUser[applicantId] = user;
+        registrationToUser[registrationNumber] = user;
 
         emit VerificationSubmitted(user, block.timestamp);
     }
 
     /// @notice Approve a pending verification (NO auto-mint)
     /// @dev After approval, admin must manually mint NFT via LP contract
-    /// @param user The address of the user to approve
+    /// @param user The address of the business to approve
     function approveVerification(address user) external onlyRole(VERIFIER_ROLE) {
         VerificationRecord storage record = verifications[user];
         require(record.status == VerificationStatus.Pending, "No pending verification");
@@ -153,7 +189,7 @@ contract VeriffVerifier is AccessControl {
     }
 
     /// @notice Reject a pending verification
-    /// @param user The address of the user to reject
+    /// @param user The address of the business to reject
     /// @param reason The reason for rejection
     function rejectVerification(
         address user,
@@ -205,76 +241,114 @@ contract VeriffVerifier is AccessControl {
         return verifications[user];
     }
 
-    /// @notice Get verification session ID for a user (admin only)
+    /// @notice Get company details for a user (admin only)
     /// @param user The address to check
-    /// @return The Veriff session ID
-    function getSessionId(address user)
+    /// @return companyName The company name
+    /// @return registrationNumber The registration number
+    /// @return jurisdiction The jurisdiction
+    /// @return businessType The business type
+    function getCompanyDetails(address user)
         external
         view
         onlyRole(VERIFIER_ROLE)
-        returns (string memory)
+        returns (
+            string memory companyName,
+            string memory registrationNumber,
+            string memory jurisdiction,
+            BusinessType businessType
+        )
     {
-        return verifications[user].veriffSessionId;
+        VerificationRecord storage record = verifications[user];
+        return (
+            record.companyName,
+            record.companyRegistrationNumber,
+            record.jurisdiction,
+            record.businessType
+        );
     }
 
-    /// @notice Check if a session ID has been used (admin only)
-    /// @param sessionId The Veriff session ID to check
-    /// @return True if session ID has been used
-    function isSessionIdUsed(string calldata sessionId)
+    /// @notice Check if an applicant ID has been used (admin only)
+    /// @param applicantId The Sumsub applicant ID to check
+    /// @return True if applicant ID has been used
+    function isApplicantIdUsed(string calldata applicantId)
         external
         view
         onlyRole(VERIFIER_ROLE)
         returns (bool)
     {
-        return sessionIdToUser[sessionId] != address(0);
+        return applicantIdToUser[applicantId] != address(0);
     }
 
-    /// @notice Get user address associated with a session ID (admin only)
-    /// @param sessionId The Veriff session ID
+    /// @notice Check if a company registration number has been used (admin only)
+    /// @param registrationNumber The registration number to check
+    /// @return True if registration number has been used
+    function isRegistrationUsed(string calldata registrationNumber)
+        external
+        view
+        onlyRole(VERIFIER_ROLE)
+        returns (bool)
+    {
+        return registrationToUser[registrationNumber] != address(0);
+    }
+
+    /// @notice Get user address associated with an applicant ID (admin only)
+    /// @param applicantId The Sumsub applicant ID
     /// @return The user address (address(0) if not found)
-    function getUserBySessionId(string calldata sessionId)
+    function getUserByApplicantId(string calldata applicantId)
         external
         view
         onlyRole(VERIFIER_ROLE)
         returns (address)
     {
-        return sessionIdToUser[sessionId];
+        return applicantIdToUser[applicantId];
+    }
+
+    /// @notice Get user address associated with a registration number (admin only)
+    /// @param registrationNumber The company registration number
+    /// @return The user address (address(0) if not found)
+    function getUserByRegistration(string calldata registrationNumber)
+        external
+        view
+        onlyRole(VERIFIER_ROLE)
+        returns (address)
+    {
+        return registrationToUser[registrationNumber];
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // PUBLIC VIEW FUNCTIONS (No sensitive data exposed)
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    /// @notice Check if a user has any verification record (public)
+    /// @notice Check if a business has any verification record (public)
     /// @param user The address to check
-    /// @return True if user has any verification record
+    /// @return True if business has any verification record
     function hasVerificationRecord(address user) external view returns (bool) {
         return verifications[user].user != address(0);
     }
 
-    /// @notice Check if a user has an approved verification (ready to mint)
+    /// @notice Check if a business has an approved verification (ready to mint)
     /// @param user The address to check
-    /// @return True if user has approved verification
+    /// @return True if business has approved verification
     function isApproved(address user) external view returns (bool) {
         return verifications[user].status == VerificationStatus.Approved;
     }
 
-    /// @notice Check if a user has a minted verification
+    /// @notice Check if a business has a minted verification
     /// @param user The address to check
-    /// @return True if user has minted verification
+    /// @return True if business has minted verification
     function isMinted(address user) external view returns (bool) {
         return verifications[user].status == VerificationStatus.Minted;
     }
 
-    /// @notice Check if a user is verified (approved or minted)
+    /// @notice Check if a business is verified (approved or minted)
     /// @param user The address to check
-    /// @return True if user is verified
+    /// @return True if business is verified
     function isVerified(address user) external view returns (bool) {
         VerificationStatus status = verifications[user].status;
         return status == VerificationStatus.Approved || status == VerificationStatus.Minted;
     }
 
-    /// @notice Get verification status for a user (status only, no details)
+    /// @notice Get verification status for a business (status only, no details)
     /// @param user The address to check
     /// @return The verification status
     function getStatus(address user) external view returns (VerificationStatus) {
@@ -285,8 +359,8 @@ contract VeriffVerifier is AccessControl {
     // ADMIN FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    /// @notice Allow user to resubmit after rejection (admin only)
-    /// @param user The address of the user
+    /// @notice Allow business to resubmit after rejection (admin only)
+    /// @param user The address of the business
     function resetVerification(address user) external onlyRole(DEFAULT_ADMIN_ROLE) {
         VerificationRecord storage record = verifications[user];
         require(
@@ -294,8 +368,10 @@ contract VeriffVerifier is AccessControl {
             "Can only reset rejected verifications"
         );
 
-        // Clear session ID mapping
-        delete sessionIdToUser[record.veriffSessionId];
+        // Clear applicant ID mapping
+        delete applicantIdToUser[record.sumsubApplicantId];
+        // Clear registration mapping
+        delete registrationToUser[record.companyRegistrationNumber];
 
         // Reset verification record
         delete verifications[user];

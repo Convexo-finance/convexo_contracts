@@ -6,7 +6,8 @@
 [![Tests](https://img.shields.io/badge/Tests-87%2F87%20Passing-brightgreen)](./test)
 [![Deployed](https://img.shields.io/badge/Deployed-Base%20Mainnet-blue)](https://basescan.org)
 [![Deployed](https://img.shields.io/badge/Deployed-Unichain%20Mainnet-success)](https://unichain.blockscout.com)
-[![Version](https://img.shields.io/badge/Version-3.0-purple)](./CONTRACTS_REFERENCE.md)
+[![Deployed](https://img.shields.io/badge/Deployed-Arbitrum%20One-red)](https://arbiscan.io)
+[![Version](https://img.shields.io/badge/Version-3.17-purple)](./CONTRACTS_REFERENCE.md)
 
 ---
 
@@ -28,7 +29,6 @@ Convexo creates a compliant, efficient lending protocol using:
 - **NFT-gated access** for compliance and credit verification
 - **AI Credit Scoring** for automated risk assessment
 - **Tokenized vaults** for transparent lending
-- **Personal treasuries** for multi-sig USDC management
 
 ---
 
@@ -54,12 +54,6 @@ Convexo creates a compliant, efficient lending protocol using:
   - Investors: Principal + 12% returns (proportional to repayments)
 - **Transparent tracking**: Real-time on-chain state
 
-### 4. Personal Treasuries (NEW in v2.1)
-- **Individual treasuries**: Tier 1+ users can create personal USDC treasuries
-- **Multi-sig support**: Optional 2-of-3 or custom signature requirements
-- **Secure withdrawals**: Proposal-based withdrawal system
-- **Audit trail**: Full on-chain transaction history
-
 ---
 
 ## 👥 User Journeys
@@ -74,24 +68,23 @@ Convexo creates a compliant, efficient lending protocol using:
    - Privacy-preserving: Only verification traits stored (no PII)
    - Instant on-chain verification
 3. Receive Convexo_Passport NFT (Tier 1)
-4. Create personal treasury (NEW!)
-5. Browse and invest in available vaults
-6. Earn returns (10-12% APY)
-7. Redeem shares after full repayment
+4. Browse and invest in available vaults
+5. Earn returns (10-12% APY)
+6. Redeem shares after full repayment
 ```
 
 **Benefits:**
 - ✅ No business KYB required
 - ✅ Privacy-first verification
 - ✅ Instant on-chain minting
-- ✅ Personal treasury creation
 - ✅ Access to vault investments
+- ✅ Access to Uniswap V4 LP Pools
 - ✅ Soulbound NFT (non-transferable)
 
 **Flow:**
 ```
-Connect Wallet → ZKPassport Verification → Self-Mint Passport NFT → 
-Create Treasury (optional) → Invest in Vaults → Earn Returns → Redeem
+Connect Wallet → ZKPassport Verification → Self-Mint Passport NFT →
+Invest in Vaults → Earn Returns → Redeem
 ```
 
 ### For SMEs (Borrowers)
@@ -152,7 +145,7 @@ Sign Contract → Withdraw → Repay → Protocol & Investors Withdraw
 
 ## 🏗️ Architecture
 
-### Reputation Tiers (v2.1 - UPDATED)
+### Reputation Tiers (v3.17)
 
 | Tier | NFT Contract | User Type | Access | Verification Method |
 |------|--------------|-----------|--------|---------------------|
@@ -229,8 +222,7 @@ View contract addresses by network in **[addresses.json](./addresses.json)**
 Supported Networks:
 - **⟠ Ethereum**: Mainnet (1) + Sepolia (11155111)
 - **🔵 Base**: Mainnet (8453) + Sepolia (84532)
-- **🦄 Unichain**: Mainnet (130) + Sepolia (1301)
-
+- **🦄 Unichain**: Mainnet (130) + Sepolia (1301)- **🔴 Arbitrum**: One (42161) + Sepolia (421614)
 ---
 
 ## 🚀 Quick Start
@@ -283,21 +275,23 @@ forge test -vvv
 
 | Network | Chain ID | Status | Contracts | Explorer |
 |---------|----------|--------|-----------|----------|
-| **Ethereum Mainnet** | 1 | ✅ Complete | 14/14 (v3.0) | [Etherscan](https://etherscan.io) |
-| **Base Mainnet** | 8453 | ✅ Complete | 14/14 (v3.0) | [BaseScan](https://basescan.org) |
-| **Unichain Mainnet** | 130 | ✅ Complete | 14/14 (v3.0) | [Blockscout](https://unichain.blockscout.com) |
+| **Ethereum Mainnet** | 1 | ✅ Complete | 12/12 (v3.17) | [Etherscan](https://etherscan.io) |
+| **Base Mainnet** | 8453 | ✅ Complete | 12/12 (v3.17) | [BaseScan](https://basescan.org) |
+| **Unichain Mainnet** | 130 | ✅ Complete | 12/12 (v3.17) | [Blockscout](https://unichain.blockscout.com) |
+| **Arbitrum One** | 42161 | 🔧 Ready | 12/12 (v3.17) | [Arbiscan](https://arbiscan.io) |
 
 ### 🧪 Testnet Deployments
 
 | Network | Chain ID | Status | Contracts | Explorer |
 |---------|----------|--------|-----------|----------|
-| **Ethereum Sepolia** | 11155111 | ✅ Complete | 14/14 (v3.0) | [Etherscan](https://sepolia.etherscan.io) |
-| **Base Sepolia** | 84532 | ✅ Complete | 14/14 (v3.0) | [BaseScan](https://sepolia.basescan.org) |
-| **Unichain Sepolia** | 1301 | ✅ Complete | 14/14 (v3.0) | [Blockscout](https://unichain-sepolia.blockscout.com) |
+| **Ethereum Sepolia** | 11155111 | ✅ Complete | 12/12 (v3.17) | [Etherscan](https://sepolia.etherscan.io) |
+| **Base Sepolia** | 84532 | ✅ Complete | 12/12 (v3.17) | [BaseScan](https://sepolia.basescan.org) |
+| **Unichain Sepolia** | 1301 | ✅ Complete | 12/12 (v3.17) | [Blockscout](https://unichain-sepolia.blockscout.com) |
+| **Arbitrum Sepolia** | 421614 | 🔧 Ready | 12/12 (v3.17) | [Arbiscan](https://sepolia.arbiscan.io) |
 
-**Note**: All networks on v3.0 with 14 contracts. ZKPassport verifier: `0x1D000001000EFD9a6371f4d90bB8920D5431c0D8` (same address on all chains).
+**Note**: All networks on v3.17 with 12 contracts. ZKPassport verifier: `0x1D000001000EFD9a6371f4d90bB8920D5431c0D8` (same address on all chains).
 
-### 📦 Deployed Contracts (14 Total)
+### 📦 Deployed Contracts (12 Total)
 
 | # | Contract | Purpose |
 |---|----------|---------|
@@ -313,8 +307,6 @@ forge test -vvv
 | 10 | **PoolRegistry** | Registry for compliant pools |
 | 11 | **PriceFeedManager** | Chainlink price feed integration |
 | 12 | **ContractSigner** | Multi-signature contract system |
-| 13 | **VaultFactory** | Factory for creating tokenized bond vaults |
-| 14 | **TreasuryFactory** | Factory for creating personal treasuries |
 
 ---
 
@@ -372,7 +364,7 @@ Convexo uses **Deterministic Deployment** via [Safe Singleton Factory](https://g
 │  A: The ADDRESSES are deterministic (same on all chains)        │
 │     because CREATE2 computes address from:                      │
 │     • Factory address (same everywhere)                         │
-│     • Salt (we use "convexo.v3.0")                              │
+│     • Salt (we use "convexo.v3.17")                             │
 │     • Bytecode + constructor args                               │
 │                                                                  │
 │  Q: What's the benefit?                                         │
@@ -386,7 +378,7 @@ Convexo uses **Deterministic Deployment** via [Safe Singleton Factory](https://g
 | Type | Addresses | Examples |
 |------|-----------|----------|
 | **Core (CREATE2)** | SAME on all chains | Convexo_Passport, LP_Individuals, ReputationManager |
-| **Chain-Specific** | DIFFERENT per chain | VaultFactory, TreasuryFactory, PassportGatedHook |
+| **Chain-Specific** | DIFFERENT per chain | VaultFactory, PassportGatedHook |
 
 ---
 
@@ -407,11 +399,13 @@ Convexo uses **Deterministic Deployment** via [Safe Singleton Factory](https://g
    ETHERSCAN_API_KEY=your_etherscan_api_key
    BASESCAN_API_KEY=your_basescan_api_key
    UNISCAN_API_KEY=your_uniscan_api_key
+   ARBISCAN_API_KEY=your_arbiscan_api_key
 
    # RPC URLs (optional - has public fallbacks)
    ETHEREUM_SEPOLIA_RPC_URL=https://...
    BASE_SEPOLIA_RPC_URL=https://...
    UNICHAIN_SEPOLIA_RPC_URL=https://...
+   ARBITRUM_SEPOLIA_RPC_URL=https://...
    ```
 
 ---
@@ -439,11 +433,13 @@ forge script script/PredictAddresses.s.sol -vvv
 ./scripts/deploy.sh ethereum-sepolia
 ./scripts/deploy.sh base-sepolia
 ./scripts/deploy.sh unichain-sepolia
+./scripts/deploy.sh arbitrum-sepolia
 
 # ═══════════════════ MAINNETS ═══════════════════
 ./scripts/deploy.sh ethereum
 ./scripts/deploy.sh base
 ./scripts/deploy.sh unichain
+./scripts/deploy.sh arbitrum
 ```
 
 **Note:** If contracts already exist at the computed addresses, they will be skipped automatically.
@@ -471,6 +467,7 @@ DEPLOY_VERSION=convexo.v3.1 forge script script/PredictAddresses.s.sol -vvv
 ./scripts/update-addresses.sh 11155111  # Ethereum Sepolia
 ./scripts/update-addresses.sh 84532     # Base Sepolia
 ./scripts/update-addresses.sh 1301      # Unichain Sepolia
+./scripts/update-addresses.sh 421614    # Arbitrum Sepolia
 ```
 
 #### Step 3: Verify Contracts
@@ -479,10 +476,12 @@ DEPLOY_VERSION=convexo.v3.1 forge script script/PredictAddresses.s.sol -vvv
 ./scripts/verify-all.sh 11155111  # Ethereum Sepolia
 ./scripts/verify-all.sh 84532     # Base Sepolia
 ./scripts/verify-all.sh 1301      # Unichain Sepolia
+./scripts/verify-all.sh 421614    # Arbitrum Sepolia
 
 ./scripts/verify-all.sh 1         # Ethereum Mainnet
 ./scripts/verify-all.sh 8453      # Base Mainnet
 ./scripts/verify-all.sh 130       # Unichain Mainnet
+./scripts/verify-all.sh 42161     # Arbitrum One
 ```
 
 #### Step 4: Extract ABIs
@@ -500,9 +499,11 @@ DEPLOY_VERSION=convexo.v3.1 forge script script/PredictAddresses.s.sol -vvv
 | Ethereum Sepolia | 11155111 | sepolia.etherscan.io |
 | Base Sepolia | 84532 | sepolia.basescan.org |
 | Unichain Sepolia | 1301 | unichain-sepolia.blockscout.com |
+| Arbitrum Sepolia | 421614 | sepolia.arbiscan.io |
 | Ethereum Mainnet | 1 | etherscan.io |
 | Base Mainnet | 8453 | basescan.org |
 | Unichain Mainnet | 130 | unichain.blockscout.com |
+| Arbitrum One | 42161 | arbiscan.io |
 
 ---
 
@@ -534,7 +535,7 @@ DEPLOY_VERSION=convexo.v3.1 forge script script/PredictAddresses.s.sol -vvv
 
 ### Contract Resources
 - **[addresses.json](./addresses.json)** - All deployed contract addresses in JSON format
-- **[abis/](./abis/)** - Contract ABIs for frontend integration (16 ABIs)
+- **[abis/](./abis/)** - Contract ABIs for frontend integration (12 ABIs)
 
 ---
 
@@ -560,7 +561,6 @@ function useUserTier(address: `0x${string}`) {
 
   return {
     tier, // 0, 1, 2, or 3
-    canCreateTreasury: tier >= 1,
     canInvestInVaults: tier >= 1,
     canAccessLPPools: tier >= 2,
     canCreateVaults: tier === 3,
@@ -585,22 +585,26 @@ function useUserTier(address: `0x${string}`) {
 
 ---
 
-## ✨ What's New in v3.0
+## ✨ What's New in v3.17
 
-### 🆕 New in v3.0 (14 contracts)
+### Breaking Changes
+- **`faceMatchPassed` removed** from `safeMintWithVerification()` (was the 5th param) - now 5 params
+- **`faceMatchPassed` removed** from `VerifiedIdentity` struct
+- **Treasury deprecated** - TreasuryFactory and TreasuryVault contracts removed
+- All addresses changed (version salt: `convexo.v3.17`)
 
-1. **Privacy-Enhanced Verification** - All verification data is now private (admin-only access)
-2. **Multi-Admin Support** - Multiple compliance officers can have VERIFIER_ROLE
-3. **SumsubVerifier** - Separate KYB verification for businesses
-4. **Deterministic Deployment** - Deploy same addresses on all chains via Safe Singleton Factory
-5. **Minted Status** - Track when NFTs are minted after verification approval
+### New in v3.17
+1. **Arbitrum Support** - Added Arbitrum One (42161) + Arbitrum Sepolia (421614)
+2. **Simplified Minting** - `safeMintWithVerification` now 5 params (no faceMatchPassed)
+3. **Cleaner Architecture** - 12 contracts instead of 14 (Treasury removed)
+4. **Organized src layout** - `src/contracts/identity/`, `credits/`, `trading/`
 
-### 🏆 Tier System Changes
+### 🏆 Tier System
 
 | Tier | NFT Contract | User Type | Access Level | Minting Method |
 |------|--------------|-----------|--------------|----------------|
 | **Tier 0** | None | Unverified | No access | N/A |
-| **Tier 1** | Convexo_Passport | Individual Investor | Treasury creation + LP Pools + Vault investments | Self-mint via ZKPassport |
+| **Tier 1** | Convexo_Passport | Individual Investor | LP Pool Swaps + Vault investments | Self-mint via ZKPassport |
 | **Tier 2** | Limited_Partners_Individuals | Limited Partner (Individual) | Monetization + Vault investments | Admin-mint via VeriffVerifier |
 | **Tier 2** | Limited_Partners_Business | Limited Partner (Business) | Monetization + Vault investments | Admin-mint via SumsubVerifier |
 | **Tier 3** | Ecreditscoring | Vault Creator | All above + Vault creation | Backend-mint with AI credit score |
@@ -614,20 +618,19 @@ function useUserTier(address: `0x${string}`) {
 | Convexo_Passport | [View Image](https://lime-famous-condor-7.mypinata.cloud/ipfs/bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4) | `bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4` | ✅ Yes (hardcoded in contract) |
 | Limited_Partners_Individuals | [View Image](https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreib7mkjzpdm3id6st6d5vsxpn7v5h6sxeiswejjmrbcb5yoagaf4em) | `bafkreib7mkjzpdm3id6st6d5vsxpn7v5h6sxeiswejjmrbcb5yoagaf4em` | ✅ Yes (via VeriffVerifier) |
 | Limited_Partners_Business | [View Image](https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreiejesvgsvohwvv7q5twszrbu5z6dnpke6sg5cdiwgn2rq7dilu33m) | `bafkreiejesvgsvohwvv7q5twszrbu5z6dnpke6sg5cdiwgn2rq7dilu33m` | ✅ Yes (via SumsubVerifier) |
-| Ecreditscoring | [View Image](https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreignxas6gqi7it5ng6muoykujxlgxxc4g7rr6sqvwgdfwveqf2zw3e) | `bafkreignxas6gqi7it5ng6muoykujxlgxxc4g7rr6sqvwgdfwveqf2zw3e` | ⚠️ No (backend must pass URI) |
+| Ecreditscoring | [View Image](https://lime-famous-condor-7.mypinata.cloud/ipfs/bafkreignxas6gqi7it5ng6muoykujxlgxxc4g7rr6sqvwgdfwveqf2zw3e) | `bafkreignxas6gqi7it5ng6muoykujxlgxxc4g7rr6sqvwgdfwveqf2zw3e) | ⚠️ No (backend must pass URI) |
 
 **Important:** All NFTs are soulbound (non-transferable) and limited to **one per address**.
 
 ### 🔒 Privacy-Compliant Verification
 
 - Only verification **traits** stored on-chain (no PII)
-- Stored traits: `kycVerified`, `faceMatchPassed`, `sanctionsPassed`, `isOver18`
-- No name, address, birthdate, or biometric data stored
+- Stored traits: `kycVerified`, `sanctionsPassed`, `isOver18`
+- No name, address, birthdate, face match, or biometric data stored
 
 ### 📊 Updated ReputationManager
 
-New functions:
-- `canCreateTreasury()` - Tier 1+
+Access control functions:
 - `canInvestInVaults()` - Tier 1+
 - `canAccessLPPools()` - Tier 2+
 - `canCreateVaults()` - Tier 3
@@ -638,7 +641,7 @@ New functions:
 - Users can upgrade from individual to business verification
 - Passport holders can later get LPs/Vaults NFTs
 
-### ⚡ Vault Redemption Update
+### ⚡ Vault Redemption
 
 - Redemption requires **full repayment** when in Repaying state
 - Early exit allowed when vault is Funded/Active (before borrower withdrawal)
@@ -649,10 +652,10 @@ New functions:
 
 | Metric | Value |
 |--------|-------|
-| **Version** | 3.0 (Privacy-Enhanced Verification) |
-| **Test Coverage** | 91/91 tests passing (100%) |
-| **Contracts** | 14 contracts per network |
-| **Networks Supported** | 3 mainnets, 3 testnets |
+| **Version** | 3.17 (Arbitrum + simplified minting) |
+| **Test Coverage** | 87/87 tests passing (100%) |
+| **Contracts** | 12 contracts per network |
+| **Networks Supported** | 4 mainnets, 4 testnets |
 | **Verification Methods** | 3 paths (ZKPassport + Veriff + Sumsub) |
 | **Investor Returns** | 12% APY |
 | **Min Credit Score** | 70 (for vault creation) |
@@ -694,13 +697,7 @@ reputationManager.getReputationTier(user);
 // Returns: None (0), Passport (1), LimitedPartner (2), VaultCreator (3)
 ```
 
-### 3. Treasury Creation (Tier 1+)
-```solidity
-// Create personal treasury
-treasuryFactory.createTreasury(signers, signaturesRequired);
-```
-
-### 4. Vault Creation (Tier 3)
+### 3. Vault Creation (Tier 3)
 ```solidity
 // Create funding vault after credit scoring
 vaultFactory.createVault(
@@ -711,7 +708,7 @@ vaultFactory.createVault(
 );
 ```
 
-### 5. Investment & Returns (Tier 1+)
+### 4. Investment & Returns (Tier 1+)
 ```solidity
 // Investor stakes USDC
 vault.purchaseShares(1000e6); // 1000 USDC
@@ -770,25 +767,27 @@ MIT License - see [LICENSE](./LICENSE) file for details.
 
 ## 🎉 Status
 
-**🆕 VERSION 3.0 - PRIVACY-ENHANCED VERIFICATION COMPLETE**
+**🆕 VERSION 3.17 - ARBITRUM SUPPORT + SIMPLIFIED MINTING COMPLETE**
 
-All 14 contracts deployed, verified, and ready for production.
+All 12 contracts deployed, verified, and ready for production.
 
 **Development Status:**
-- ✅ 14 smart contracts implemented
+- ✅ 12 smart contracts implemented
 - ✅ Comprehensive testing (87 tests, 100% coverage)
 - ✅ Deployment scripts unified (deterministic via CREATE2)
 - ✅ Documentation complete
 - ✅ Security review complete
-- ✅ Deployed on all 6 networks
+- ✅ Deployed on all 8 networks (4 mainnet + 4 testnet)
 
-**Version 3.0 Features:**
-- 🆕 **Privacy-Enhanced Verification** - All data private (admin-only)
-- 🆕 **SumsubVerifier** - Separate KYB for businesses
-- 🆕 **Multi-Admin Support** - Multiple compliance officers
-- 🆕 **Deterministic Deployment** - Same addresses on all chains
-- 🆕 **Minted Status** - Track NFT minting after approval
-- ✅ TreasuryFactory - Personal multi-sig treasuries
+**Version 3.17 Features:**
+- 🆕 **Arbitrum One + Sepolia** - 2 new networks added
+- 🆕 **Simplified minting** - faceMatchPassed removed from passport flow
+- 🆕 **Cleaner architecture** - Treasury deprecated, 12 contracts
+- ✅ Privacy-Enhanced Verification - All data private (admin-only)
+- ✅ SumsubVerifier - Separate KYB for businesses
+- ✅ Multi-Admin Support - Multiple compliance officers
+- ✅ Deterministic Deployment - Same addresses on all chains
+- ✅ Minted Status - Track NFT minting after approval
 - ✅ Progressive KYC - Upgrade from individual to business
 - ✅ Borrower-initiated vault creation (Tier 3)
 - ✅ Flexible repayment system

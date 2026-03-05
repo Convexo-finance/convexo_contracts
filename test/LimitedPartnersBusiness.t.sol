@@ -2,8 +2,8 @@
 pragma solidity ^0.8.27;
 
 import {Test} from "forge-std/Test.sol";
-import {Limited_Partners_Business} from "../src/contracts/Limited_Partners_Business.sol";
-import {SumsubVerifier} from "../src/contracts/SumsubVerifier.sol";
+import {Limited_Partners_Business} from "../src/contracts/identity/Limited_Partners_Business.sol";
+import {SumsubVerifier} from "../src/contracts/identity/SumsubVerifier.sol";
 import {ILimitedPartnersBusiness} from "../src/interfaces/ILimitedPartnersBusiness.sol";
 
 contract LimitedPartnersBusinessTest is Test {

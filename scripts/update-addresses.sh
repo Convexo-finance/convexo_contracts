@@ -1,7 +1,7 @@
 #!/bin/bash
 # scripts/update-addresses.sh
 # Updates addresses.json using deterministic address computation
-# Updated for v3.1 - Computes addresses directly via CREATE2
+# Updated for v3.17 - Computes addresses directly via CREATE2
 #
 # Usage:
 #   ./scripts/update-addresses.sh              # Update all deployed chains
@@ -37,6 +37,8 @@ get_chain_info() {
         "1") echo "Ethereum Mainnet|https://etherscan.io/address|etherscan" ;;
         "8453") echo "Base Mainnet|https://basescan.org/address|basescan" ;;
         "130") echo "Unichain Mainnet|https://unichain.blockscout.com/address|blockscout" ;;
+        "421614") echo "Arbitrum Sepolia|https://sepolia.arbiscan.io/address|arbiscan" ;;
+        "42161") echo "Arbitrum One|https://arbiscan.io/address|arbiscan" ;;
         *) echo "Unknown Network||" ;;
     esac
 }
@@ -50,6 +52,8 @@ get_chain_deps() {
         "1") echo "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48|0x8C4BcBE6b9eF47855f97E675296FA3F6fafa5F1A" ;;
         "8453") echo "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913|0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829" ;;
         "130") echo "0x078D782b760474a361dDA0AF3839290b0EF57AD6|0x1F98400000000000000000000000000000000004" ;;
+        "421614") echo "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d|0xFB3e0C6F74eB1a21CC1Da29aeC80D2Dfe6C9a317" ;;
+        "42161") echo "0xaf88d065e77c8cC2239327C5EDb3A432268e5831|0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32" ;;
         *) echo "|" ;;
     esac
 }
@@ -90,7 +94,6 @@ get_chain_specific_from_prediction() {
 
     PASSPORT_GATED_HOOK=$(echo "$section" | grep -A1 "PassportGatedHook:" | grep "Address:" | head -1 | awk '{print $2}')
     VAULT_FACTORY=$(echo "$section" | grep -A1 "VaultFactory:" | grep "Address:" | head -1 | awk '{print $2}')
-    TREASURY_FACTORY=$(echo "$section" | grep -A1 "TreasuryFactory:" | grep "Address:" | head -1 | awk '{print $2}')
 }
 
 # Get chain-specific addresses - computed from prediction (CREATE2)
@@ -132,7 +135,7 @@ update_chain_addresses() {
 
     local temp_json=$(mktemp)
     local deploy_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    local version="${DEPLOY_VERSION:-convexo.v3.15}"
+    local version="${DEPLOY_VERSION:-convexo.v3.17}"
 
     # Start fresh for this chain (remove legacy data)
     if [ -f "$ADDRESSES_FILE" ]; then
@@ -205,19 +208,18 @@ update_chain_addresses() {
     echo "--- Chain-Specific Addresses ---"
     add_contract "passport_gated_hook" "$PASSPORT_GATED_HOOK" "PassportGatedHook"
     add_contract "vault_factory" "$VAULT_FACTORY" "VaultFactory"
-    add_contract "treasury_factory" "$TREASURY_FACTORY" "TreasuryFactory"
 
     # Update contract count
     jq --arg chain_id "$chain_id" \
        --argjson count "$found_count" \
-       '.[$chain_id].contract_count = "\($count)/14"' \
+       '.[$chain_id].contract_count = "\($count)/12"' \
        "$temp_json" > "${temp_json}.tmp" && mv "${temp_json}.tmp" "$temp_json"
 
     # Validate JSON before moving
     if jq empty "$temp_json" 2>/dev/null; then
         mv "$temp_json" "$ADDRESSES_FILE"
         echo ""
-        echo "✅ Updated addresses.json for $chain_name ($found_count/14 contracts)"
+        echo "✅ Updated addresses.json for $chain_name ($found_count/12 contracts)"
     else
         echo "❌ Error: Invalid JSON generated"
         rm -f "$temp_json"
