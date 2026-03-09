@@ -18,13 +18,11 @@ import {Ecreditscoring} from "../src/contracts/credits/Ecreditscoring.sol";
 import {ContractSigner} from "../src/contracts/credits/ContractSigner.sol";
 import {VaultFactory} from "../src/contracts/credits/VaultFactory.sol";
 
-// trading/
-import {PoolRegistry} from "../src/contracts/trading/PoolRegistry.sol";
-import {PriceFeedManager} from "../src/contracts/trading/PriceFeedManager.sol";
-
-// hooks
-import {HookDeployer} from "../src/hooks/HookDeployer.sol";
-import {PassportGatedHook} from "../src/hooks/PassportGatedHook.sol";
+// hooks/
+import {PoolRegistry} from "../src/contracts/hooks/PoolRegistry.sol";
+import {PriceFeedManager} from "../src/contracts/hooks/PriceFeedManager.sol";
+import {HookDeployer} from "../src/contracts/hooks/HookDeployer.sol";
+import {PassportGatedHook} from "../src/contracts/hooks/PassportGatedHook.sol";
 
 // Interfaces
 import {ILimitedPartnersIndividuals} from "../src/interfaces/ILimitedPartnersIndividuals.sol";
@@ -161,11 +159,11 @@ contract DeployDeterministic is Script {
             usdc = vm.envOr("USDC_ADDRESS_UNISEPOLIA", 0x31d0220469e10c4E71834a79b1f276d740d3768F);
         } else if (chainId == 1) {
             networkName = "Ethereum Mainnet";
-            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_ETHMAINNET", 0x8C4BcBE6b9eF47855f97E675296FA3F6fafa5F1A);
+            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_ETHMAINNET", 0x000000000004444c5dc75cB358380D2e3dE08A90);
             usdc = vm.envOr("USDC_ADDRESS_ETHMAINNET", 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
         } else if (chainId == 8453) {
             networkName = "Base Mainnet";
-            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_BASEMAINNET", 0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829);
+            poolManager = vm.envOr("POOL_MANAGER_ADDRESS_BASEMAINNET", 0x498581fF718922c3f8e6A244956aF099B2652b2b);
             usdc = vm.envOr("USDC_ADDRESS_BASEMAINNET", 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913);
         } else if (chainId == 130) {
             networkName = "Unichain Mainnet";
@@ -195,10 +193,10 @@ contract DeployDeterministic is Script {
 
         // Predict addresses in deployment order
 
-        // 1. Convexo Passport (constructor takes: admin, initialBaseURI)
+        // 1. Convexo Passport (constructor takes: admin, initialBaseURI, zkPassportVerifier)
         address predictedPassport = SafeSingletonDeployer.computeAddress(
             type(Convexo_Passport).creationCode,
-            abi.encode(ADMIN, CONVEXO_PASSPORT_METADATA_URI),
+            abi.encode(ADMIN, CONVEXO_PASSPORT_METADATA_URI, getZKPassportVerifier()),
             getSalt("ConvexoPassport")
         );
         console.log("Convexo_Passport:", predictedPassport);
@@ -308,11 +306,11 @@ contract DeployDeterministic is Script {
         // ========================================================================
         console.log("Phase 1: Deploying Core Contracts...\n");
 
-        // 1. Convexo Passport (constructor takes: admin, initialBaseURI)
+        // 1. Convexo Passport (constructor takes: admin, initialBaseURI, zkPassportVerifier)
         convexoPassport = deployIfNeeded(
             deployerPrivateKey,
             type(Convexo_Passport).creationCode,
-            abi.encode(ADMIN, CONVEXO_PASSPORT_METADATA_URI),
+            abi.encode(ADMIN, CONVEXO_PASSPORT_METADATA_URI, getZKPassportVerifier()),
             getSalt("ConvexoPassport"),
             "Convexo_Passport"
         );
@@ -423,14 +421,34 @@ contract DeployDeterministic is Script {
 
         bytes32 chainSalt = keccak256(abi.encodePacked(getSaltPrefix(), "chain", chainId));
 
+        // PassportGatedHook must be deployed via HookDeployer so the address has the correct
+        // permission bits required by Uniswap V4 PoolManager (bits 11, 9, 7 for
+        // beforeAddLiquidity, beforeRemoveLiquidity, beforeSwap).
+        // findPassportGatedHookSalt is a view call — no broadcast, runs locally in forge.
         if (poolManager != address(0)) {
-            passportGatedHook = deployIfNeeded(
-                deployerPrivateKey,
-                type(PassportGatedHook).creationCode,
-                abi.encode(poolManager, reputationManager),
-                keccak256(abi.encodePacked(chainSalt, "PassportGatedHook")),
-                "PassportGatedHook"
+            bytes32 hookStartingSalt = keccak256(abi.encodePacked(chainSalt, "PassportGatedHook"));
+            (bytes32 hookSalt, address predictedHook) = HookDeployer(hookDeployer).findPassportGatedHookSalt(
+                IPoolManager(poolManager),
+                ReputationManager(reputationManager),
+                hookStartingSalt,
+                500000 // max iterations (~milliseconds locally, no gas cost)
             );
+
+            if (isDeployed(predictedHook)) {
+                console.log("[SKIP] PassportGatedHook already deployed:", predictedHook);
+                passportGatedHook = predictedHook;
+            } else {
+                vm.broadcast(deployerPrivateKey);
+                passportGatedHook = address(
+                    HookDeployer(hookDeployer).deployPassportGatedHook(
+                        IPoolManager(poolManager),
+                        ReputationManager(reputationManager),
+                        hookSalt
+                    )
+                );
+                console.log("[NEW] Deployed PassportGatedHook:", passportGatedHook);
+                console.log("      Hook salt used:", vm.toString(hookSalt));
+            }
         }
 
         if (usdc != address(0)) {

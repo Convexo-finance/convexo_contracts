@@ -7,166 +7,199 @@ import {ERC721Burnable} from "@openzeppelin/contracts/token/ERC721/extensions/ER
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IConvexoPassport} from "../../interfaces/IConvexoPassport.sol";
+import {IZKPassportVerifier, IZKPassportHelper, ProofVerificationParams, BoundData} from "../../interfaces/IZKPassportVerifier.sol";
 
 /// @title Convexo_Passport
-/// @notice Soulbound NFT for individual investors verified via ZKPassport
-/// @dev Non-transferable ERC721 NFT that represents verified identity for Tier 1 (Passport) access
-///      Privacy-compliant: stores only verification results (traits), no PII stored on-chain.
-///      
-///      STORED TRAITS (non-PII):
-///      - kycVerified: Overall KYC verification passed (always true when minted)
-///      - sanctionsPassed: Sanctions check result (US, UK, EU, Switzerland)
-///      - isOver18: Age verification result
-///      
-///      SIMPLIFIED APPROACH:
-///      - Frontend handles ZKPassport verification off-chain
-///      - Contract accepts verification results as parameters
-///      - Much simpler frontend integration
+/// @notice Soulbound NFT for identity-verified investors — trustless ZKPassport self-claim
+/// @dev Non-transferable ERC721. The ONLY minting path is claimPassport() which
+///      submits a ZKPassport ZK proof verified on-chain. No admin can mint on behalf of a user.
+///
+///      Security guarantees:
+///      - uniqueIdentifier from verifier (cryptographic sybil resistance, not caller input)
+///      - msg.sender bound in proof (no proxy minting)
+///      - block.chainid bound in proof (no cross-chain replay)
+///      - Age >= 18 verified by ZK circuit (no birthdate stored)
+///      - Sanctions validated against US/UK/EU/CH lists
+///      - Nationality not in sanctioned countries (alphabetically sorted list)
+///      - Passport/ID not expired
+///      Privacy-compliant: only boolean traits stored on-chain, zero PII.
 contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessControl, IConvexoPassport {
+    // ─── Roles ────────────────────────────────────────────────────────────
+
     bytes32 public constant REVOKER_ROLE = keccak256("REVOKER_ROLE");
 
-    /// @notice Counter for token IDs
-    uint256 private _nextTokenId;
+    // ─── ZKPassport ───────────────────────────────────────────────────────
 
-    /// @notice Base URI for token metadata
+    /// @notice ZKPassport verifier: 0x1D000001000EFD9a6371f4d90bB8920D5431c0D8
+    IZKPassportVerifier public immutable ZKPASSPORT_VERIFIER;
+
+    /// @notice Service domain bound into every proof (must match SDK queryBuilder domain)
+    string public constant APP_DOMAIN = "protocol.convexo.xyz";
+
+    /// @notice Service scope bound into every proof (must match SDK request scope)
+    string public constant APP_SCOPE = "convexo-passport-identity";
+
+    // ─── State ────────────────────────────────────────────────────────────
+
+    uint256 private _nextTokenId;
     string private _baseTokenURI;
 
-    /// @notice Mapping from identifier hash to address (prevents duplicate passports)
-    /// @dev The key is keccak256(uniqueIdentifier) where uniqueIdentifier is the string from ZKPassport SDK
-    ///      ZKPassport computes uniqueIdentifier as: Poseidon2(ID_data + domain + scope)
-    ///      This is the SINGLE source of truth for sybil resistance:
-    ///      One ID → one uniqueIdentifier per domain+scope → one NFT
-    ///      IMPORTANT: Pass uniqueIdentifier string directly from ZKPassport - contract hashes internally!
+    /// @notice uniqueIdentifier → holder address (sybil resistance)
     mapping(bytes32 => address) private passportIdentifierToAddress;
 
-    /// @notice Mapping from address to verified identity (stores ZKPassport outputs)
+    /// @notice holder → verified identity traits
     mapping(address => VerifiedIdentity) private verifiedUsers;
 
-    /// @notice Total number of active passports
     uint256 private activePassportCount;
 
-    /// @notice Error thrown when trying to transfer a soulbound token
+    // ─── Errors ───────────────────────────────────────────────────────────
+
     error SoulboundTokenCannotBeTransferred();
-
-    /// @notice Error thrown when ZKPassport proof verification fails
     error ProofVerificationFailed();
-
-    /// @notice Error thrown when user already has a passport
+    error InvalidScope();
+    error InvalidSender();
+    error InvalidChain();
+    error AgeVerificationFailed();
+    error SanctionsCheckFailed();
+    error NationalityNotCompliant();
+    error PassportExpired();
     error AlreadyHasPassport();
-
-    /// @notice Error thrown when unique identifier is already used
     error IdentifierAlreadyUsed();
-
-    /// @notice Error thrown when unique identifier string is empty
-    error InvalidIdentifier();
-
-    /// @notice Error thrown when passport is not active
     error PassportNotActive();
 
-    /// @notice Constructor
-    /// @param admin The admin address
-    /// @param initialBaseURI The initial base URI for token metadata
+    // ─── Constructor ──────────────────────────────────────────────────────
+
     constructor(
         address admin,
-        string memory initialBaseURI
+        string memory initialBaseURI,
+        address _zkPassportVerifier
     ) ERC721("Convexo Passport", "CPASS") {
-        require(admin != address(0), "Invalid admin address");
+        require(admin != address(0), "Invalid admin");
+        require(_zkPassportVerifier != address(0), "Invalid verifier");
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(REVOKER_ROLE, admin);
-        
+
         _baseTokenURI = initialBaseURI;
+        ZKPASSPORT_VERIFIER = IZKPassportVerifier(_zkPassportVerifier);
     }
 
+    // ─── Core: trustless self-claim ───────────────────────────────────────
+
     /// @inheritdoc IConvexoPassport
-    /// @dev Simplified minting with verification results only.
-    ///      Privacy-compliant: no PII stored, only boolean verification results.
-    ///      Frontend passes the verification results from ZKPassport verification.
-    ///      uniqueIdentifier is passed as string directly from ZKPassport SDK and hashed internally.
-    function safeMintWithVerification(
-        string calldata uniqueIdentifier,
-        bytes32 personhoodProof,
-        bool sanctionsPassed,
-        bool isOver18,
+    function claimPassport(
+        ProofVerificationParams calldata zkParams,
+        bool isIDCard,
         string calldata ipfsMetadataHash
     ) external returns (uint256 tokenId) {
-        // Validate unique identifier is not empty
-        if (bytes(uniqueIdentifier).length == 0) {
-            revert InvalidIdentifier();
+        // 1. On-chain ZK proof verification
+        (bool verified, bytes32 uniqueIdentifier, IZKPassportHelper helper) =
+            ZKPASSPORT_VERIFIER.verify(zkParams);
+        if (!verified) revert ProofVerificationFailed();
+
+        // 2. Domain + scope binding (proof is for Convexo, not another service)
+        if (!helper.verifyScopes(
+            zkParams.proofVerificationData.publicInputs,
+            APP_DOMAIN,
+            APP_SCOPE
+        )) revert InvalidScope();
+
+        // 3. Sender binding (proof belongs to exactly this caller — no proxy minting)
+        BoundData memory bound = helper.getBoundData(zkParams.committedInputs);
+        if (bound.senderAddress != msg.sender) revert InvalidSender();
+
+        // 4. Chain binding (no cross-chain replay attacks)
+        if (bound.chainId != block.chainid) revert InvalidChain();
+
+        // 5. Age >= 18 (ZK-proven, no birthdate disclosed)
+        bool isOver18 = helper.isAgeAboveOrEqual(18, zkParams.committedInputs);
+        if (!isOver18) revert AgeVerificationFailed();
+
+        // 6. Sanctions check (US, UK, EU, CH lists) — use proof timestamp not block.timestamp
+        uint256 proofTimestamp = helper.getProofTimestamp(
+            zkParams.proofVerificationData.publicInputs
+        );
+        bool sanctionsPassed = helper.isSanctionsRootValid(
+            proofTimestamp,
+            false, // non-strict: standard sanctions lists
+            zkParams.committedInputs
+        );
+        if (!sanctionsPassed) revert SanctionsCheckFailed();
+
+        // 7. Nationality exclusion — not from a sanctioned country
+        //    List MUST be sorted alphabetically (ZKPassport requirement)
+        bool nationalityCompliant = helper.isNationalityOut(
+            _getSanctionedCountries(),
+            zkParams.committedInputs
+        );
+        if (!nationalityCompliant) revert NationalityNotCompliant();
+
+        // 8. Document not expired
+        if (!helper.isExpiryDateAfterOrEqual(block.timestamp, zkParams.committedInputs)) {
+            revert PassportExpired();
         }
 
-        // Hash the string identifier for storage (sybil resistance)
-        bytes32 identifierHash = keccak256(bytes(uniqueIdentifier));
+        // 9. Sybil resistance — uniqueIdentifier from verifier (cryptographic, not caller input)
+        if (passportIdentifierToAddress[uniqueIdentifier] != address(0)) revert IdentifierAlreadyUsed();
+        if (balanceOf(msg.sender) > 0) revert AlreadyHasPassport();
 
-        // Check if user already has a passport
-        if (balanceOf(msg.sender) > 0) {
-            revert AlreadyHasPassport();
-        }
-
-        // Check if identifier has been used (sybil resistance)
-        // identifierHash ensures: 1 human = 1 passport
-        if (passportIdentifierToAddress[identifierHash] != address(0)) {
-            revert IdentifierAlreadyUsed();
-        }
-
-        // Mint the passport NFT
+        // 10. Mint
         tokenId = _nextTokenId++;
         _safeMint(msg.sender, tokenId);
-        
-        // Set IPFS metadata URI
         if (bytes(ipfsMetadataHash).length > 0) {
-            _setTokenURI(tokenId, string(abi.encodePacked("https://lime-famous-condor-7.mypinata.cloud/ipfs/", ipfsMetadataHash)));
+            _setTokenURI(
+                tokenId,
+                string(abi.encodePacked(
+                    "https://lime-famous-condor-7.mypinata.cloud/ipfs/",
+                    ipfsMetadataHash
+                ))
+            );
         }
 
-        // Store verification results as traits (no PII)
+        // 11. Store enriched identity (4-doc coverage: personhood + age + kyc + nationality)
         verifiedUsers[msg.sender] = VerifiedIdentity({
-            // Cryptographic identifiers (sybil resistance)
-            identifierHash: identifierHash,
-            personhoodProof: personhoodProof,
-            // Timestamps
-            verifiedAt: block.timestamp,
-            zkPassportTimestamp: block.timestamp, // Use current timestamp
-            // Status
-            isActive: true,
-            // Verification results (boolean traits - no PII)
-            kycVerified: true, // Overall KYC passed if function is called
-            sanctionsPassed: sanctionsPassed,
-            isOver18: isOver18
+            identifierHash:      uniqueIdentifier,
+            personhoodProof:     zkParams.proofVerificationData.vkeyHash,
+            verifiedAt:          block.timestamp,
+            zkPassportTimestamp: proofTimestamp,
+            isActive:            true,
+            kycVerified:         sanctionsPassed && isOver18,
+            sanctionsPassed:     sanctionsPassed,
+            isOver18:            isOver18,
+            nationalityCompliant: nationalityCompliant
         });
 
-        // Map identifier hash to address (sybil resistance)
-        passportIdentifierToAddress[identifierHash] = msg.sender;
-
-        // Increment active passport count
+        passportIdentifierToAddress[uniqueIdentifier] = msg.sender;
         activePassportCount++;
 
-        // Emit privacy-compliant event (only verification traits, no PII)
         emit PassportMinted(
-            msg.sender, 
-            tokenId, 
-            identifierHash, 
-            personhoodProof,
-            true, // kycVerified
+            msg.sender,
+            tokenId,
+            uniqueIdentifier,
+            zkParams.proofVerificationData.vkeyHash,
+            sanctionsPassed && isOver18,
             sanctionsPassed,
             isOver18
         );
     }
 
+    // ─── Admin ────────────────────────────────────────────────────────────
 
     /// @inheritdoc IConvexoPassport
     function revokePassport(uint256 tokenId) external onlyRole(REVOKER_ROLE) {
         address holder = ownerOf(tokenId);
         VerifiedIdentity storage identity = verifiedUsers[holder];
-
-        if (!identity.isActive) {
-            revert PassportNotActive();
-        }
-
+        if (!identity.isActive) revert PassportNotActive();
         identity.isActive = false;
         activePassportCount--;
-
         emit PassportRevoked(holder, tokenId, identity.identifierHash);
     }
+
+    function setBaseURI(string memory newBaseURI) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _baseTokenURI = newBaseURI;
+    }
+
+    // ─── Views ────────────────────────────────────────────────────────────
 
     /// @inheritdoc IConvexoPassport
     function holdsActivePassport(address holder) external view returns (bool) {
@@ -179,8 +212,7 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
     }
 
     /// @inheritdoc IConvexoPassport
-    function isIdentifierUsed(string calldata uniqueIdentifier) external view returns (bool) {
-        bytes32 identifierHash = keccak256(bytes(uniqueIdentifier));
+    function isIdentifierUsed(bytes32 identifierHash) external view returns (bool) {
         return passportIdentifierToAddress[identifierHash] != address(0);
     }
 
@@ -189,45 +221,61 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         return activePassportCount;
     }
 
-    /// @notice Override to make tokens soulbound (non-transferable)
-    function _update(address to, uint256 tokenId, address auth) 
-        internal 
+    // ─── Sanctioned countries list ────────────────────────────────────────
+
+    /// @notice Returns the sanctioned countries list sorted alphabetically (ZKPassport requirement)
+    /// @dev Matches SANCTIONED_COUNTRIES from @zkpassport/sdk
+    function _getSanctionedCountries() internal pure returns (string[] memory) {
+        string[] memory countries = new string[](20);
+        countries[0]  = "AFG";
+        countries[1]  = "BLR";
+        countries[2]  = "CAF";
+        countries[3]  = "COD";
+        countries[4]  = "CUB";
+        countries[5]  = "IRN";
+        countries[6]  = "IRQ";
+        countries[7]  = "LBY";
+        countries[8]  = "MLI";
+        countries[9]  = "MMR";
+        countries[10] = "NIC";
+        countries[11] = "PRK";
+        countries[12] = "RUS";
+        countries[13] = "SDN";
+        countries[14] = "SOM";
+        countries[15] = "SSD";
+        countries[16] = "SYR";
+        countries[17] = "VEN";
+        countries[18] = "YEM";
+        countries[19] = "ZWE";
+        return countries;
+    }
+
+    // ─── Soulbound overrides ──────────────────────────────────────────────
+
+    function _update(address to, uint256 tokenId, address auth)
+        internal
         override(ERC721)
-        returns (address) 
+        returns (address)
     {
         address from = _ownerOf(tokenId);
-        
-        // Allow minting (from == address(0)) and burning (to == address(0))
-        // But prevent transfers between addresses
-        if (from != address(0) && to != address(0)) {
-            revert SoulboundTokenCannotBeTransferred();
-        }
-        
+        if (from != address(0) && to != address(0)) revert SoulboundTokenCannotBeTransferred();
         return super._update(to, tokenId, auth);
     }
 
-    /// @notice Override to prevent approvals (soulbound token)
     function approve(address, uint256) public pure override(ERC721, IERC721) {
         revert SoulboundTokenCannotBeTransferred();
     }
 
-    /// @notice Override to prevent approval for all (soulbound token)
     function setApprovalForAll(address, bool) public pure override(ERC721, IERC721) {
         revert SoulboundTokenCannotBeTransferred();
     }
 
-    /// @notice Set base URI for token metadata
-    /// @param newBaseURI The new base URI
-    function setBaseURI(string memory newBaseURI) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _baseTokenURI = newBaseURI;
+    // ─── ERC721 overrides ─────────────────────────────────────────────────
+
+    function _baseURI() internal pure override returns (string memory) {
+        return "";
     }
 
-    /// @notice Get base URI (returns empty since we use individual IPFS URIs)  
-    function _baseURI() internal view override returns (string memory) {
-        return ""; // Empty since each NFT has its own IPFS URI
-    }
-
-    /// @notice Override required by Solidity for multiple inheritance
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -237,28 +285,12 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         return super.supportsInterface(interfaceId);
     }
 
-    /// @notice Override tokenURI to support both base URI and individual IPFS URIs
-    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721, ERC721URIStorage)
+        returns (string memory)
+    {
         return super.tokenURI(tokenId);
-    }
-
-    /// @notice Helper function to convert uint to string
-    function _toString(uint256 value) internal pure returns (string memory) {
-        if (value == 0) {
-            return "0";
-        }
-        uint256 temp = value;
-        uint256 digits;
-        while (temp != 0) {
-            digits++;
-            temp /= 10;
-        }
-        bytes memory buffer = new bytes(digits);
-        while (value != 0) {
-            digits -= 1;
-            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
-            value /= 10;
-        }
-        return string(buffer);
     }
 }

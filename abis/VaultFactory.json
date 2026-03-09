@@ -94,6 +94,16 @@
         "internalType": "uint256"
       },
       {
+        "name": "totalShareSupply",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "minInvestment",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
         "name": "name",
         "type": "string",
         "internalType": "string"
@@ -492,13 +502,19 @@
         "internalType": "address"
       },
       {
-        "name": "contractHash",
-        "type": "bytes32",
+        "name": "principalAmount",
+        "type": "uint256",
         "indexed": false,
-        "internalType": "bytes32"
+        "internalType": "uint256"
       },
       {
-        "name": "principalAmount",
+        "name": "totalShareSupply",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "initialSharePrice",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"

@@ -49,7 +49,7 @@ A comprehensive security audit was performed on all 9 Convexo Protocol smart con
 | **Convexo_LPs** | ~200 | Medium | ✅ Secure |
 | **Convexo_Vaults** | ~200 | Medium | ✅ Secure |
 | **Convexo_Passport** 🆕 | ~300 | Medium | ✅ Secure |
-| **CompliantLPHook** | ~150 | Medium | ✅ Secure |
+| **PassportGatedHook** | ~150 | Medium | ✅ Secure |
 | **ReputationManager** | ~100 | Low | ✅ Secure |
 | **PriceFeedManager** | ~200 | Low | ✅ Secure |
 | **ContractSigner** | ~300 | Medium | ✅ Secure |
@@ -326,7 +326,7 @@ function withdrawFunds() external onlyActive {
 
 #### A. Uniswap V4 Hooks
 
-**Contract:** `CompliantLPHook.sol`
+**Contract:** `PassportGatedHook.sol`
 
 **Security Properties:**
 - ✅ Only whitelisted users (NFT holders) can trade
@@ -422,20 +422,9 @@ function withdrawFunds() external onlyActive {
 ### Test Results
 
 ```bash
-forge test -vv
+forge test
 
-Running 63 tests for TokenizedBondVault
-[PASS] testPurchaseShares
-[PASS] testRedeemShares
-[PASS] testMakeRepayment
-[PASS] testWithdrawProtocolFees
-[PASS] testProtocolFeesAreProtectedFromInvestorRedemption
-[PASS] testCannotRedeemBeforeRepayment
-[PASS] testCannotWithdrawBeforeContractSigned
-[PASS] testVaultStateTransitions
-... (55 more tests)
-
-Test result: ok. 63 passed; 0 failed
+Ran 11 test suites in 306.95ms: 130 tests passed, 0 failed, 0 skipped (130 total tests)
 ```
 
 ### Security Test Categories
@@ -700,260 +689,193 @@ The Convexo Protocol demonstrates **exceptional security architecture** with ent
 
 ---
 
-## 🔐 ZKPassport Integration Security Review (v2.4)
+## 🔐 ZKPassport Integration Security Review (v3.0 — Trustless On-Chain Verification)
 
 ### Overview
 
-The Convexo_Passport contract integrates ZKPassport's on-chain verification system to enable privacy-preserving identity verification for individual investors. This section reviews the security implications of this integration.
-
-### Security Architecture
+The Convexo_Passport contract (v3.17) implements **fully trustless ZKPassport verification**. The `claimPassport()` function submits a ZK proof directly to the on-chain `IZKPassportVerifier` — no admin, no trusted boolean flags, no backend intermediary. All verification logic is enforced at the EVM level.
 
 **ZKPassport Verifier Contract:**
-- Address: `0x1D000001000EFD9a6371f4d90bB8920D5431c0D8`
-- Deployed by ZKPassport team on Ethereum, Base, and other networks
-- Audited and battle-tested zero-knowledge proof verification
-- Convexo contracts do NOT implement ZK verification logic (delegated to trusted verifier)
+- Address: `0x1D000001000EFD9a6371f4d90bB8920D5431c0D8` (Ethereum, Ethereum Sepolia, Base, Base Sepolia)
+- Audited and battle-tested zero-knowledge proof verification by ZKPassport team
+- Convexo contracts do NOT implement ZK verification logic — fully delegated to this verifier
+
+**What claimPassport() verifies (8 sequential checks):**
+1. `IZKPassportVerifier.verify(proof)` → verified=true (ZK proof valid)
+2. `proof.service.scope == APP_SCOPE` (scope binding — correct app)
+3. `proof.bound.senderAddress == msg.sender` (anti-replay — correct wallet)
+4. `proof.bound.chainId == block.chainid` (anti-replay — correct chain)
+5. `helper.isAgeValid()` + age >= 18 (age gate)
+6. `helper.isSanctionsValid()` == true (sanctions pass, no hit)
+7. `helper.getNationality()` not in 20-country block list (nationality compliance)
+8. `helper.isExpiryValid()` (document not expired)
 
 ### Security Features
 
-#### 1. Sybil Resistance ✅
+#### 1. Sybil Resistance ✅ — CRYPTOGRAPHIC (v3.17 upgrade from trusted booleans)
 
 **Protection Mechanism:**
 ```solidity
-mapping(bytes32 => address) private passportIdentifierToAddress;
+// uniqueIdentifier is returned by IZKPassportVerifier — derived from passport data
+// It is NOT provided by the caller — cannot be forged
+(bool verified, bytes32 uniqueIdentifier, IZKPassportHelper helper) = ZKPASSPORT_VERIFIER.verify(proof);
 
-// Unique identifier generated from multiple passport fields
-bytes32 uniqueIdentifier = keccak256(abi.encodePacked(
-    boundData.userIDHash,
-    boundData.userIDHash2,
-    boundData.publicKeyHash,
-    boundData.identityCounterHash
-));
+// Sybil check — one passport = one NFT, cryptographically enforced
+require(passportIdentifierToAddress[uniqueIdentifier] == address(0), "IdentifierAlreadyUsed");
+passportIdentifierToAddress[uniqueIdentifier] = msg.sender;
+```
 
-require(passportIdentifierToAddress[uniqueIdentifier] == address(0), 
-    "Passport already used");
+**Security Level:** ✅ **VERY STRONG (upgraded)**
+- uniqueIdentifier is `Poseidon2(ID_data + domain + scope)` — cryptographically unforgeable
+- Previously (pre-v3.17): relied on trusted string from SDK (caller-provided, gameable)
+- Now: derived by the verifier contract from the ZK proof — cannot be forged or spoofed
+
+#### 2. Anti-Replay Protection ✅ (NEW in v3.17)
+
+**Protection Mechanism:**
+```solidity
+// Proof is bound to specific wallet AND specific chain — cannot be replayed elsewhere
+require(proof.bound.senderAddress == msg.sender, "InvalidSender");
+require(proof.bound.chainId == block.chainid, "InvalidChain");
 ```
 
 **Security Level:** ✅ **STRONG**
-- Prevents same passport from minting multiple NFTs
-- Uses multiple hashed fields for uniqueness
-- Cryptographically secure identifier generation
+- Proof generated for one wallet cannot be submitted by another wallet
+- Proof generated for Base cannot be submitted on Ethereum
+- Makes stolen proofs useless
 
-#### 2. Privacy Protection ✅
+#### 3. Privacy Protection ✅
 
 **Minimal Data Storage:**
 ```solidity
 struct VerifiedIdentity {
-    bytes32 uniqueIdentifier;  // Hashed, not reversible
-    uint256 verifiedAt;        // Timestamp only
-    bool isActive;             // Status flag
-    string nationality;        // Country code only (e.g., "US")
+    bytes32 identifierHash;       // Poseidon2 hash — not reversible to passport data
+    uint256 verifiedAt;
+    uint256 zkPassportTimestamp;
+    bool isActive;
+    bool isIDCard;
+    bool sanctionsPassed;
+    bool isOver18;
+    bool nationalityCompliant;   // boolean only — no country code stored
 }
 ```
 
-**What is NOT stored:**
-- ❌ Full name
-- ❌ Date of birth
-- ❌ Passport number
+**What is NOT stored on-chain:**
+- ❌ Full name, date of birth, passport number
+- ❌ Nationality / country code (only boolean compliant/non-compliant)
 - ❌ Photo or biometric data
 - ❌ Address or contact information
 
-**Security Level:** ✅ **EXCELLENT**
-- Minimal data exposure
-- GDPR-compliant by design
-- Zero-knowledge proof ensures privacy
+**Security Level:** ✅ **EXCELLENT** — GDPR-compliant by design
 
-#### 3. Age Verification ✅
+#### 4. Age Verification ✅
 
-**On-Chain Verification:**
 ```solidity
-require(disclosedData.isAdult, "Must be 18 or older");
+bool ageValid = helper.isAgeValid();
+bool isOver18 = helper.getAge() >= 18;
+require(ageValid && isOver18, "AgeVerificationFailed");
 ```
 
-**Security Level:** ✅ **STRONG**
-- Age verified by ZKPassport verifier contract
-- No date of birth stored
-- Boolean flag only (18+ yes/no)
+#### 5. Soulbound Token (Non-Transferable) ✅ — unchanged
+Transfer prevention via `_update()` override — mint and burn only. Cannot be sold or transferred.
 
-#### 4. Soulbound Token (Non-Transferable) ✅
+#### 6. Nationality Compliance ✅
 
-**Transfer Prevention:**
 ```solidity
-function _update(address to, uint256 tokenId, address auth) internal override {
-    address from = _ownerOf(tokenId);
-    
-    // Allow minting and burning only
-    if (from != address(0) && to != address(0)) {
-        revert("Soulbound: Transfer not allowed");
+// _getSanctionedCountries() returns fixed sorted array — immutable, not admin-configurable
+string[] memory sanctioned = _getSanctionedCountries(); // 20 countries
+string memory nationality = helper.getNationality();
+for (uint256 i = 0; i < sanctioned.length; i++) {
+    if (keccak256(bytes(nationality)) == keccak256(bytes(sanctioned[i]))) {
+        revert NationalityNotCompliant();
     }
-    
-    return super._update(to, tokenId, auth);
 }
 ```
 
-**Security Level:** ✅ **STRONG**
-- Prevents NFT trading/selling
-- Maintains 1-person-1-passport integrity
-- Cannot be transferred even with approval
+**Blocked countries (20):** AFG, BLR, CAF, COD, CUB, IRN, IRQ, LBY, MLI, MMR, NIC, PRK, RUS, SDN, SOM, SSD, SYR, VEN, YEM, ZWE
 
-#### 5. Nationality Restrictions ✅
+**Security Level:** ✅ **STRONG** — hardcoded in contract (immutable), not admin-configurable
 
-**Configurable Restrictions:**
+#### 7. Sanctions Check ✅
+
 ```solidity
-mapping(bytes32 => bool) public restrictedCountries;
-
-function addRestrictedCountry(bytes32 countryHash) external onlyRole(ADMIN_ROLE)
-function removeRestrictedCountry(bytes32 countryHash) external onlyRole(ADMIN_ROLE)
-
-// Check during minting
-require(!restrictedCountries[nationalityHash], "Nationality restricted");
+require(helper.isSanctionsValid(), "SanctionsCheckFailed");
 ```
+Sanctions data verified by ZKPassport against US/UK/EU/CH lists — not by Convexo.
 
-**Security Level:** ✅ **GOOD**
-- Admin-controlled compliance
-- Flexible for regulatory requirements
-- Transparent on-chain restrictions
+### Comparison: Pre-v3.17 vs v3.17
 
-#### 6. Mutual Exclusivity with Business NFTs ✅
-
-**ReputationManager Enforcement:**
-```solidity
-if (hasActivePassport) {
-    require(lpsBalance == 0 && vaultsBalance == 0, 
-        "Cannot have both business and individual verification");
-    return ReputationTier.Passport;
-}
-```
-
-**Security Level:** ✅ **STRONG**
-- Prevents dual verification abuse
-- Clear separation between business and individual paths
-- Enforced at reputation tier calculation
+| Aspect | Pre-v3.17 (safeMintWithVerification) | v3.17 (claimPassport) |
+|--------|--------------------------------------|------------------------|
+| **Verification** | Trusted booleans from frontend | On-chain ZK proof verification |
+| **Sybil resistance** | String uniqueIdentifier (caller-provided) | bytes32 from verifier (cryptographic) |
+| **Anti-replay** | None | Bound to msg.sender + chainId |
+| **Admin bypass** | MINTER_ROLE could bypass all checks | No admin can mint passports |
+| **Sanctions** | Frontend passed true/false | ZKPassport verifier + helper.isSanctionsValid() |
+| **Age** | Frontend passed true/false | helper.isAgeValid() + getAge() >= 18 |
+| **Nationality** | Not checked | 20-country block list via helper.getNationality() |
+| **Document expiry** | Not checked | helper.isExpiryValid() |
 
 ### Potential Risks & Mitigations
 
-#### Risk 1: ZKPassport Verifier Compromise
+#### Risk 1: ZKPassport Verifier Compromise — LOW
+ZKPassport verifier is audited and battle-tested. Admin can revoke passports if fraud detected.
+Immutable `ZKPASSPORT_VERIFIER` address prevents malicious replacement after deployment.
 
-**Risk Level:** 🟡 **LOW**
-- **Scenario:** ZKPassport verifier contract is compromised
-- **Impact:** Invalid proofs could be accepted
-- **Mitigation:** 
-  - ZKPassport verifier is audited and battle-tested
-  - Convexo admin can revoke passports if fraud detected
-  - Immutable verifier address prevents malicious replacement
+#### Risk 2: Admin Key Compromise — MEDIUM
+Admin can revoke passports (REVOKER_ROLE). Cannot mint passports (self-claim only).
+**Recommendation:** ⚠️ USE MULTISIG for admin operations.
 
-**Recommendation:** ✅ **ACCEPTED RISK** - ZKPassport is a trusted third-party service
+#### Risk 3: Privacy Leakage via Events — VERY LOW
+Events emit `identifierHash` (Poseidon2 hash, not reversible). No PII in any event.
 
-#### Risk 2: Passport Theft/Loss
+### Test Coverage (v3.17 — 130 tests total)
 
-**Risk Level:** 🟡 **LOW**
-- **Scenario:** User's physical passport is stolen
-- **Impact:** Attacker could mint NFT before victim
-- **Mitigation:**
-  - One passport = one NFT (first-come-first-served)
-  - Admin can revoke NFT if fraud reported
-  - Soulbound prevents secondary market exploitation
-
-**Recommendation:** ✅ **ACCEPTABLE** - Similar to all identity systems
-
-#### Risk 3: Admin Key Compromise
-
-**Risk Level:** 🟡 **MEDIUM**
-- **Scenario:** Admin private key is compromised
-- **Impact:** Attacker could:
-  - Revoke legitimate passports
-  - Add/remove country restrictions
-  - Access holder lookup by identifier
-- **Mitigation:**
-  - Use multisig wallet for admin role
-  - Monitor admin actions via events
-  - Cannot mint passports (only users can self-mint)
-
-**Recommendation:** ⚠️ **USE MULTISIG** - Standard best practice
-
-#### Risk 4: Privacy Leakage via Events
-
-**Risk Level:** 🟢 **VERY LOW**
-- **Scenario:** Event logs reveal passport identifiers
-- **Impact:** Minimal - identifiers are hashed
-- **Mitigation:**
-  - Identifiers are cryptographically hashed
-  - No personal data in events
-  - Only admin can reverse-lookup (by design)
-
-**Recommendation:** ✅ **ACCEPTABLE** - Privacy-by-design
-
-### Test Coverage
-
-**ZKPassport Integration Tests:**
-- ✅ Valid proof acceptance
-- ✅ Invalid proof rejection
-- ✅ Duplicate passport prevention
-- ✅ Age requirement enforcement
-- ✅ Nationality restriction enforcement
+- ✅ Full `claimPassport()` success path
+- ✅ ProofVerificationFailed (verifier returns false)
+- ✅ InvalidScope
+- ✅ InvalidSender (anti-replay)
+- ✅ InvalidChain (anti-replay)
+- ✅ AgeVerificationFailed
+- ✅ SanctionsCheckFailed
+- ✅ NationalityNotCompliant
+- ✅ PassportExpired
+- ✅ IdentifierAlreadyUsed (sybil prevention)
+- ✅ AlreadyHasPassport (wallet duplicate prevention)
 - ✅ Soulbound transfer prevention
 - ✅ Admin revocation
 - ✅ ReputationManager integration
-- ✅ Vault investment with passport
+- ✅ Multiple independent users
 
 **Coverage:** 100% of passport-related functions
 
-### Comparison with Business KYB Path
-
-| Feature | Business KYB (Sumsub) | Individual (ZKPassport) |
-|---------|----------------------|-------------------------|
-| **Verification Method** | Off-chain (Sumsub) | On-chain (ZKPassport) |
-| **Privacy** | Full KYB data collected | Minimal (age + nationality) |
-| **Minting** | Admin-controlled | Self-minting |
-| **Speed** | Hours/days | Instant |
-| **Cost** | Sumsub fees | Gas only |
-| **Sybil Resistance** | Company ID | Passport identifier |
-| **Transferability** | Soulbound | Soulbound |
-| **Access Rights** | Pools + Vaults | Vaults only |
-
-**Security Assessment:** Both paths are secure for their intended use cases.
-
-### Security Score: 9.0/10 ⭐
+### Security Score: 9.5/10 ⭐ (upgraded from 9.0)
 
 **Breakdown:**
-- ✅ Sybil Resistance: 10/10
+- ✅ Sybil Resistance: 10/10 (upgraded — cryptographic, not string-based)
 - ✅ Privacy Protection: 10/10
 - ✅ Age Verification: 10/10
+- ✅ Anti-Replay Protection: 10/10 (new in v3.17)
 - ✅ Soulbound Implementation: 10/10
-- ⚠️ Admin Controls: 7/10 (needs multisig)
+- ⚠️ Admin Controls: 7/10 (needs multisig — but note: admin CANNOT mint passports)
 - ✅ Test Coverage: 10/10
 
-**Overall:** The ZKPassport integration is **production-ready** with proper admin key management.
-
----
-
-## ✅ Final Security Recommendation
-
-**Mainnet Deployment:** ✅ **TECHNICALLY APPROVED**
-
-The contracts (including new Convexo_Passport) are **production-ready from a security perspective**. The following are business/operational recommendations, not security requirements:
-
-1. **Recommended (Not Required):** External audit for additional assurance
-2. **Recommended (Not Required):** Multisig for admin operations
-3. **Recommended (Not Required):** Bug bounty program for community engagement
-4. **Recommended:** Monitor ZKPassport verifier contract for any updates/issues
-
-**Smart contract security is enterprise-grade and ready for mainnet deployment.**
+**Overall:** The ZKPassport integration is **production-ready** and upgraded to cryptographic trustlessness in v3.17.
 
 ---
 
 ## 📋 Document Control
 
-**Report Prepared By:** Convexo Security Team  
-**Last Updated:** December 24, 2025  
-**Version:** 2.4 (ZKPassport Integration Security Review)  
-**Next Review:** Q1 2026 (Post-Mainnet Launch)
+**Report Prepared By:** Convexo Security Team
+**Last Updated:** March 2026
+**Version:** 3.0 (v3.17 Trustless ZKPassport On-Chain Verification)
+**Next Review:** Q2 2026
 
 ### Version History
-- **v2.4** (Dec 24, 2025): Added ZKPassport integration security review, Convexo_Passport contract audit
+- **v3.0** (March 2026): Full rewrite of ZKPassport section — trustless on-chain verification (claimPassport), anti-replay, cryptographic sybil resistance, nationality compliance, expiry checks. Test count: 130.
+- **v2.4** (Dec 24, 2025): Added ZKPassport integration security review (safeMintWithVerification — trusted booleans)
 - **v2.3** (Dec 24, 2025): Verified contract-level implementations, updated security score to 9.5/10
 - **v2.2** (Dec 2025): Initial comprehensive audit
-- **v2.0-2.1** (Nov 2025): Development phase audits
 
 ---
 

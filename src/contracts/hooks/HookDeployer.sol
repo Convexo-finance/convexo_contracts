@@ -2,16 +2,22 @@
 pragma solidity ^0.8.27;
 
 import {PassportGatedHook} from "./PassportGatedHook.sol";
-import {IPoolManager} from "../interfaces/IPoolManager.sol";
-import {ReputationManager} from "../contracts/identity/ReputationManager.sol";
+import {IPoolManager} from "../../interfaces/IPoolManager.sol";
+import {ReputationManager} from "../identity/ReputationManager.sol";
 
 /// @title HookDeployer
 /// @notice Deploys Uniswap V4 hooks using CREATE2 for deterministic addresses
 /// @dev Hook permissions are encoded in the hook address per Uniswap V4 spec.
 ///      The address must have specific bit patterns to indicate which hooks are enabled.
-///      Bits 159-150 encode: beforeInitialize, afterInitialize, beforeAddLiquidity, 
-///      afterAddLiquidity, beforeRemoveLiquidity, afterRemoveLiquidity, beforeSwap, 
-///      afterSwap, beforeDonate, afterDonate
+///      Bottom 14 bits of the address encode hook flags:
+///        bit 13 = beforeInitialize       bit 12 = afterInitialize
+///        bit 11 = beforeAddLiquidity     bit 10 = afterAddLiquidity
+///        bit  9 = beforeRemoveLiquidity  bit  8 = afterRemoveLiquidity
+///        bit  7 = beforeSwap             bit  6 = afterSwap
+///        bit  5 = beforeDonate           bit  4 = afterDonate
+///        bit  3 = beforeSwapReturnDelta  bit  2 = afterSwapReturnDelta
+///        bit  1 = afterAddLiquidityReturnDelta
+///        bit  0 = afterRemoveLiquidityReturnDelta
 ///
 ///      This deployer creates PassportGatedHook which allows LP pool access to users
 ///      who hold either Convexo Passport (ZKPassport) OR Convexo LPs (Veriff) NFT.
@@ -61,7 +67,7 @@ contract HookDeployer {
     // ============ Salt Finding Functions ============
 
     /// @notice Find a salt that produces a PassportGatedHook address with the correct permissions
-    /// @dev For PassportGatedHook, we need: beforeAddLiquidity (157), beforeRemoveLiquidity (155), beforeSwap (153)
+    /// @dev For PassportGatedHook, we need: beforeAddLiquidity (bit11), beforeRemoveLiquidity (bit9), beforeSwap (bit7)
     /// @param poolManager The Uniswap V4 PoolManager address
     /// @param reputationManager The ReputationManager contract address
     /// @param startingSalt The starting salt to iterate from
@@ -96,30 +102,36 @@ contract HookDeployer {
     }
 
     /// @notice Validate that an address has the correct hook permission bits set
-    /// @dev Checks bits for: beforeAddLiquidity (157), beforeRemoveLiquidity (155), beforeSwap (153)
-    ///      And ensures no other permission bits are set
+    /// @dev Checks bottom 14 bits per Uniswap V4 Hooks library encoding:
+    ///      Required: beforeAddLiquidity (bit11), beforeRemoveLiquidity (bit9), beforeSwap (bit7)
+    ///      Must not have: all other hook flags (bits 13, 12, 10, 8, 6, 5, 4, 3, 2, 1, 0)
     /// @param predicted The address to validate
     /// @return isValid True if the address has correct permission bits
     function _validateHookPermissions(address predicted) internal pure returns (bool isValid) {
         uint160 addr = uint160(predicted);
 
-        // Required permissions
-        bool hasBeforeAddLiquidity = (addr & (1 << 157)) != 0;
-        bool hasBeforeRemoveLiquidity = (addr & (1 << 155)) != 0;
-        bool hasBeforeSwap = (addr & (1 << 153)) != 0;
+        // Required permissions (Uniswap V4 bottom-bit encoding)
+        bool hasBeforeAddLiquidity = (addr & (1 << 11)) != 0;
+        bool hasBeforeRemoveLiquidity = (addr & (1 << 9)) != 0;
+        bool hasBeforeSwap = (addr & (1 << 7)) != 0;
 
         // Unwanted permissions (should NOT be set)
-        bool noBeforeInitialize = (addr & (1 << 159)) == 0;
-        bool noAfterInitialize = (addr & (1 << 158)) == 0;
-        bool noAfterAddLiquidity = (addr & (1 << 156)) == 0;
-        bool noAfterRemoveLiquidity = (addr & (1 << 154)) == 0;
-        bool noAfterSwap = (addr & (1 << 152)) == 0;
-        bool noBeforeDonate = (addr & (1 << 151)) == 0;
-        bool noAfterDonate = (addr & (1 << 150)) == 0;
+        bool noBeforeInitialize = (addr & (1 << 13)) == 0;
+        bool noAfterInitialize = (addr & (1 << 12)) == 0;
+        bool noAfterAddLiquidity = (addr & (1 << 10)) == 0;
+        bool noAfterRemoveLiquidity = (addr & (1 << 8)) == 0;
+        bool noAfterSwap = (addr & (1 << 6)) == 0;
+        bool noBeforeDonate = (addr & (1 << 5)) == 0;
+        bool noAfterDonate = (addr & (1 << 4)) == 0;
+        bool noBeforeSwapReturnDelta = (addr & (1 << 3)) == 0;
+        bool noAfterSwapReturnDelta = (addr & (1 << 2)) == 0;
+        bool noAfterAddLiquidityReturnDelta = (addr & (1 << 1)) == 0;
+        bool noAfterRemoveLiquidityReturnDelta = (addr & (1 << 0)) == 0;
 
-        return hasBeforeAddLiquidity && hasBeforeRemoveLiquidity && hasBeforeSwap && noBeforeInitialize
-            && noAfterInitialize && noAfterAddLiquidity && noAfterRemoveLiquidity && noAfterSwap && noBeforeDonate
-            && noAfterDonate;
+        return hasBeforeAddLiquidity && hasBeforeRemoveLiquidity && hasBeforeSwap
+            && noBeforeInitialize && noAfterInitialize && noAfterAddLiquidity && noAfterRemoveLiquidity
+            && noAfterSwap && noBeforeDonate && noAfterDonate && noBeforeSwapReturnDelta
+            && noAfterSwapReturnDelta && noAfterAddLiquidityReturnDelta && noAfterRemoveLiquidityReturnDelta;
     }
 
     /// @notice Check if an address has valid hook permissions
@@ -153,7 +165,7 @@ contract HookDeployer {
         return address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, bytecodeHash)))));
     }
 
-    /// @notice Find a salt for PassportGatedHook (legacy function name)
+    /// @notice Find a salt for PassportGatedHook (legacy function name, same as findPassportGatedHookSalt)
     function findSalt(
         IPoolManager poolManager,
         ReputationManager reputationManager,

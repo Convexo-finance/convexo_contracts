@@ -13,11 +13,11 @@ import {ReputationManager} from "../src/contracts/identity/ReputationManager.sol
 import {ContractSigner} from "../src/contracts/credits/ContractSigner.sol";
 import {VeriffVerifier} from "../src/contracts/identity/VeriffVerifier.sol";
 import {SumsubVerifier} from "../src/contracts/identity/SumsubVerifier.sol";
-import {PoolRegistry} from "../src/contracts/trading/PoolRegistry.sol";
-import {PriceFeedManager} from "../src/contracts/trading/PriceFeedManager.sol";
-import {HookDeployer} from "../src/hooks/HookDeployer.sol";
+import {PoolRegistry} from "../src/contracts/hooks/PoolRegistry.sol";
+import {PriceFeedManager} from "../src/contracts/hooks/PriceFeedManager.sol";
+import {HookDeployer} from "../src/contracts/hooks/HookDeployer.sol";
 import {VaultFactory} from "../src/contracts/credits/VaultFactory.sol";
-import {PassportGatedHook} from "../src/hooks/PassportGatedHook.sol";
+import {PassportGatedHook} from "../src/contracts/hooks/PassportGatedHook.sol";
 
 /// @title PredictAddresses
 /// @notice Predicts all contract addresses before deployment using Safe Singleton Factory

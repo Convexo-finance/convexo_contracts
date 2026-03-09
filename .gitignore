@@ -17,8 +17,7 @@ out/
 # Ignore dry-run deployments
 /broadcast/**/dry-run/
 
-# Docs
-docs/
+
 
 # Dotenv file
 .env

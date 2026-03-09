@@ -1,38 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
+import {ProofVerificationParams} from "./IZKPassportVerifier.sol";
+
 /// @title IConvexoPassport
-/// @notice Interface for Convexo_Passport NFT contract
-/// @dev Soulbound NFT for individual investors verified via ZKPassport
-///      Privacy-compliant: stores only verification results (traits), no PII
+/// @notice Interface for Convexo_Passport NFT contract (v3.17 — trustless ZKPassport)
 interface IConvexoPassport {
-    /// @notice Verified identity information stored for each passport holder
-    /// @dev Stores verification results as "traits" - no sensitive PII stored on-chain
+    /// @notice Verified identity stored for each passport holder
+    /// @dev Privacy-compliant: boolean traits only, zero PII on-chain
     struct VerifiedIdentity {
-        // Cryptographic identifiers (sybil resistance)
-        bytes32 identifierHash;         // keccak256 hash of uniqueIdentifier string from ZKPassport
-        bytes32 personhoodProof;        // Nullifier from ZKPassport
-        // Timestamps
-        uint256 verifiedAt;             // Contract verification timestamp
-        uint256 zkPassportTimestamp;    // Original ZKPassport verification time
-        // Status
-        bool isActive;                  // Whether passport is currently active
-        // ZKPassport verification results (boolean traits - no PII)
-        bool kycVerified;               // Overall KYC verification passed
-        bool sanctionsPassed;           // Sanctions check result
-        bool isOver18;                  // Age verification result
+        bytes32 identifierHash;      // uniqueIdentifier from ZKPassport verifier (Poseidon2 hash)
+        bytes32 personhoodProof;     // vkeyHash from proof (circuit identifier)
+        uint256 verifiedAt;          // block.timestamp at mint
+        uint256 zkPassportTimestamp; // proof generation timestamp from getProofTimestamp()
+        bool isActive;
+        bool kycVerified;            // sanctionsPassed && isOver18
+        bool sanctionsPassed;        // isSanctionsRootValid()
+        bool isOver18;               // isAgeAboveOrEqual(18)
+        bool nationalityCompliant;   // isNationalityOut(SANCTIONED_COUNTRIES)
     }
 
-    /// @notice Emitted when a new passport is minted
-    /// @dev Privacy-compliant: emits only non-PII verification traits
+    /// @notice Emitted when a passport is minted
     event PassportMinted(
         address indexed holder,
         uint256 indexed tokenId,
-        bytes32 identifierHash,         // keccak256 hash of uniqueIdentifier (not PII)
-        bytes32 personhoodProof,        // Nullifier (not PII)
-        bool kycVerified,               // Verification trait
-        bool sanctionsPassed,           // Verification trait
-        bool isOver18                   // Verification trait
+        bytes32 identifierHash,
+        bytes32 personhoodProof,
+        bool kycVerified,
+        bool sanctionsPassed,
+        bool isOver18
     );
 
     /// @notice Emitted when a passport is revoked
@@ -42,47 +38,32 @@ interface IConvexoPassport {
         bytes32 identifierHash
     );
 
-    /// @notice Self-mint a passport using verification results (ONLY minting path)
-    /// @param uniqueIdentifier String identifier directly from ZKPassport SDK (hashed internally)
-    /// @param personhoodProof Nullifier from ZKPassport verification
-    /// @param sanctionsPassed Whether sanctions check passed
-    /// @param isOver18 Whether age verification (18+) passed
-    /// @param ipfsMetadataHash IPFS hash for the NFT metadata (tier-specific)
+    /// @notice Self-claim a Convexo Passport by submitting a ZKPassport ZK proof
+    /// @dev The ONLY minting path. No admin can mint on behalf of a user.
+    ///      Proof is verified on-chain by the ZKPassport verifier contract.
+    ///      msg.sender and block.chainid must be bound in the proof (anti-replay).
+    /// @param zkParams Proof parameters from zkPassport.getSolidityVerifierParameters()
+    /// @param isIDCard True if document is ID card, false if passport
+    /// @param ipfsMetadataHash IPFS hash for the NFT metadata
     /// @return tokenId The minted token ID
-    /// @dev This is the ONLY way to mint a Convexo Passport.
-    ///      Enforces: 1 human → 1 ZKPassport → 1 NFT → 1 wallet
-    ///      The uniqueIdentifier string is hashed internally using keccak256
-    function safeMintWithVerification(
-        string calldata uniqueIdentifier,
-        bytes32 personhoodProof,
-        bool sanctionsPassed,
-        bool isOver18,
+    function claimPassport(
+        ProofVerificationParams calldata zkParams,
+        bool isIDCard,
         string calldata ipfsMetadataHash
     ) external returns (uint256 tokenId);
 
-    /// @notice Revoke a passport
-    /// @param tokenId The token ID to revoke
+    /// @notice Revoke a passport (REVOKER_ROLE only)
     function revokePassport(uint256 tokenId) external;
 
-    /// @notice Check if an address holds an active passport
-    /// @param holder The address to check
-    /// @return hasPassport Whether the address holds an active passport
-    function holdsActivePassport(address holder) external view returns (bool hasPassport);
+    /// @notice Check if address holds an active passport
+    function holdsActivePassport(address holder) external view returns (bool);
 
-    /// @notice Get verified identity information for an address
-    /// @param holder The address to query
-    /// @return identity The verified identity information
-    function getVerifiedIdentity(address holder) external view returns (VerifiedIdentity memory identity);
+    /// @notice Get verified identity for an address
+    function getVerifiedIdentity(address holder) external view returns (VerifiedIdentity memory);
 
-    /// @notice Check if a unique identifier string has been used
-    /// @param uniqueIdentifier The identifier string from ZKPassport SDK
-    /// @return used Whether the identifier has been used
-    /// @dev This is the SINGLE source of truth for sybil resistance
-    ///      The string is hashed internally using keccak256
-    function isIdentifierUsed(string calldata uniqueIdentifier) external view returns (bool used);
+    /// @notice Check if a uniqueIdentifier bytes32 has been used (sybil resistance)
+    function isIdentifierUsed(bytes32 identifierHash) external view returns (bool);
 
-    /// @notice Get the total number of active passports
-    /// @return count The number of active passports
-    function getActivePassportCount() external view returns (uint256 count);
+    /// @notice Total active passports
+    function getActivePassportCount() external view returns (uint256);
 }
-

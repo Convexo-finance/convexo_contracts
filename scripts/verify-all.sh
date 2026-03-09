@@ -145,8 +145,9 @@ verify_contract() {
 # Phase 1: Core NFT Contracts
 # =============================
 
-ARGS=$(cast abi-encode "constructor(address,string)" \
-    "$ADMIN" "$METADATA_URI")
+ZKPASSPORT_VERIFIER="0x1D000001000EFD9a6371f4d90bB8920D5431c0D8"
+ARGS=$(cast abi-encode "constructor(address,string,address)" \
+    "$ADMIN" "$METADATA_URI" "$ZKPASSPORT_VERIFIER")
 verify_contract "$CONVEXO_PASSPORT" \
     "src/contracts/identity/Convexo_Passport.sol:Convexo_Passport" "$ARGS" "Convexo_Passport"
 
@@ -197,13 +198,13 @@ verify_contract "$CONTRACT_SIGNER" \
     "src/contracts/credits/ContractSigner.sol:ContractSigner" "$ARGS" "ContractSigner"
 
 verify_contract "$POOL_REGISTRY" \
-    "src/contracts/trading/PoolRegistry.sol:PoolRegistry" "$ARGS" "PoolRegistry"
+    "src/contracts/hooks/PoolRegistry.sol:PoolRegistry" "$ARGS" "PoolRegistry"
 
 verify_contract "$PRICE_FEED_MANAGER" \
-    "src/contracts/trading/PriceFeedManager.sol:PriceFeedManager" "$ARGS" "PriceFeedManager"
+    "src/contracts/hooks/PriceFeedManager.sol:PriceFeedManager" "$ARGS" "PriceFeedManager"
 
 verify_contract "$HOOK_DEPLOYER" \
-    "src/hooks/HookDeployer.sol:HookDeployer" "" "HookDeployer"
+    "src/contracts/hooks/HookDeployer.sol:HookDeployer" "" "HookDeployer"
 
 # =============================
 # Phase 4: Chain-Specific
@@ -219,7 +220,7 @@ fi
 if [ -n "$POOL_MANAGER" ] && [ -n "$REPUTATION_MANAGER" ]; then
     ARGS=$(cast abi-encode "constructor(address,address)" "$POOL_MANAGER" "$REPUTATION_MANAGER")
     verify_contract "$PASSPORT_GATED_HOOK" \
-        "src/hooks/PassportGatedHook.sol:PassportGatedHook" "$ARGS" "PassportGatedHook"
+        "src/contracts/hooks/PassportGatedHook.sol:PassportGatedHook" "$ARGS" "PassportGatedHook"
 fi
 
 echo "========================================"

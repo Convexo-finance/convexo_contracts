@@ -9,8 +9,8 @@ import {
     ModifyLiquidityParams,
     SwapParams,
     Permissions
-} from "../interfaces/IHooks.sol";
-import {IPoolManager} from "../interfaces/IPoolManager.sol";
+} from "../../interfaces/IHooks.sol";
+import {IPoolManager} from "../../interfaces/IPoolManager.sol";
 
 /// @title BaseHook
 /// @notice Base contract for Uniswap V4 hooks following v4-periphery patterns

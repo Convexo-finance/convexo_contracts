@@ -32,7 +32,13 @@ struct SwapParams {
 }
 
 /// @notice Hook permissions struct
-/// @dev Indicates which hook functions are enabled
+/// @dev Indicates which hook functions are enabled.
+///      Matches Uniswap V4 Hooks library bit encoding (bottom 14 bits of address):
+///      beforeInitialize=bit13, afterInitialize=bit12, beforeAddLiquidity=bit11,
+///      afterAddLiquidity=bit10, beforeRemoveLiquidity=bit9, afterRemoveLiquidity=bit8,
+///      beforeSwap=bit7, afterSwap=bit6, beforeDonate=bit5, afterDonate=bit4,
+///      beforeSwapReturnDelta=bit3, afterSwapReturnDelta=bit2,
+///      afterAddLiquidityReturnDelta=bit1, afterRemoveLiquidityReturnDelta=bit0
 struct Permissions {
     bool beforeInitialize;
     bool afterInitialize;
@@ -44,6 +50,10 @@ struct Permissions {
     bool afterSwap;
     bool beforeDonate;
     bool afterDonate;
+    bool beforeSwapReturnDelta;
+    bool afterSwapReturnDelta;
+    bool afterAddLiquidityReturnDelta;
+    bool afterRemoveLiquidityReturnDelta;
 }
 
 /// @notice Interface for Uniswap V4 Hooks

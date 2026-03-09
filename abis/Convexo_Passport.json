@@ -11,9 +11,40 @@
         "name": "initialBaseURI",
         "type": "string",
         "internalType": "string"
+      },
+      {
+        "name": "_zkPassportVerifier",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "APP_DOMAIN",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "APP_SCOPE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -37,6 +68,19 @@
         "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ZKPASSPORT_VERIFIER",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IZKPassportVerifier"
       }
     ],
     "stateMutability": "view"
@@ -89,6 +133,96 @@
       }
     ],
     "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "claimPassport",
+    "inputs": [
+      {
+        "name": "zkParams",
+        "type": "tuple",
+        "internalType": "struct ProofVerificationParams",
+        "components": [
+          {
+            "name": "version",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "proofVerificationData",
+            "type": "tuple",
+            "internalType": "struct ProofVerificationData",
+            "components": [
+              {
+                "name": "vkeyHash",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "proof",
+                "type": "bytes",
+                "internalType": "bytes"
+              },
+              {
+                "name": "publicInputs",
+                "type": "bytes32[]",
+                "internalType": "bytes32[]"
+              }
+            ]
+          },
+          {
+            "name": "committedInputs",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "serviceConfig",
+            "type": "tuple",
+            "internalType": "struct ServiceConfig",
+            "components": [
+              {
+                "name": "validityPeriodInSeconds",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "domain",
+                "type": "string",
+                "internalType": "string"
+              },
+              {
+                "name": "scope",
+                "type": "string",
+                "internalType": "string"
+              },
+              {
+                "name": "devMode",
+                "type": "bool",
+                "internalType": "bool"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "isIDCard",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "ipfsMetadataHash",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -189,17 +323,17 @@
             "internalType": "bool"
           },
           {
-            "name": "faceMatchPassed",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
             "name": "sanctionsPassed",
             "type": "bool",
             "internalType": "bool"
           },
           {
             "name": "isOver18",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "nationalityCompliant",
             "type": "bool",
             "internalType": "bool"
           }
@@ -298,9 +432,9 @@
     "name": "isIdentifierUsed",
     "inputs": [
       {
-        "name": "uniqueIdentifier",
-        "type": "string",
-        "internalType": "string"
+        "name": "identifierHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -391,50 +525,6 @@
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "safeMintWithVerification",
-    "inputs": [
-      {
-        "name": "uniqueIdentifier",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "personhoodProof",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "sanctionsPassed",
-        "type": "bool",
-        "internalType": "bool"
-      },
-      {
-        "name": "isOver18",
-        "type": "bool",
-        "internalType": "bool"
-      },
-      {
-        "name": "faceMatchPassed",
-        "type": "bool",
-        "internalType": "bool"
-      },
-      {
-        "name": "ipfsMetadataHash",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "tokenId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -710,12 +800,6 @@
         "internalType": "bool"
       },
       {
-        "name": "faceMatchPassed",
-        "type": "bool",
-        "indexed": false,
-        "internalType": "bool"
-      },
-      {
         "name": "sanctionsPassed",
         "type": "bool",
         "indexed": false,
@@ -878,6 +962,11 @@
   },
   {
     "type": "error",
+    "name": "AgeVerificationFailed",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "AlreadyHasPassport",
     "inputs": []
   },
@@ -991,7 +1080,27 @@
   },
   {
     "type": "error",
-    "name": "InvalidIdentifier",
+    "name": "InvalidChain",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidScope",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NationalityNotCompliant",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PassportExpired",
     "inputs": []
   },
   {
@@ -1002,6 +1111,11 @@
   {
     "type": "error",
     "name": "ProofVerificationFailed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SanctionsCheckFailed",
     "inputs": []
   },
   {

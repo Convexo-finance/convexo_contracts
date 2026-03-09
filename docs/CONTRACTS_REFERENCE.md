@@ -1,8 +1,25 @@
 # Convexo Contracts Reference
 
-**Version 3.17** | Solidity ^0.8.27 | **Arbitrum support + Treasury deprecated + Folder reorganization**
+**Version 3.17** | Solidity ^0.8.27 | **Arbitrum support + Treasury deprecated + Folder reorganization + ZKPassport on-chain trustless verification**
 
 > **📍 Contract Addresses:** See [addresses.json](./addresses.json)
+
+---
+
+## Supported Networks
+
+| Chain ID | Network | Type | Explorer |
+|----------|---------|------|----------|
+| **1** | Ethereum Mainnet | Mainnet | etherscan.io |
+| **8453** | Base Mainnet | Mainnet | basescan.org |
+| **130** | Unichain Mainnet | Mainnet | unichain.blockscout.com |
+| **42161** | Arbitrum One | Mainnet | arbiscan.io |
+| **11155111** | Ethereum Sepolia | Testnet | sepolia.etherscan.io |
+| **84532** | Base Sepolia | Testnet | sepolia.basescan.org |
+| **1301** | Unichain Sepolia | Testnet | unichain-sepolia.blockscout.com |
+| **421614** | Arbitrum Sepolia | Testnet | sepolia.arbiscan.io |
+
+**Note:** Arbitrum One (42161) and Arbitrum Sepolia (421614) added in v3.17. All addresses pending redeploy with salt `convexo.v3.17`.
 
 ---
 
@@ -64,25 +81,27 @@ function getReputationDetails(address user) returns (
 
 ## Convexo_Passport
 
-**Purpose**: Soulbound NFT for ZKPassport-verified individuals (Tier 1)  
-**IPFS Integration**: Pinata with custom gateway `lime-famous-condor-7.mypinata.cloud`  
+**Purpose**: Soulbound NFT for ZKPassport-verified individuals (Tier 1)
+**IPFS Integration**: Pinata with custom gateway `lime-famous-condor-7.mypinata.cloud`
 **Image Hash**: `bafybeiekwlyujx32cr5u3ixt5esfxhusalt5ljtrmsng74q7k45tilugh4`
+**Verification**: Fully trustless — ZK proof verified on-chain by `IZKPassportVerifier` (no admin bypass)
+**ZKPassport Verifier**: `0x1D000001000EFD9a6371f4d90bB8920D5431c0D8` (Ethereum, Ethereum Sepolia, Base, Base Sepolia)
+**App Domain**: `protocol.convexo.xyz` | **App Scope**: `convexo-passport-identity`
 
 ### Write Functions
 
 ```solidity
-// Simplified mint with verification results and IPFS metadata
-// uniqueIdentifier is passed directly as string from ZKPassport SDK
-// Contract hashes it internally with keccak256 for storage efficiency
-function safeMintWithVerification(
-    string calldata uniqueIdentifier, // Unique ID string from ZKPassport SDK (use directly!)
-    bytes32 personhoodProof,          // Personhood proof from ZKPassport
-    bool sanctionsPassed,             // Sanctions check result
-    bool isOver18,                    // Age verification result
-    string calldata ipfsMetadataHash  // IPFS hash for NFT metadata
+// Self-claim — caller submits ZK proof, verified on-chain
+// ProofVerificationParams from ZKPassport SDK getSolidityVerifierParameters()
+// Bound requirements: proof.bound.senderAddress == msg.sender, proof.bound.chainId == block.chainid
+// Checks (in order): verify proof → scope → sender binding → chain binding → age 18+ → sanctions → nationality → expiry → sybil
+function claimPassport(
+    ProofVerificationParams calldata proof,  // full ZK proof from SDK
+    bool isIDCard,                           // false=passport, true=ID card
+    string calldata ipfsMetadataHash         // IPFS hash for NFT metadata
 ) returns (uint256 tokenId)
 
-// Revoke passport
+// Revoke passport (admin only)
 function revokePassport(uint256 tokenId) // REVOKER_ROLE
 ```
 
@@ -91,7 +110,7 @@ function revokePassport(uint256 tokenId) // REVOKER_ROLE
 ```solidity
 function holdsActivePassport(address holder) returns (bool)
 function getVerifiedIdentity(address holder) returns (VerifiedIdentity memory)
-function isIdentifierUsed(string calldata uniqueIdentifier) returns (bool) // Pass string, hashed internally
+function isIdentifierUsed(bytes32 uniqueIdentifier) returns (bool)  // bytes32 from ZKPassport verifier
 function getActivePassportCount() returns (uint256)
 ```
 
@@ -99,22 +118,52 @@ function getActivePassportCount() returns (uint256)
 
 ```solidity
 struct VerifiedIdentity {
-    bytes32 identifierHash;   // keccak256 hash of uniqueIdentifier string
-    bytes32 personhoodProof;
-    uint256 verifiedAt;
-    uint256 zkPassportTimestamp;
+    bytes32 identifierHash;       // uniqueIdentifier returned by IZKPassportVerifier (sybil-resistant)
+    uint256 verifiedAt;           // block.timestamp at mint
+    uint256 zkPassportTimestamp;  // timestamp from ZKPassport proof
     bool isActive;
-    bool kycVerified;
+    bool isIDCard;                // false=passport, true=ID card
     bool sanctionsPassed;
     bool isOver18;
+    bool nationalityCompliant;    // nationality not in sanctioned countries list
 }
 ```
+
+### Custom Errors
+
+```solidity
+error ProofVerificationFailed()      // IZKPassportVerifier.verify returned false
+error InvalidScope()                 // proof.service.scope != APP_SCOPE
+error InvalidSender()                // proof.bound.senderAddress != msg.sender
+error InvalidChain()                 // proof.bound.chainId != block.chainid
+error AgeVerificationFailed()        // helper.isAgeValid() failed or age < 18
+error SanctionsCheckFailed()         // helper.isSanctionsValid() returned false (sanctions hit)
+error NationalityNotCompliant()      // nationality in sanctioned countries list
+error PassportExpired()              // helper.isExpiryValid() returned false
+error AlreadyHasPassport()           // wallet already owns a passport
+error IdentifierAlreadyUsed()        // same real-world identity already minted
+error SoulboundTokenCannotBeTransferred()
+```
+
+### Sanctioned Countries (nationality block list)
+20 countries (alphabetically sorted, ISO 3166-1 alpha-3):
+`AFG, BLR, CAF, COD, CUB, IRN, IRQ, LBY, MLI, MMR, NIC, PRK, RUS, SDN, SOM, SSD, SYR, VEN, YEM, ZWE`
 
 ---
 
 ## TokenizedBondVault
 
-ERC20 vault for tokenized bonds. Investors purchase shares, borrowers repay with interest.
+**ERC-7540 async-redeem vault** for tokenized bonds. Investors buy shares at a fixed base price; borrowers repay with interest; investors claim pro-rata as repayments accumulate.
+
+### Economics Model
+
+| Concept | Formula |
+|---------|---------|
+| Base share price | `principalAmount / totalShareSupply` (USDC 6-dec) |
+| Expected final price | `(principal + interest − fee) / totalShareSupply` |
+| Current share price | `basePrice + (finalPrice − basePrice) × repaidFraction` — interpolated, deterministic |
+| Share denomination | ERC-20 with 18 decimals (`totalShareSupply × 1e18` minted at deployment) |
+| Min investment | Settable by borrower (VAULT_MANAGER_ROLE), default $100 USDC |
 
 ### Vault States
 
@@ -125,84 +174,129 @@ enum VaultState { Pending, Funded, Active, Repaying, Completed, Defaulted }
 ### Write Functions (Investor)
 
 ```solidity
-// Purchase shares with USDC (Tier 1+ required)
-function purchaseShares(uint256 amount)
+// ERC-4626: deposit USDC, receive shares (Tier 1+ required, state: Pending/Funded)
+function deposit(uint256 assets, address receiver) returns (uint256 shares)
 
-// Redeem shares for USDC (after full repayment)
-function redeemShares(uint256 shares)
+// ERC-7540: lock shares for async redemption (state: Repaying/Completed)
+// requestId is always 0; shares locked until claimed
+function requestRedeem(uint256 shares, address controller, address owner) returns (uint256 requestId)
+
+// ERC-7540: claim USDC proportional to repaid fraction (can call multiple times as repayments accumulate)
+// assets: how much USDC to claim (≤ claimableNow)
+function redeem(uint256 shares, address receiver, address controller) returns (uint256 assets)
+
+// Exit before borrower withdraws (state: Pending/Funded) — refund at base price
+function earlyExit(uint256 shares)
 ```
 
 ### Write Functions (Borrower)
 
 ```solidity
-// Withdraw funds after contract signed
+// Withdraw raised funds (contract must be signed)
 function withdrawFunds()
 
-// Make repayment
+// Repay USDC; triggers state → Repaying (first repayment) or → Completed (if fully paid)
 function makeRepayment(uint256 amount)
 ```
 
-### Write Functions (Admin)
+### Write Functions (Admin/Borrower)
 
 ```solidity
 function attachContract(bytes32 _contractHash) // VAULT_MANAGER_ROLE
-function markAsDefaulted() // VAULT_MANAGER_ROLE
+function markAsDefaulted()                     // VAULT_MANAGER_ROLE
 function withdrawProtocolFees()
+function setMinInvestment(uint256 amount)       // VAULT_MANAGER_ROLE
 ```
 
-### Read Functions
+### Read Functions (ERC-7540)
 
 ```solidity
-function getVaultMetrics() returns (
-    uint256 totalShares,
-    uint256 sharePrice,
-    uint256 totalValueLocked,
-    uint256 targetAmount,
-    uint256 fundingProgress,
-    uint256 currentAPY
-)
+// Always returns 0 (all requests immediately claimable)
+function pendingRedeemRequest(uint256 requestId, address controller) returns (uint256)
 
-function getInvestorReturn(address investor) returns (
-    uint256 invested,
-    uint256 currentValue,
-    uint256 profit,
-    uint256 apy
+// Returns the remaining locked shares the controller has ready to claim
+function claimableRedeemRequest(uint256 requestId, address controller) returns (uint256)
+```
+
+### Read Functions (ERC-4626)
+
+```solidity
+function asset() returns (address)                           // USDC address
+function totalAssets() returns (uint256)                     // USDC in vault
+function convertToShares(uint256 assets) returns (uint256)
+function convertToAssets(uint256 shares) returns (uint256)
+function maxDeposit(address receiver) returns (uint256)
+function previewDeposit(uint256 assets) returns (uint256)
+```
+
+### Read Functions (Vault-Specific)
+
+```solidity
+function getBaseSharePrice() returns (uint256)         // principalAmount / originalTotalShares (USDC 6-dec)
+function getExpectedFinalSharePrice() returns (uint256) // (principal + interest − fee) / originalTotalShares
+function getCurrentSharePrice() returns (uint256)      // interpolated price at current repaid fraction
+function originalTotalShares() returns (uint256)       // totalShareSupply × 1e18 (immutable)
+function minInvestment() returns (uint256)             // minimum USDC per deposit
+
+function getVaultBorrower() returns (address)
+function getVaultPrincipalAmount() returns (uint256)
+function getVaultTotalRepaid() returns (uint256)
+function getVaultState() returns (VaultState)
+
+function getRedeemState(address controller) returns (
+    uint256 originalLockedShares,
+    uint256 remainingLockedShares,
+    uint256 assetsClaimed,
+    uint256 claimableNow
 )
 
 function getRepaymentStatus() returns (
-    uint256 totalDue,
+    uint256 totalDue,    // principal + interest + fee
     uint256 totalPaid,
     uint256 remaining,
     uint256 protocolFee
 )
 
-function getAvailableForInvestors() returns (uint256)
-function getVaultState() returns (VaultState)
+function getInvestorReturn(address investor) returns (
+    uint256 invested,      // USDC deposited
+    uint256 currentValue,  // at current share price
+    uint256 profit,
+    uint256 apy
+)
+
 function getVaultCreatedAt() returns (uint256)
 function getVaultFundedAt() returns (uint256)
-function getVaultContractAttachedAt() returns (uint256)
-function getVaultFundsWithdrawnAt() returns (uint256)
 function getActualDueDate() returns (uint256)
 function getInvestors() returns (address[] memory)
+
+// ERC-165: announces ERC-7540 operator (0xe3bc4e65) + async redeem (0x620ee8e4)
+function supportsInterface(bytes4 interfaceId) returns (bool)
 ```
 
 ---
 
 ## VaultFactory
 
-Creates TokenizedBondVault instances. Requires Tier 3.
+Creates TokenizedBondVault instances. Requires Tier 3 (Ecreditscoring NFT).
 
 ### Write Functions
 
 ```solidity
 function createVault(
-    uint256 principalAmount,  // USDC (6 decimals)
-    uint256 interestRate,     // Basis points (1200 = 12%)
-    uint256 protocolFeeRate,  // Basis points (200 = 2%)
-    uint256 maturityDate,     // Unix timestamp
-    string memory name,
-    string memory symbol
+    uint256 principalAmount,   // Total USDC to raise (6 decimals, e.g. 100_000e6 = $100k)
+    uint256 interestRate,      // Basis points (e.g. 1200 = 12%)
+    uint256 protocolFeeRate,   // Basis points (e.g. 200 = 2%, max 1000)
+    uint256 maturityDate,      // Unix timestamp (must be future)
+    uint256 totalShareSupply,  // Number of shares (e.g. 1000 → $100/share at $100k raise)
+    uint256 minInvestment,     // Minimum USDC per investor deposit (e.g. 100e6 = $100)
+    string memory name,        // ERC-20 share token name
+    string memory symbol       // ERC-20 share token symbol
 ) returns (uint256 vaultId, address vaultAddress)
+
+// Guard: principalAmount >= totalShareSupply × 1e6 (share price ≥ $1)
+// Guard: canCreateVaults(msg.sender) — Tier 3 required
+
+function updateProtocolFeeCollector(address newCollector) // DEFAULT_ADMIN_ROLE
 ```
 
 ### Read Functions
@@ -211,6 +305,7 @@ function createVault(
 function getVault(uint256 vaultId) returns (address)
 function getVaultCount() returns (uint256)
 function getVaultAddressAtIndex(uint256 index) returns (address)
+function protocolFeeCollector() returns (address)
 ```
 
 ---
@@ -636,7 +731,7 @@ function getMaxLoanAmount(uint256 tokenId) returns (uint256)
 
 ---
 
-## CompliantLPHook (Uniswap V4 Integration)
+## PassportGatedHook (Uniswap V4 Integration)
 
 **Purpose:** Uniswap V4 hook that gates LP pool access to Tier 1+ users.
 
@@ -654,9 +749,9 @@ function getMaxLoanAmount(uint256 tokenId) returns (uint256)
 These functions are called automatically by Uniswap V4 before each operation:
 
 ```solidity
-function beforeSwap(...) // Requires Tier 1+ (Convexo_Passport or higher)
-function beforeAddLiquidity(...) // Requires Tier 1+ (Convexo_Passport or higher)
-function beforeRemoveLiquidity(...) // Requires Tier 1+ (Convexo_Passport or higher)
+function _beforeSwap(...) // Requires Tier 1+ (Convexo_Passport or higher)
+function _beforeAddLiquidity(...) // Requires Tier 1+ (Convexo_Passport or higher)
+function _beforeRemoveLiquidity(...) // Requires Tier 1+ (Convexo_Passport or higher)
 ```
 
 **Integration:** Liquidity pools register this hook via the PoolRegistry contract.
@@ -714,7 +809,7 @@ function convertLocalToUSDC(CurrencyPair pair, uint256 localAmount) returns (uin
 | Role | Contract | Permission |
 |------|----------|------------|
 | `DEFAULT_ADMIN_ROLE` | All | Full admin |
-| `MINTER_ROLE` | NFTs | Can mint |
+| `MINTER_ROLE` | LP_Individuals, LP_Business, Ecreditscoring | Can mint (not Convexo_Passport — self-mint) |
 | `REVOKER_ROLE` | Convexo_Passport | Can revoke |
 | `VERIFIER_ROLE` | VeriffVerifier, SumsubVerifier | Can submit/approve/reject, read private data |
 | `MINTER_CALLBACK_ROLE` | VeriffVerifier, SumsubVerifier | Can call markAsMinted (granted to NFT contracts) |
@@ -735,24 +830,47 @@ event VerificationMinted(address indexed user, uint256 tokenId, uint256 timestam
 
 ### Passport Events
 ```solidity
-event PassportMinted(address indexed holder, uint256 tokenId, bytes32 identifierHash, ...)
+event PassportMinted(
+    address indexed holder,
+    uint256 indexed tokenId,
+    bytes32 identifierHash,
+    bool isIDCard,
+    bool nationalityCompliant,
+    bool isOver18,
+    bool sanctionsPassed
+);
 event PassportRevoked(address indexed holder, uint256 tokenId, bytes32 identifierHash)
 ```
 
 ### Vault Events
 ```solidity
-event SharesPurchased(address indexed investor, uint256 amount, uint256 shares)
-event RepaymentMade(uint256 amount, uint256 totalRepaid)
-event SharesRedeemed(address indexed investor, uint256 shares, uint256 amount)
+// ERC-4626
+event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares)
+event Withdraw(address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares)
+
+// ERC-7540
+event RedeemRequest(address indexed controller, address indexed owner, uint256 indexed requestId, address sender, uint256 shares)
+
+// Vault lifecycle
 event VaultStateChanged(VaultState newState)
-event VaultFullyFunded(uint256 indexed vaultId, uint256 timestamp)
-event ContractAttached(uint256 indexed vaultId, bytes32 contractHash)
+event RepaymentMade(address indexed borrower, uint256 amount, uint256 totalRepaid)
+event ContractAttached(bytes32 contractHash)
 event FundsWithdrawn(address indexed borrower, uint256 amount)
+event EarlyExitProcessed(address indexed investor, uint256 shares, uint256 refund)
+event ProtocolFeesWithdrawn(address indexed collector, uint256 amount)
 ```
 
 ### Factory Events
 ```solidity
-event VaultCreated(uint256 indexed vaultId, address indexed vaultAddress, address indexed borrower, ...)
+event VaultCreated(
+    uint256 indexed vaultId,
+    address indexed vaultAddress,
+    address indexed borrower,
+    uint256 principalAmount,
+    uint256 totalShareSupply,
+    uint256 initialSharePrice  // principalAmount / totalShareSupply (USDC 6-dec)
+)
+event ProtocolFeeCollectorUpdated(address indexed oldCollector, address indexed newCollector)
 ```
 
 ---

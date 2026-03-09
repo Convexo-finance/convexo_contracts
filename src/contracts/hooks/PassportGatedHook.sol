@@ -2,9 +2,9 @@
 pragma solidity ^0.8.27;
 
 import {BaseHook} from "./BaseHook.sol";
-import {IHooks, PoolKey, BeforeSwapDelta, ModifyLiquidityParams, SwapParams, Permissions} from "../interfaces/IHooks.sol";
-import {IPoolManager} from "../interfaces/IPoolManager.sol";
-import {ReputationManager} from "../contracts/identity/ReputationManager.sol";
+import {IHooks, PoolKey, BeforeSwapDelta, ModifyLiquidityParams, SwapParams, Permissions} from "../../interfaces/IHooks.sol";
+import {IPoolManager} from "../../interfaces/IPoolManager.sol";
+import {ReputationManager} from "../identity/ReputationManager.sol";
 
 /// @title PassportGatedHook
 /// @notice Uniswap V4 hook that gates LP pool access to verified KYC/KYB holders
@@ -49,19 +49,25 @@ contract PassportGatedHook is BaseHook {
     }
 
     /// @notice Returns the hook permissions
-    /// @dev Enables beforeSwap, beforeAddLiquidity, and beforeRemoveLiquidity hooks
+    /// @dev Enables beforeSwap, beforeAddLiquidity, and beforeRemoveLiquidity hooks.
+    ///      Hook address must have bits 11 (beforeAddLiquidity), 9 (beforeRemoveLiquidity),
+    ///      and 7 (beforeSwap) set — deploy via HookDeployer.findPassportGatedHookSalt().
     function getHookPermissions() public pure override returns (Permissions memory) {
         return Permissions({
             beforeInitialize: false,
             afterInitialize: false,
-            beforeAddLiquidity: true,    // Gate adding liquidity
+            beforeAddLiquidity: true,               // Gate adding liquidity (bit 11)
             afterAddLiquidity: false,
-            beforeRemoveLiquidity: true, // Gate removing liquidity
+            beforeRemoveLiquidity: true,            // Gate removing liquidity (bit 9)
             afterRemoveLiquidity: false,
-            beforeSwap: true,            // Gate swapping
+            beforeSwap: true,                       // Gate swapping (bit 7)
             afterSwap: false,
             beforeDonate: false,
-            afterDonate: false
+            afterDonate: false,
+            beforeSwapReturnDelta: false,
+            afterSwapReturnDelta: false,
+            afterAddLiquidityReturnDelta: false,
+            afterRemoveLiquidityReturnDelta: false
         });
     }
 
@@ -89,9 +95,10 @@ contract PassportGatedHook is BaseHook {
     }
 
     /// @notice Hook called before a swap is executed
-    /// @param sender The address initiating the swap
-    function beforeSwap(address sender, PoolKey calldata, SwapParams calldata, bytes calldata)
-        external
+    /// @dev Overrides internal hook — BaseHook enforces onlyPoolManager on the external wrapper
+    /// @param sender The address initiating the swap (original msg.sender passed by PoolManager)
+    function _beforeSwap(address sender, PoolKey calldata, SwapParams calldata, bytes calldata)
+        internal
         override
         returns (bytes4, BeforeSwapDelta, uint24)
     {
@@ -101,9 +108,10 @@ contract PassportGatedHook is BaseHook {
     }
 
     /// @notice Hook called before liquidity is added to a pool
-    /// @param sender The address adding liquidity
-    function beforeAddLiquidity(address sender, PoolKey calldata, ModifyLiquidityParams calldata, bytes calldata)
-        external
+    /// @dev Overrides internal hook — BaseHook enforces onlyPoolManager on the external wrapper
+    /// @param sender The address adding liquidity (original msg.sender passed by PoolManager)
+    function _beforeAddLiquidity(address sender, PoolKey calldata, ModifyLiquidityParams calldata, bytes calldata)
+        internal
         override
         returns (bytes4)
     {
@@ -113,9 +121,10 @@ contract PassportGatedHook is BaseHook {
     }
 
     /// @notice Hook called before liquidity is removed from a pool
-    /// @param sender The address removing liquidity
-    function beforeRemoveLiquidity(address sender, PoolKey calldata, ModifyLiquidityParams calldata, bytes calldata)
-        external
+    /// @dev Overrides internal hook — BaseHook enforces onlyPoolManager on the external wrapper
+    /// @param sender The address removing liquidity (original msg.sender passed by PoolManager)
+    function _beforeRemoveLiquidity(address sender, PoolKey calldata, ModifyLiquidityParams calldata, bytes calldata)
+        internal
         override
         returns (bytes4)
     {

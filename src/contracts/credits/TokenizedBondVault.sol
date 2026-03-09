@@ -5,99 +5,137 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IContractSigner} from "../../interfaces/IContractSigner.sol";
 import {ReputationManager} from "../identity/ReputationManager.sol";
 
 /// @title TokenizedBondVault
-/// @notice Core vault contract for tokenized bonds with ERC20 share tokens
-/// @dev Implements 12% returns for LPs, 2% protocol fee, and 10% interest paid by SME
+/// @notice Fixed-term tokenized bond vault with configurable share supply.
+///
+/// @dev Economic model:
+///   - Borrower defines `totalShareSupply` (e.g. 1000 shares).
+///   - initialSharePrice  = principalAmount / totalShareSupply   (e.g. $100/share)
+///   - expectedFinalPrice = (principal + interest - fee) / totalShareSupply  (e.g. $110/share)
+///   - currentSharePrice  = availableForInvestors / currentTotalSupply  (rises as repayments arrive)
+///
+/// @dev ERC-7540 Async Redemption:
+///   State lifecycle maps to ERC-7540:
+///     Pending/Funded/Active  → Deposit phase (synchronous)
+///     Repaying               → requestRedeem is open; claimable = entitlement × repaidFraction
+///     Completed              → All debt repaid; final claims possible
+///
+///   Redemption flow:
+///     1. investor calls requestRedeem(shares) → shares locked in vault
+///     2. investor calls redeem(shares, receiver, controller) → claims proportional USDC;
+///        shares burned proportionally to fraction of entitlement claimed.
+///        Multiple calls possible as repayments accumulate.
+///
+/// @dev ERC-165 interface IDs:
+///   0xe3bc4e65 = ERC-7540 operator methods
+///   0x620ee8e4 = ERC-7540 async redeem
 contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
+    using Math for uint256;
+
     bytes32 public constant VAULT_MANAGER_ROLE = keccak256("VAULT_MANAGER_ROLE");
 
-    /// @notice Vault state enum
+    // ─────────────────────────────────────────────────────────────
+    // Types
+    // ─────────────────────────────────────────────────────────────
+
     enum VaultState {
-        Pending,           // Accepting investments
-        Funded,            // Fully funded, awaiting contract signatures
-        Active,            // Contract signed, can withdraw
-        Repaying,          // Funds withdrawn, making repayments
-        Completed,
-        Defaulted
+        Pending,    // Accepting investments
+        Funded,     // Fully funded, awaiting contract signature
+        Active,     // Contract signed, borrower can withdraw
+        Repaying,   // Funds disbursed, borrower making repayments
+        Completed,  // All debt repaid and all investor claims settled
+        Defaulted   // Maturity passed without full repayment
     }
 
-    /// @notice Vault information
     struct VaultInfo {
         uint256 vaultId;
         address borrower;
         bytes32 contractHash;
-        uint256 principalAmount; // USDC (6 decimals)
-        uint256 interestRate; // Basis points (e.g., 1200 = 12%)
-        uint256 protocolFeeRate; // Basis points (e.g., 200 = 2%)
-        uint256 maturityDate;
+        uint256 principalAmount;      // USDC (6 decimals)
+        uint256 interestRate;         // Basis points (e.g. 1200 = 12%)
+        uint256 protocolFeeRate;      // Basis points (e.g. 200 = 2%)
+        uint256 maturityDate;         // Timestamp: deadline for full repayment
         VaultState state;
         uint256 totalRaised;
         uint256 totalRepaid;
         uint256 createdAt;
-        uint256 fundedAt;        // Timestamp when vault was fully funded
-        uint256 contractAttachedAt; // Timestamp when contract was attached
-        uint256 fundsWithdrawnAt;   // Timestamp when borrower withdrew funds
+        uint256 fundedAt;
+        uint256 contractAttachedAt;
+        uint256 fundsWithdrawnAt;
     }
 
-    /// @notice Array of investor addresses
-    address[] private investors;
+    /// @notice Per-controller ERC-7540 redemption state
+    struct RedeemState {
+        uint256 originalLockedShares; // Total shares locked via requestRedeem (never decreases)
+        uint256 remainingLockedShares;// Shares still locked in vault (decreases as burned)
+        uint256 assetsClaimed;        // Total USDC claimed so far
+    }
 
-    /// @notice Mapping to track if an address is already an investor
-    mapping(address => bool) private isInvestor;
+    // ─────────────────────────────────────────────────────────────
+    // Immutables & Storage
+    // ─────────────────────────────────────────────────────────────
 
-    /// @notice The vault information
+    /// @notice Total shares ever issuable (in share-wei = totalShareSupply × 1e18)
+    uint256 public immutable originalTotalShares;
+
+    /// @notice Minimum USDC per deposit (6 decimals, settable by VAULT_MANAGER_ROLE)
+    uint256 public minInvestment;
+
     VaultInfo public vaultInfo;
 
-    /// @notice The USDC token
     IERC20 public immutable usdc;
-
-    /// @notice Contract signer reference for verification
     address public immutable contractSigner;
-
-    /// @notice Reputation manager reference for access control
     ReputationManager public immutable reputationManager;
-
-    /// @notice Protocol fee collector address
     address public protocolFeeCollector;
-
-    /// @notice Total protocol fees withdrawn by collector
     uint256 public protocolFeesWithdrawn;
 
-    /// @notice Emitted when shares are purchased
-    event SharesPurchased(address indexed investor, uint256 amount, uint256 shares);
+    /// @notice ERC-7540 operator approvals
+    mapping(address controller => mapping(address operator => bool)) public isOperator;
 
-    /// @notice Emitted when a repayment is made
-    event RepaymentMade(uint256 amount, uint256 totalRepaid);
+    /// @notice ERC-7540 redemption state per controller
+    mapping(address => RedeemState) private _redeemRequests;
 
-    /// @notice Emitted when shares are redeemed
-    event SharesRedeemed(address indexed investor, uint256 shares, uint256 amount);
+    address[] private _investors;
+    mapping(address => bool) private _isInvestor;
 
-    /// @notice Emitted when vault state changes
+    // ─────────────────────────────────────────────────────────────
+    // Events
+    // ─────────────────────────────────────────────────────────────
+
+    // ERC-4626
+    event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+    event Withdraw(address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares);
+
+    // ERC-7540
+    event RedeemRequest(address indexed controller, address indexed owner, uint256 indexed requestId, address sender, uint256 shares);
+    event OperatorSet(address indexed controller, address indexed operator, bool approved);
+
+    // Vault lifecycle
     event VaultStateChanged(VaultState newState);
-
-    /// @notice Emitted when protocol fees are collected
-    event ProtocolFeesCollected(uint256 amount);
-
-    /// @notice Emitted when vault is fully funded
     event VaultFullyFunded(uint256 indexed vaultId, uint256 timestamp);
-
-    /// @notice Emitted when contract is attached to vault
     event ContractAttached(uint256 indexed vaultId, bytes32 contractHash);
-
-    /// @notice Emitted when borrower withdraws funds
     event FundsWithdrawn(address indexed borrower, uint256 amount);
+    event RepaymentMade(address indexed payer, uint256 amount, uint256 totalRepaid);
+    event ProtocolFeesCollected(uint256 amount);
+    event MinInvestmentUpdated(uint256 oldMin, uint256 newMin);
+
+    // ─────────────────────────────────────────────────────────────
+    // Constructor
+    // ─────────────────────────────────────────────────────────────
 
     constructor(
         uint256 _vaultId,
         address _borrower,
-        bytes32 _contractHash,
         uint256 _principalAmount,
         uint256 _interestRate,
         uint256 _protocolFeeRate,
         uint256 _maturityDate,
+        uint256 _totalShareSupply,  // Whole-share count (e.g. 1000)
+        uint256 _minInvestment,     // USDC min per deposit (6 decimals)
         address _usdc,
         address _contractSigner,
         address _admin,
@@ -106,10 +144,19 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
         string memory _name,
         string memory _symbol
     ) ERC20(_name, _symbol) {
+        require(_principalAmount > 0, "Invalid principal");
+        require(_totalShareSupply > 0, "Invalid share supply");
+        require(_interestRate <= 10000, "Invalid interest rate");
+        require(_protocolFeeRate <= 1000, "Protocol fee too high");
+        require(_maturityDate > block.timestamp, "Maturity must be future");
+        require(_minInvestment > 0, "Min investment must be > 0");
+        require(_borrower != address(0), "Invalid borrower");
+        require(_admin != address(0), "Invalid admin");
+
         vaultInfo = VaultInfo({
             vaultId: _vaultId,
             borrower: _borrower,
-            contractHash: _contractHash,
+            contractHash: bytes32(0),
             principalAmount: _principalAmount,
             interestRate: _interestRate,
             protocolFeeRate: _protocolFeeRate,
@@ -123,6 +170,8 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
             fundsWithdrawnAt: 0
         });
 
+        originalTotalShares = _totalShareSupply * 1e18;
+        minInvestment = _minInvestment;
         usdc = IERC20(_usdc);
         contractSigner = _contractSigner;
         reputationManager = _reputationManager;
@@ -132,35 +181,140 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
         _grantRole(VAULT_MANAGER_ROLE, _admin);
     }
 
-    /// @notice Purchase vault shares by depositing USDC
-    /// @param amount The amount of USDC to deposit
-    function purchaseShares(uint256 amount) external nonReentrant {
-        // Require Tier 1+ (Passport or higher) to invest
-        require(
-            reputationManager.canInvestInVaults(msg.sender),
-            "Must have Tier 1+ (Convexo_Passport or higher) to invest"
-        );
-        require(vaultInfo.state == VaultState.Pending, "Vault not accepting deposits");
-        require(amount > 0, "Amount must be greater than 0");
-        require(vaultInfo.totalRaised + amount <= vaultInfo.principalAmount, "Exceeds principal amount");
+    // ─────────────────────────────────────────────────────────────
+    // ERC-4626: View Functions
+    // ─────────────────────────────────────────────────────────────
 
-        // Track investor if not already tracked
-        if (!isInvestor[msg.sender]) {
-            investors.push(msg.sender);
-            isInvestor[msg.sender] = true;
+    /// @notice The underlying USDC token
+    function asset() external view returns (address) {
+        return address(usdc);
+    }
+
+    /// @notice Total USDC held in this vault
+    function totalAssets() public view returns (uint256) {
+        return usdc.balanceOf(address(this));
+    }
+
+    /// @notice Shares minted for a given USDC deposit amount (valid during Pending)
+    function convertToShares(uint256 assets) public view returns (uint256) {
+        if (vaultInfo.principalAmount == 0) return 0;
+        return assets.mulDiv(originalTotalShares, vaultInfo.principalAmount);
+    }
+
+    /// @notice USDC value of given shares at current state
+    function convertToAssets(uint256 shares) public view returns (uint256) {
+        // Before disbursement: base price (doesn't depend on current supply)
+        if (
+            vaultInfo.state == VaultState.Pending ||
+            vaultInfo.state == VaultState.Funded ||
+            vaultInfo.state == VaultState.Active
+        ) {
+            if (originalTotalShares == 0) return 0;
+            return shares.mulDiv(vaultInfo.principalAmount, originalTotalShares);
+        }
+        // During/after repayment: use current interpolated share price
+        uint256 price = getCurrentSharePrice();
+        return shares.mulDiv(price, 1e18);
+    }
+
+    /// @notice Maximum USDC depositable (0 when not in Pending)
+    function maxDeposit(address) external view returns (uint256) {
+        if (vaultInfo.state != VaultState.Pending) return 0;
+        return vaultInfo.principalAmount - vaultInfo.totalRaised;
+    }
+
+    /// @notice Preview shares for deposit amount
+    function previewDeposit(uint256 assets) external view returns (uint256) {
+        if (vaultInfo.state != VaultState.Pending) return 0;
+        return convertToShares(assets);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Share Price Views
+    // ─────────────────────────────────────────────────────────────
+
+    /// @notice Initial price per whole share in USDC (6 decimals)
+    /// @dev = principalAmount / totalShareSupply
+    function getBaseSharePrice() external view returns (uint256) {
+        return vaultInfo.principalAmount.mulDiv(1e18, originalTotalShares);
+    }
+
+    /// @notice Expected price per whole share at full repayment (USDC, 6 decimals)
+    /// @dev = (principal + interest - protocolFee) / totalShareSupply
+    function getExpectedFinalSharePrice() external view returns (uint256) {
+        uint256 netForInvestors = _getNetForInvestors();
+        return netForInvestors.mulDiv(1e18, originalTotalShares);
+    }
+
+    /// @notice Current price per whole share (USDC, 6 decimals)
+    /// @dev Interpolates between baseSharePrice and expectedFinalSharePrice
+    ///      based on the fraction of total debt repaid. This gives a deterministic,
+    ///      redemption-order-independent price that investors can trust.
+    ///
+    ///   currentSharePrice = basePrice + (expectedFinalPrice - basePrice) × repaidFraction
+    ///
+    ///   At 0% repaid  → baseSharePrice           (e.g. $100)
+    ///   At 50% repaid → midpoint price            (e.g. $105)
+    ///   At 100% repaid → expectedFinalSharePrice  (e.g. $110)
+    function getCurrentSharePrice() public view returns (uint256) {
+        if (originalTotalShares == 0) return 0;
+
+        uint256 basePrice = vaultInfo.principalAmount.mulDiv(1e18, originalTotalShares);
+
+        if (
+            vaultInfo.state == VaultState.Pending ||
+            vaultInfo.state == VaultState.Funded ||
+            vaultInfo.state == VaultState.Active
+        ) {
+            return basePrice;
         }
 
-        // Transfer USDC from investor
-        require(usdc.transferFrom(msg.sender, address(this), amount), "USDC transfer failed");
+        if (vaultInfo.state == VaultState.Completed) {
+            return _getNetForInvestors().mulDiv(1e18, originalTotalShares);
+        }
 
-        // Mint shares 1:1 with USDC
-        _mint(msg.sender, amount);
+        // Repaying: interpolate based on repaid fraction
+        uint256 totalDue = _getTotalDue();
+        if (totalDue == 0) return basePrice;
 
-        vaultInfo.totalRaised += amount;
+        uint256 repaidFraction = Math.min(1e18, vaultInfo.totalRepaid.mulDiv(1e18, totalDue));
+        uint256 netForInvestors = _getNetForInvestors();
+        uint256 expectedFinalPrice = netForInvestors.mulDiv(1e18, originalTotalShares);
 
-        emit SharesPurchased(msg.sender, amount, amount);
+        if (expectedFinalPrice <= basePrice) return basePrice;
+        uint256 priceRange = expectedFinalPrice - basePrice;
+        return basePrice + priceRange.mulDiv(repaidFraction, 1e18);
+    }
 
-        // If fully funded, change to Funded state (awaiting contract)
+    // ─────────────────────────────────────────────────────────────
+    // ERC-4626: Deposit (synchronous, Pending state only)
+    // ─────────────────────────────────────────────────────────────
+
+    /// @notice Purchase vault shares by depositing USDC
+    /// @param assets USDC to deposit (6 decimals)
+    /// @param receiver Address receiving the shares
+    /// @return shares Amount of shares (18 decimals) minted
+    function deposit(uint256 assets, address receiver) external nonReentrant returns (uint256 shares) {
+        require(reputationManager.canInvestInVaults(msg.sender), "Tier 1+ required to invest");
+        require(vaultInfo.state == VaultState.Pending, "Not accepting deposits");
+        require(assets >= minInvestment, "Below minimum investment");
+        require(vaultInfo.totalRaised + assets <= vaultInfo.principalAmount, "Exceeds funding target");
+        require(receiver != address(0), "Invalid receiver");
+
+        shares = convertToShares(assets);
+        require(shares > 0, "Zero shares");
+
+        if (!_isInvestor[receiver]) {
+            _investors.push(receiver);
+            _isInvestor[receiver] = true;
+        }
+
+        require(usdc.transferFrom(msg.sender, address(this), assets), "USDC transfer failed");
+        _mint(receiver, shares);
+        vaultInfo.totalRaised += assets;
+
+        emit Deposit(msg.sender, receiver, assets, shares);
+
         if (vaultInfo.totalRaised == vaultInfo.principalAmount) {
             vaultInfo.state = VaultState.Funded;
             vaultInfo.fundedAt = block.timestamp;
@@ -169,8 +323,175 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
         }
     }
 
-    /// @notice Attach contract hash to vault after contract is created and signed
-    /// @param _contractHash The hash of the signed contract
+    // ─────────────────────────────────────────────────────────────
+    // Early Exit (Funded / Active — before borrower withdraws)
+    // ─────────────────────────────────────────────────────────────
+
+    /// @notice Exit before borrower withdraws. Returns principal at base price (1:1 USDC per share).
+    /// @param shares Shares to burn
+    function earlyExit(uint256 shares) external nonReentrant {
+        require(
+            vaultInfo.state == VaultState.Funded || vaultInfo.state == VaultState.Active,
+            "Early exit only before disbursement"
+        );
+        require(shares > 0, "Zero shares");
+        require(balanceOf(msg.sender) >= shares, "Insufficient shares");
+
+        uint256 assets = shares.mulDiv(vaultInfo.principalAmount, originalTotalShares);
+        require(usdc.balanceOf(address(this)) >= assets, "Insufficient vault balance");
+
+        _burn(msg.sender, shares);
+        vaultInfo.totalRaised -= assets;
+        require(usdc.transfer(msg.sender, assets), "USDC transfer failed");
+
+        // Revert to Pending if target no longer met
+        if (vaultInfo.totalRaised < vaultInfo.principalAmount) {
+            vaultInfo.state = VaultState.Pending;
+            vaultInfo.fundedAt = 0;
+            vaultInfo.contractAttachedAt = 0;
+            vaultInfo.contractHash = bytes32(0);
+            emit VaultStateChanged(VaultState.Pending);
+        }
+
+        emit Withdraw(msg.sender, msg.sender, msg.sender, assets, shares);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ERC-7540: Async Redeem (Repaying / Completed)
+    // ─────────────────────────────────────────────────────────────
+
+    /// @notice ERC-7540: Lock shares for async redemption.
+    ///         Shares transfer from owner to vault. All locked shares are immediately claimable
+    ///         proportional to the current repaid fraction.
+    /// @param shares Share-wei to lock
+    /// @param controller Address that controls the claim (receives assets on redeem)
+    /// @param owner Address whose shares are locked (must be msg.sender or operator)
+    /// @return requestId Always 0 (aggregated per-controller, per ERC-7540 requestId==0 spec)
+    function requestRedeem(
+        uint256 shares,
+        address controller,
+        address owner
+    ) external nonReentrant returns (uint256 requestId) {
+        require(
+            vaultInfo.state == VaultState.Repaying || vaultInfo.state == VaultState.Completed,
+            "Not in repaying state"
+        );
+        require(shares > 0, "Zero shares");
+        require(owner == msg.sender || isOperator[owner][msg.sender], "Not authorized");
+        require(balanceOf(owner) >= shares, "Insufficient shares");
+        require(controller != address(0), "Invalid controller");
+
+        // Transfer shares to vault (locked, not yet burned)
+        _transfer(owner, address(this), shares);
+
+        RedeemState storage rs = _redeemRequests[controller];
+        rs.originalLockedShares += shares;
+        rs.remainingLockedShares += shares;
+
+        emit RedeemRequest(controller, owner, 0, msg.sender, shares);
+        return 0;
+    }
+
+    /// @notice ERC-7540: Shares pending fulfillment for controller.
+    ///         In this vault all requests are immediately claimable (no waiting period).
+    function pendingRedeemRequest(uint256, address) external pure returns (uint256) {
+        return 0; // All requests transition directly to claimable
+    }
+
+    /// @notice ERC-7540: Shares claimable by controller right now (locked shares in vault)
+    function claimableRedeemRequest(uint256, address controller) public view returns (uint256) {
+        return _redeemRequests[controller].remainingLockedShares;
+    }
+
+    /// @notice ERC-7540 / ERC-4626: Claim USDC for locked shares, proportional to repayments.
+    ///
+    /// @dev Math:
+    ///   entitlement = originalLockedShares × netForInvestors / originalTotalShares
+    ///   claimableNow = entitlement × repaidFraction - assetsClaimed
+    ///   sharesBurned  = remainingLockedShares × claimableNow / (entitlement - assetsClaimed)
+    ///
+    ///   Multiple calls allowed as repayments accumulate. Shares burned proportionally to
+    ///   the fraction of entitlement being claimed in each call. Price is unaffected for
+    ///   remaining investors because both available-USDC and totalSupply shrink proportionally.
+    ///
+    /// @param shares Share-wei to process in this call (≤ remainingLockedShares)
+    /// @param receiver Address receiving USDC
+    /// @param controller Controller address (msg.sender or operator)
+    /// @return assets USDC transferred
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address controller
+    ) external nonReentrant returns (uint256 assets) {
+        require(controller == msg.sender || isOperator[controller][msg.sender], "Not authorized");
+        require(shares > 0, "Zero shares");
+        require(receiver != address(0), "Invalid receiver");
+
+        RedeemState storage rs = _redeemRequests[controller];
+        require(shares <= rs.remainingLockedShares, "Exceeds locked shares");
+
+        uint256 totalDue = _getTotalDue();
+        require(totalDue > 0, "Invalid vault state");
+
+        // repaidFraction ∈ [0, 1e18]
+        uint256 repaidFraction = Math.min(1e18, vaultInfo.totalRepaid.mulDiv(1e18, totalDue));
+
+        // Total entitlement for ALL originally locked shares
+        uint256 netForInvestors = _getNetForInvestors();
+        uint256 totalEntitlement = rs.originalLockedShares.mulDiv(netForInvestors, originalTotalShares);
+
+        // How much of that entitlement is claimable now (based on repayment progress)
+        uint256 totalClaimableNow = totalEntitlement.mulDiv(repaidFraction, 1e18);
+
+        // Subtract what's already been claimed
+        uint256 availableNow = totalClaimableNow > rs.assetsClaimed
+            ? totalClaimableNow - rs.assetsClaimed
+            : 0;
+        require(availableNow > 0, "Nothing claimable yet");
+
+        // Remaining entitlement (denominator for proportional burn)
+        uint256 remainingEntitlement = totalEntitlement > rs.assetsClaimed
+            ? totalEntitlement - rs.assetsClaimed
+            : 0;
+        require(remainingEntitlement > 0, "Entitlement exhausted");
+
+        // Assets for this specific shares tranche (proportional to locked)
+        assets = shares.mulDiv(availableNow, rs.remainingLockedShares);
+        require(assets > 0, "Zero assets for shares");
+        require(usdc.balanceOf(address(this)) >= assets, "Insufficient vault balance");
+
+        // Burn shares proportional to fraction of remaining entitlement being claimed
+        uint256 sharesToBurn = rs.remainingLockedShares.mulDiv(assets, remainingEntitlement);
+        if (sharesToBurn > rs.remainingLockedShares) sharesToBurn = rs.remainingLockedShares;
+        if (sharesToBurn > shares) sharesToBurn = shares; // cap at requested
+
+        _burn(address(this), sharesToBurn);
+        rs.remainingLockedShares -= sharesToBurn;
+        rs.assetsClaimed += assets;
+
+        require(usdc.transfer(receiver, assets), "USDC transfer failed");
+        emit Withdraw(controller, receiver, controller, assets, sharesToBurn);
+
+        _checkVaultCompletion();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ERC-7540: Operator Management
+    // ─────────────────────────────────────────────────────────────
+
+    /// @notice Grant or revoke operator permission
+    function setOperator(address operator, bool approved) external returns (bool) {
+        require(operator != address(0), "Invalid operator");
+        isOperator[msg.sender][operator] = approved;
+        emit OperatorSet(msg.sender, operator, approved);
+        return true;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Vault Lifecycle
+    // ─────────────────────────────────────────────────────────────
+
+    /// @notice Attach signed contract hash to vault (VAULT_MANAGER_ROLE)
     function attachContract(bytes32 _contractHash) external onlyRole(VAULT_MANAGER_ROLE) {
         require(vaultInfo.state == VaultState.Funded, "Vault not funded");
         require(vaultInfo.contractHash == bytes32(0), "Contract already attached");
@@ -183,344 +504,159 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
         emit VaultStateChanged(VaultState.Active);
     }
 
-    /// @notice Borrower withdraws funds after contract is fully signed
+    /// @notice Borrower withdraws principal after contract is fully signed
     function withdrawFunds() external nonReentrant {
         require(msg.sender == vaultInfo.borrower, "Only borrower");
         require(vaultInfo.state == VaultState.Active, "Vault not active");
         require(vaultInfo.contractHash != bytes32(0), "No contract attached");
-        require(vaultInfo.totalRaised == vaultInfo.principalAmount, "Vault not fully funded");
+        require(vaultInfo.totalRaised == vaultInfo.principalAmount, "Not fully funded");
 
-        // Verify contract is fully signed
         IContractSigner.ContractDocument memory doc = IContractSigner(contractSigner).getContract(
             vaultInfo.contractHash
         );
         require(doc.isExecuted, "Contract not fully signed");
         require(!doc.isCancelled, "Contract cancelled");
 
-        // Transfer principal to borrower
         require(usdc.transfer(vaultInfo.borrower, vaultInfo.principalAmount), "USDC transfer failed");
-
         vaultInfo.state = VaultState.Repaying;
         vaultInfo.fundsWithdrawnAt = block.timestamp;
         emit FundsWithdrawn(vaultInfo.borrower, vaultInfo.principalAmount);
         emit VaultStateChanged(VaultState.Repaying);
     }
 
-    /// @notice Disburse loan to borrower (DEPRECATED - use withdrawFunds instead)
-    /// @dev Kept for backward compatibility but should not be used
-    function disburseLoan() external onlyRole(VAULT_MANAGER_ROLE) {
-        require(vaultInfo.state == VaultState.Active, "Vault not active");
-        require(vaultInfo.totalRaised == vaultInfo.principalAmount, "Vault not fully funded");
-
-        // Transfer principal to borrower
-        require(usdc.transfer(vaultInfo.borrower, vaultInfo.principalAmount), "USDC transfer failed");
-
-        vaultInfo.state = VaultState.Repaying;
-        emit VaultStateChanged(VaultState.Repaying);
-    }
-
-    /// @notice Make a repayment
-    /// @param amount The amount to repay in USDC
+    /// @notice Borrower repays principal + interest + fee in one or more installments
     function makeRepayment(uint256 amount) external nonReentrant {
-        require(vaultInfo.state == VaultState.Repaying, "Vault not in repaying state");
-        require(amount > 0, "Amount must be greater than 0");
-
-        // Transfer USDC from borrower
+        require(vaultInfo.state == VaultState.Repaying, "Not in repaying state");
+        require(amount > 0, "Zero amount");
         require(usdc.transferFrom(msg.sender, address(this), amount), "USDC transfer failed");
 
         vaultInfo.totalRepaid += amount;
-
-        emit RepaymentMade(amount, vaultInfo.totalRepaid);
-
-        // Note: Vault state changes to Completed only when all funds are withdrawn
-        // This is checked in _checkVaultCompletion() called by redeemShares() and withdrawProtocolFees()
+        emit RepaymentMade(msg.sender, amount, vaultInfo.totalRepaid);
     }
 
-    /// @notice Redeem shares for USDC
-    /// @param shares The number of shares to redeem
-    /// @dev Can redeem partially or fully at any time after borrower withdraws funds
-    function redeemShares(uint256 shares) external nonReentrant {
-        require(
-            vaultInfo.state == VaultState.Repaying || vaultInfo.state == VaultState.Completed || vaultInfo.state == VaultState.Funded || vaultInfo.state == VaultState.Active,
-            "Invalid state for redemption"
-        );
-        require(shares > 0, "Shares must be greater than 0");
-        require(balanceOf(msg.sender) >= shares, "Insufficient shares");
-
-        // Allow withdrawal if contract is not yet fully signed/executed (Funded/Active state)
-        // This enables investors to withdraw if deal falls through before borrower withdrawal
-        if (vaultInfo.state == VaultState.Funded || vaultInfo.state == VaultState.Active) {
-            // Check if contract is signed/executed to be safe, though state check handles most cases
-            // If active, contract is attached but funds not withdrawn. Investor can exit.
-            // If funded, contract might not even be attached. Investor can exit.
-            
-            // Calculate 1:1 redemption (since no interest/fees generated yet)
-            // Principal only
-            uint256 earlyRedemptionAmount = shares; // 1 share = 1 USDC initially
-            
-            require(usdc.balanceOf(address(this)) >= earlyRedemptionAmount, "Insufficient vault balance");
-
-            // Burn shares
-            _burn(msg.sender, shares);
-
-            // Transfer USDC
-            require(usdc.transfer(msg.sender, earlyRedemptionAmount), "USDC transfer failed");
-            
-            vaultInfo.totalRaised -= earlyRedemptionAmount;
-            
-            // If total raised drops below principal, go back to Pending
-            if (vaultInfo.totalRaised < vaultInfo.principalAmount) {
-                vaultInfo.state = VaultState.Pending;
-                // Reset timestamps if we go back to pending
-                vaultInfo.fundedAt = 0;
-                vaultInfo.contractAttachedAt = 0; 
-                vaultInfo.contractHash = bytes32(0); // Detach contract if any
-            }
-
-            emit SharesRedeemed(msg.sender, shares, earlyRedemptionAmount);
-            emit VaultStateChanged(vaultInfo.state);
-            return;
-        }
-
-        // --- Standard Redemption Logic (Repaying/Completed) ---
-
-        // SECURITY UPGRADE: Prevent full redemption until debt is fully repaid
-        // This prevents the "last man standing" issue where early exiters leave dust for others
-        // if the borrower hasn't fully repaid yet.
-        
-        // Calculate total due (principal + interest + protocol fee)
-        uint256 interestAmount = vaultInfo.principalAmount * vaultInfo.interestRate / 10000;
-        uint256 protocolFee = vaultInfo.principalAmount * vaultInfo.protocolFeeRate / 10000;
-        uint256 totalDue = vaultInfo.principalAmount + interestAmount + protocolFee;
-        
-        bool isFullyRepaid = vaultInfo.totalRepaid >= totalDue;
-
-        // If not fully repaid, allow redemption ONLY proportional to what has been repaid
-        // Actually, the request said: "enabling only redem when repayment is done totally"
-        // But preventing ANY redemption until 100% repayment is very strict and hurts liquidity.
-        // However, the prompt says: "We wil use the prevent by enabling only redem when repayment is done totally."
-        // So I will implement strict check as requested.
-        
-        if (vaultInfo.state == VaultState.Repaying) {
-             require(isFullyRepaid, "Cannot redeem until full repayment");
-        }
-
-        // Get available funds for investors (excluding reserved protocol fees)
-        uint256 availableForInvestors = getAvailableForInvestors();
-        require(availableForInvestors > 0, "No funds available for redemption");
-        
-        // Calculate redemption amount proportional to shares
-        uint256 redemptionAmount = (shares * availableForInvestors) / totalSupply();
-
-        // Burn shares
-        _burn(msg.sender, shares);
-
-        // Transfer USDC
-        require(usdc.transfer(msg.sender, redemptionAmount), "USDC transfer failed");
-
-        emit SharesRedeemed(msg.sender, shares, redemptionAmount);
-        
-        // Check if vault can be marked as completed (all funds distributed)
-        _checkVaultCompletion();
-    }
-
-    /// @notice Withdraw protocol fees (only callable by protocol fee collector)
-    /// @dev Can be called at any time after repayments start, withdraws proportional fees
-    function withdrawProtocolFees() external nonReentrant {
-        require(msg.sender == protocolFeeCollector, "Only protocol fee collector");
-        require(vaultInfo.state == VaultState.Repaying || vaultInfo.state == VaultState.Completed, "No repayments yet");
-        
-        // Calculate how much protocol fee is available based on repayments made
-        uint256 interestAmount = vaultInfo.principalAmount * vaultInfo.interestRate / 10000;
-        uint256 totalProtocolFee = vaultInfo.principalAmount * vaultInfo.protocolFeeRate / 10000;
-        uint256 totalDue = vaultInfo.principalAmount + interestAmount + totalProtocolFee;
-        
-        // Calculate proportional protocol fee based on repayments
-        // If fully repaid, all protocol fees are available
-        uint256 earnedProtocolFee;
-        if (vaultInfo.totalRepaid >= totalDue) {
-            earnedProtocolFee = totalProtocolFee;
-        } else {
-            earnedProtocolFee = (vaultInfo.totalRepaid * totalProtocolFee) / totalDue;
-        }
-        
-        uint256 availableFees = earnedProtocolFee > protocolFeesWithdrawn 
-            ? earnedProtocolFee - protocolFeesWithdrawn 
-            : 0;
-        
-        require(availableFees > 0, "No fees to collect");
-
-        protocolFeesWithdrawn += availableFees;
-
-        require(usdc.transfer(protocolFeeCollector, availableFees), "Protocol fee transfer failed");
-        
-        emit ProtocolFeesCollected(availableFees);
-        
-        // Check if vault can be marked as completed (all funds distributed)
-        _checkVaultCompletion();
-    }
-
-    /// @notice Calculate protocol fees that are earned but not yet withdrawn
-    /// @return The amount of USDC reserved for protocol fees
-    function _calculateReservedProtocolFees() internal view returns (uint256) {
-        // Calculate total due
-        uint256 interestAmount = vaultInfo.principalAmount * vaultInfo.interestRate / 10000;
-        uint256 totalProtocolFee = vaultInfo.principalAmount * vaultInfo.protocolFeeRate / 10000;
-        uint256 totalDue = vaultInfo.principalAmount + interestAmount + totalProtocolFee;
-        
-        // Calculate earned protocol fee based on repayments
-        uint256 earnedProtocolFee;
-        if (vaultInfo.totalRepaid >= totalDue) {
-            earnedProtocolFee = totalProtocolFee;
-        } else {
-            earnedProtocolFee = (vaultInfo.totalRepaid * totalProtocolFee) / totalDue;
-        }
-        
-        // Return reserved amount (earned but not withdrawn)
-        return earnedProtocolFee > protocolFeesWithdrawn 
-            ? earnedProtocolFee - protocolFeesWithdrawn 
-            : 0;
-    }
-
-    /// @notice Get available funds for investors (excluding reserved protocol fees)
-    /// @return The amount available for investor redemptions
-    function getAvailableForInvestors() public view returns (uint256) {
-        uint256 vaultBalance = usdc.balanceOf(address(this));
-        uint256 reservedProtocolFees = _calculateReservedProtocolFees();
-        
-        return vaultBalance > reservedProtocolFees 
-            ? vaultBalance - reservedProtocolFees 
-            : 0;
-    }
-
-    /// @notice Internal function to check if vault should be marked as completed
-    /// @dev Vault is completed when all debt is repaid AND all funds are withdrawn (balance is 0 or dust)
-    function _checkVaultCompletion() internal {
-        if (vaultInfo.state != VaultState.Repaying) {
-            return; // Only check when in Repaying state
-        }
-        
-        // Calculate total due (principal + interest + protocol fee)
-        uint256 interestAmount = vaultInfo.principalAmount * vaultInfo.interestRate / 10000;
-        uint256 protocolFee = vaultInfo.principalAmount * vaultInfo.protocolFeeRate / 10000;
-        uint256 totalDue = vaultInfo.principalAmount + interestAmount + protocolFee;
-        
-        // Check if all debt is repaid
-        bool debtFullyRepaid = vaultInfo.totalRepaid >= totalDue;
-        
-        // Check if all funds have been withdrawn (allowing for dust/rounding errors)
-        uint256 vaultBalance = usdc.balanceOf(address(this));
-        bool allFundsWithdrawn = vaultBalance < 100; // Less than 0.0001 USDC (dust)
-        
-        // Mark as completed only if debt is repaid AND all funds distributed
-        if (debtFullyRepaid && allFundsWithdrawn) {
-            vaultInfo.state = VaultState.Completed;
-            emit VaultStateChanged(VaultState.Completed);
-        }
-    }
-
-    /// @notice Mark vault as defaulted
+    /// @notice Mark vault as defaulted after maturity (VAULT_MANAGER_ROLE)
     function markAsDefaulted() external onlyRole(VAULT_MANAGER_ROLE) {
-        require(vaultInfo.state == VaultState.Repaying, "Vault not in repaying state");
-        require(block.timestamp > vaultInfo.maturityDate, "Vault has not matured yet");
+        require(vaultInfo.state == VaultState.Repaying, "Not in repaying state");
+        require(block.timestamp > vaultInfo.maturityDate, "Not yet matured");
 
         vaultInfo.state = VaultState.Defaulted;
         emit VaultStateChanged(VaultState.Defaulted);
     }
 
-    /// @notice Get vault balance
-    /// @return The USDC balance of the vault
-    function getVaultBalance() external view returns (uint256) {
-        return usdc.balanceOf(address(this));
+    // ─────────────────────────────────────────────────────────────
+    // Protocol Fees
+    // ─────────────────────────────────────────────────────────────
+
+    /// @notice Claim earned protocol fees proportional to repayments received
+    function withdrawProtocolFees() external nonReentrant {
+        require(msg.sender == protocolFeeCollector, "Only protocol fee collector");
+        require(
+            vaultInfo.state == VaultState.Repaying || vaultInfo.state == VaultState.Completed,
+            "No repayments yet"
+        );
+
+        uint256 totalDue = _getTotalDue();
+        uint256 totalProtocolFee = vaultInfo.principalAmount.mulDiv(vaultInfo.protocolFeeRate, 10000);
+
+        uint256 earnedFee = vaultInfo.totalRepaid >= totalDue
+            ? totalProtocolFee
+            : vaultInfo.totalRepaid.mulDiv(totalProtocolFee, totalDue);
+
+        uint256 available = earnedFee > protocolFeesWithdrawn
+            ? earnedFee - protocolFeesWithdrawn
+            : 0;
+        require(available > 0, "No fees to collect");
+
+        protocolFeesWithdrawn += available;
+        require(usdc.transfer(protocolFeeCollector, available), "USDC transfer failed");
+        emit ProtocolFeesCollected(available);
+
+        _checkVaultCompletion();
     }
 
-    /// @notice Calculate share value
-    /// @return The current value of one share in USDC (6 decimals)
-    function getShareValue() external view returns (uint256) {
-        if (totalSupply() == 0) return 1e6; // 1 USDC initially
-        uint256 totalAvailable = usdc.balanceOf(address(this));
-        return (totalAvailable * 1e6) / totalSupply(); // Normalized to 6 decimals
+    // ─────────────────────────────────────────────────────────────
+    // Admin
+    // ─────────────────────────────────────────────────────────────
+
+    /// @notice Update minimum investment (VAULT_MANAGER_ROLE)
+    function setMinInvestment(uint256 newMin) external onlyRole(VAULT_MANAGER_ROLE) {
+        require(newMin > 0, "Must be > 0");
+        emit MinInvestmentUpdated(minInvestment, newMin);
+        minInvestment = newMin;
     }
 
-    /// @notice Get total accrued interest (like Aave shows APY)
-    /// @return accruedInterest The interest accrued so far
-    /// @return remainingInterest The interest still to be paid
-    function getAccruedInterest() external view returns (uint256 accruedInterest, uint256 remainingInterest) {
-        if (vaultInfo.state != VaultState.Repaying) {
-            return (0, 0);
-        }
+    // ─────────────────────────────────────────────────────────────
+    // Internal Helpers
+    // ─────────────────────────────────────────────────────────────
 
-        // Total interest = principal * 12% (or interestRate)
-        uint256 totalInterest = (vaultInfo.principalAmount * vaultInfo.interestRate) / 10000;
-
-        // Accrued = what's been repaid minus principal
-        if (vaultInfo.totalRepaid > vaultInfo.principalAmount) {
-            accruedInterest = vaultInfo.totalRepaid - vaultInfo.principalAmount;
-        } else {
-            accruedInterest = 0;
-        }
-
-        // Remaining = total interest minus accrued
-        if (totalInterest > accruedInterest) {
-            remainingInterest = totalInterest - accruedInterest;
-        } else {
-            remainingInterest = 0;
-        }
-
-        return (accruedInterest, remainingInterest);
+    /// @notice Total borrower obligation: principal + interest + protocolFee
+    function _getTotalDue() internal view returns (uint256) {
+        uint256 interest = vaultInfo.principalAmount.mulDiv(vaultInfo.interestRate, 10000);
+        uint256 fee = vaultInfo.principalAmount.mulDiv(vaultInfo.protocolFeeRate, 10000);
+        return vaultInfo.principalAmount + interest + fee;
     }
 
-    /// @notice Get investor's current return (like Aave dashboard)
-    /// @param investor The investor address
-    /// @return invested The amount invested
-    /// @return currentValue The current value of their shares
-    /// @return profit The profit earned (currentValue - invested)
-    /// @return apy The effective APY based on time elapsed
-    function getInvestorReturn(address investor)
+    /// @notice Net USDC for investors: principal + interest - protocolFee
+    function _getNetForInvestors() internal view returns (uint256) {
+        uint256 interest = vaultInfo.principalAmount.mulDiv(vaultInfo.interestRate, 10000);
+        uint256 fee = vaultInfo.principalAmount.mulDiv(vaultInfo.protocolFeeRate, 10000);
+        return vaultInfo.principalAmount + interest - fee;
+    }
+
+    /// @notice Protocol fees earned but not yet withdrawn (reserved from vault balance)
+    function _calculateReservedProtocolFees() internal view returns (uint256) {
+        uint256 totalDue = _getTotalDue();
+        uint256 totalProtocolFee = vaultInfo.principalAmount.mulDiv(vaultInfo.protocolFeeRate, 10000);
+
+        uint256 earnedFee = vaultInfo.totalRepaid >= totalDue
+            ? totalProtocolFee
+            : vaultInfo.totalRepaid.mulDiv(totalProtocolFee, totalDue);
+
+        return earnedFee > protocolFeesWithdrawn ? earnedFee - protocolFeesWithdrawn : 0;
+    }
+
+    /// @notice Mark vault Completed when all debt repaid and all funds distributed
+    function _checkVaultCompletion() internal {
+        if (vaultInfo.state != VaultState.Repaying) return;
+
+        bool debtFullyRepaid = vaultInfo.totalRepaid >= _getTotalDue();
+        bool allDistributed = usdc.balanceOf(address(this)) < 100; // < 0.0001 USDC dust
+
+        if (debtFullyRepaid && allDistributed) {
+            vaultInfo.state = VaultState.Completed;
+            emit VaultStateChanged(VaultState.Completed);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Public View Functions
+    // ─────────────────────────────────────────────────────────────
+
+    /// @notice USDC available for investor redemptions (vault balance minus reserved protocol fees)
+    function getAvailableForInvestors() public view returns (uint256) {
+        uint256 bal = usdc.balanceOf(address(this));
+        uint256 reserved = _calculateReservedProtocolFees();
+        return bal > reserved ? bal - reserved : 0;
+    }
+
+    /// @notice Repayment overview for borrower dashboard
+    /// @return totalDue   Principal + interest + protocol fee
+    /// @return totalPaid  Amount repaid so far
+    /// @return remaining  Amount still owed
+    /// @return protocolFee Total protocol fee (not net)
+    function getRepaymentStatus()
         external
         view
-        returns (uint256 invested, uint256 currentValue, uint256 profit, uint256 apy)
+        returns (uint256 totalDue, uint256 totalPaid, uint256 remaining, uint256 protocolFee)
     {
-        uint256 shares = balanceOf(investor);
-        if (shares == 0) {
-            return (0, 0, 0, 0);
-        }
-
-        // Invested = shares owned (1:1 with USDC initially)
-        invested = shares;
-
-        // Current value = shares * current share price
-        uint256 sharePrice = this.getShareValue();
-        currentValue = (shares * sharePrice) / 1e6;
-
-        // Profit = current value - invested
-        if (currentValue > invested) {
-            profit = currentValue - invested;
-        } else {
-            profit = 0;
-        }
-
-        // APY calculation based on time elapsed
-        if (vaultInfo.state == VaultState.Repaying && profit > 0) {
-            uint256 timeElapsed = block.timestamp - vaultInfo.createdAt;
-            if (timeElapsed > 0) {
-                // APY = (profit / invested) * (365 days / timeElapsed) * 100
-                apy = (profit * 1e4 * 365 days) / (invested * timeElapsed);
-            }
-        } else {
-            apy = 0;
-        }
-
-        return (invested, currentValue, profit, apy);
+        protocolFee = vaultInfo.principalAmount.mulDiv(vaultInfo.protocolFeeRate, 10000);
+        uint256 interest = vaultInfo.principalAmount.mulDiv(vaultInfo.interestRate, 10000);
+        totalDue = vaultInfo.principalAmount + interest + protocolFee;
+        totalPaid = vaultInfo.totalRepaid;
+        remaining = totalDue > totalPaid ? totalDue - totalPaid : 0;
     }
 
-    /// @notice Get vault metrics (for dashboard display)
-    /// @return totalShares Total shares minted
-    /// @return sharePrice Current price per share
-    /// @return totalValueLocked Total USDC in vault
-    /// @return targetAmount Target amount to reach
-    /// @return fundingProgress Funding progress in basis points (10000 = 100%)
-    /// @return currentAPY Current APY for investors
+    /// @notice Vault metrics for frontend dashboard
     function getVaultMetrics()
         external
         view
@@ -530,129 +666,140 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
             uint256 totalValueLocked,
             uint256 targetAmount,
             uint256 fundingProgress,
-            uint256 currentAPY
+            uint256 expectedFinalSharePrice
         )
     {
         totalShares = totalSupply();
-        sharePrice = this.getShareValue();
+        sharePrice = getCurrentSharePrice();
         totalValueLocked = usdc.balanceOf(address(this));
         targetAmount = vaultInfo.principalAmount;
-
-        // Funding progress (0-10000, where 10000 = 100%)
-        if (targetAmount > 0) {
-            fundingProgress = (vaultInfo.totalRaised * 10000) / targetAmount;
-        } else {
-            fundingProgress = 0;
-        }
-
-        // Current APY = interest rate for this vault
-        currentAPY = vaultInfo.interestRate; // e.g., 1200 = 12%
-
-        return (totalShares, sharePrice, totalValueLocked, targetAmount, fundingProgress, currentAPY);
+        fundingProgress = targetAmount > 0
+            ? vaultInfo.totalRaised.mulDiv(10000, targetAmount)
+            : 0;
+        uint256 netForInvestors = _getNetForInvestors();
+        expectedFinalSharePrice = netForInvestors.mulDiv(1e18, originalTotalShares);
     }
 
-    /// @notice Get repayment status (for borrower dashboard)
-    /// @return totalDue Total amount due (principal + interest)
-    /// @return totalPaid Amount paid so far
-    /// @return remaining Amount still to pay
-    /// @return protocolFee Protocol fee amount
-    function getRepaymentStatus()
+    /// @notice Investor return summary
+    /// @return invested          USDC value of all shares (held + locked + claimed-from)
+    /// @return currentValue      USDC claimable now + claimed already + current value of held shares
+    /// @return profit            currentValue - invested (0 if negative)
+    /// @return expectedAtMaturity USDC expected when fully repaid (for unlocked + locked shares)
+    function getInvestorReturn(address investor)
         external
         view
-        returns (uint256 totalDue, uint256 totalPaid, uint256 remaining, uint256 protocolFee)
+        returns (
+            uint256 invested,
+            uint256 currentValue,
+            uint256 profit,
+            uint256 expectedAtMaturity
+        )
     {
-        // Total due = principal + 12% interest
-        totalDue = vaultInfo.principalAmount + (vaultInfo.principalAmount * vaultInfo.interestRate / 10000);
+        uint256 held = balanceOf(investor);
+        RedeemState memory rs = _redeemRequests[investor];
 
-        // Total paid
-        totalPaid = vaultInfo.totalRepaid;
+        uint256 totalShares = held + rs.originalLockedShares;
+        invested = totalShares.mulDiv(vaultInfo.principalAmount, originalTotalShares);
 
-        // Remaining
-        if (totalDue > totalPaid) {
-            remaining = totalDue - totalPaid;
-        } else {
-            remaining = 0;
+        // Claimed already
+        uint256 claimed = rs.assetsClaimed;
+
+        // Claimable now from locked shares
+        uint256 claimable = 0;
+        if (rs.originalLockedShares > 0) {
+            uint256 totalDue = _getTotalDue();
+            uint256 repaidFraction = totalDue > 0
+                ? Math.min(1e18, vaultInfo.totalRepaid.mulDiv(1e18, totalDue))
+                : 0;
+            uint256 netLocked = _getNetForInvestors();
+            uint256 totalEntitlement = rs.originalLockedShares.mulDiv(netLocked, originalTotalShares);
+            uint256 totalClaimableNow = totalEntitlement.mulDiv(repaidFraction, 1e18);
+            claimable = totalClaimableNow > rs.assetsClaimed ? totalClaimableNow - rs.assetsClaimed : 0;
         }
 
-        // Protocol fee (2%)
-        protocolFee = (vaultInfo.principalAmount * vaultInfo.protocolFeeRate / 10000);
+        // Value of currently held (not locked) shares
+        uint256 heldValue = held > 0 ? convertToAssets(held) : 0;
 
-        return (totalDue, totalPaid, remaining, protocolFee);
+        currentValue = claimed + claimable + heldValue;
+        profit = currentValue > invested ? currentValue - invested : 0;
+
+        // Expected at maturity for shares not yet redeemed
+        uint256 netForInvestors = _getNetForInvestors();
+        uint256 unredeemed = held + rs.remainingLockedShares;
+        expectedAtMaturity = unredeemed.mulDiv(netForInvestors, originalTotalShares);
     }
 
-    /// @notice Get list of all investors in this vault
-    /// @return Array of investor addresses
-    function getInvestors() external view returns (address[] memory) {
-        return investors;
+    /// @notice Redemption state for a controller (for frontend)
+    function getRedeemState(address controller)
+        external
+        view
+        returns (
+            uint256 originalLockedShares,
+            uint256 remainingLockedShares,
+            uint256 assetsClaimed,
+            uint256 claimableNow
+        )
+    {
+        RedeemState memory rs = _redeemRequests[controller];
+        originalLockedShares = rs.originalLockedShares;
+        remainingLockedShares = rs.remainingLockedShares;
+        assetsClaimed = rs.assetsClaimed;
+        claimableNow = claimableRedeemRequest(0, controller) > 0
+            ? _computeClaimableAssets(controller)
+            : 0;
     }
 
-    /// @notice Check if an address is an investor
-    /// @param account The address to check
-    /// @return True if the address is an investor
-    function isInvestorAddress(address account) external view returns (bool) {
-        return isInvestor[account];
-    }
-
-    /// @notice Get vault state
-    /// @return The current state of the vault
-    function getVaultState() external view returns (VaultState) {
-        return vaultInfo.state;
-    }
-
-    /// @notice Get vault borrower
-    /// @return The borrower address
-    function getVaultBorrower() external view returns (address) {
-        return vaultInfo.borrower;
-    }
-
-    /// @notice Get vault principal amount
-    /// @return The principal amount
-    function getVaultPrincipalAmount() external view returns (uint256) {
-        return vaultInfo.principalAmount;
-    }
-
-    /// @notice Get vault total raised
-    /// @return The total amount raised
-    function getVaultTotalRaised() external view returns (uint256) {
-        return vaultInfo.totalRaised;
-    }
-
-    /// @notice Get vault contract hash
-    /// @return The contract hash
-    function getVaultContractHash() external view returns (bytes32) {
-        return vaultInfo.contractHash;
-    }
-
-    /// @notice Get vault creation timestamp
-    /// @return The timestamp when vault was created
-    function getVaultCreatedAt() external view returns (uint256) {
-        return vaultInfo.createdAt;
-    }
-
-    /// @notice Get vault funded timestamp
-    /// @return The timestamp when vault was fully funded (0 if not funded)
-    function getVaultFundedAt() external view returns (uint256) {
-        return vaultInfo.fundedAt;
-    }
-
-    /// @notice Get contract attached timestamp
-    /// @return The timestamp when contract was attached (0 if not attached)
-    function getVaultContractAttachedAt() external view returns (uint256) {
-        return vaultInfo.contractAttachedAt;
-    }
-
-    /// @notice Get funds withdrawn timestamp
-    /// @return The timestamp when borrower withdrew funds (0 if not withdrawn)
-    function getVaultFundsWithdrawnAt() external view returns (uint256) {
-        return vaultInfo.fundsWithdrawnAt;
-    }
-
-    /// @notice Calculate actual due date based on withdrawal timestamp
-    /// @return The actual due date (fundsWithdrawnAt + duration)
+    /// @notice Actual due date: fundsWithdrawnAt + loan duration
     function getActualDueDate() external view returns (uint256) {
-        if (vaultInfo.fundsWithdrawnAt == 0) {
-            return 0; // Funds not withdrawn yet
-        }
+        if (vaultInfo.fundsWithdrawnAt == 0) return 0;
         return vaultInfo.fundsWithdrawnAt + (vaultInfo.maturityDate - vaultInfo.createdAt);
+    }
+
+    function getVaultState() external view returns (VaultState) { return vaultInfo.state; }
+    function getVaultBalance() external view returns (uint256) { return usdc.balanceOf(address(this)); }
+    function getVaultBorrower() external view returns (address) { return vaultInfo.borrower; }
+    function getVaultPrincipalAmount() external view returns (uint256) { return vaultInfo.principalAmount; }
+    function getVaultTotalRaised() external view returns (uint256) { return vaultInfo.totalRaised; }
+    function getVaultTotalRepaid() external view returns (uint256) { return vaultInfo.totalRepaid; }
+    function getVaultContractHash() external view returns (bytes32) { return vaultInfo.contractHash; }
+    function getVaultFundedAt() external view returns (uint256) { return vaultInfo.fundedAt; }
+    function getVaultFundsWithdrawnAt() external view returns (uint256) { return vaultInfo.fundsWithdrawnAt; }
+    function getInvestors() external view returns (address[] memory) { return _investors; }
+    function isInvestorAddress(address account) external view returns (bool) { return _isInvestor[account]; }
+
+    // ─────────────────────────────────────────────────────────────
+    // Internal View Helper
+    // ─────────────────────────────────────────────────────────────
+
+    function _computeClaimableAssets(address controller) internal view returns (uint256) {
+        RedeemState memory rs = _redeemRequests[controller];
+        if (rs.remainingLockedShares == 0) return 0;
+
+        uint256 totalDue = _getTotalDue();
+        if (totalDue == 0) return 0;
+
+        uint256 repaidFraction = Math.min(1e18, vaultInfo.totalRepaid.mulDiv(1e18, totalDue));
+        uint256 netForInvestors = _getNetForInvestors();
+        uint256 totalEntitlement = rs.originalLockedShares.mulDiv(netForInvestors, originalTotalShares);
+        uint256 totalClaimableNow = totalEntitlement.mulDiv(repaidFraction, 1e18);
+
+        return totalClaimableNow > rs.assetsClaimed ? totalClaimableNow - rs.assetsClaimed : 0;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ERC-165
+    // ─────────────────────────────────────────────────────────────
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(AccessControl)
+        returns (bool)
+    {
+        return
+            interfaceId == 0xe3bc4e65 || // ERC-7540 operator methods
+            interfaceId == 0x620ee8e4 || // ERC-7540 async redeem
+            super.supportsInterface(interfaceId);
     }
 }
