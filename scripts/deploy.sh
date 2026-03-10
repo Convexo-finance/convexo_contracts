@@ -181,6 +181,7 @@ echo ""
 forge script script/DeployDeterministic.s.sol:DeployDeterministic \
     --rpc-url "$RPC_URL" \
     --broadcast \
+    --private-key "$PRIVATE_KEY" \
     --chain-id $CHAIN_ID \
     --slow \
     $EXTRA_FLAGS \

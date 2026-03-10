@@ -4,7 +4,6 @@ pragma solidity ^0.8.27;
 import {Script, console} from "forge-std/Script.sol";
 import {SafeSingletonDeployer} from "safe-singleton-deployer-sol/SafeSingletonDeployer.sol";
 
-// Import all contracts
 // identity/
 import {Convexo_Passport} from "../src/contracts/identity/Convexo_Passport.sol";
 import {Limited_Partners_Individuals} from "../src/contracts/identity/Limited_Partners_Individuals.sol";
@@ -20,19 +19,22 @@ import {VaultFactory} from "../src/contracts/credits/VaultFactory.sol";
 
 // hooks/
 import {PoolRegistry} from "../src/contracts/hooks/PoolRegistry.sol";
-import {PriceFeedManager} from "../src/contracts/hooks/PriceFeedManager.sol";
 import {HookDeployer} from "../src/contracts/hooks/HookDeployer.sol";
 import {PassportGatedHook} from "../src/contracts/hooks/PassportGatedHook.sol";
 
 // Interfaces
 import {ILimitedPartnersIndividuals} from "../src/interfaces/ILimitedPartnersIndividuals.sol";
 import {ILimitedPartnersBusiness} from "../src/interfaces/ILimitedPartnersBusiness.sol";
-import {IPoolManager} from "../src/interfaces/IPoolManager.sol";
+import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 /// @title DeployDeterministic
-/// @notice Deploys all Convexo contracts to deterministic addresses using Safe Singleton Factory
-/// @dev Uses CREATE2 via Safe Singleton Factory for same addresses across all chains
+/// @notice Deploys all Convexo MVP contracts to deterministic addresses using Safe Singleton Factory.
+///
+/// Phase 2 contracts (PriceFeedManager, ManualPriceAggregator, ConvexoHookDeployer,
+/// ConvexoPoolHook) are implemented in src/contracts/oracles/ and src/contracts/hooks/
+/// but NOT deployed here — they will be added in a future script when the oracle
+/// price-band feature is enabled.
 ///
 /// ===============================================================================
 /// DETERMINISTIC DEPLOYMENT STRATEGY:
@@ -49,28 +51,25 @@ contract DeployDeterministic is Script {
     // CONFIGURATION
     // ========================================================================
 
-    /// @notice Default salt version - can be overridden via DEPLOY_VERSION env var
-    /// @dev Change version to get new addresses after contract changes
-    ///      Example: DEPLOY_VERSION=v3.1 ./scripts/deploy.sh ethereum-sepolia
-    string public constant DEFAULT_VERSION = "convexo.v3.17";
+    /// @notice Salt version — bump to get new addresses after ABI-breaking changes.
+    ///         Example: DEPLOY_VERSION=convexo.v3.18 ./scripts/deploy.sh base-sepolia
+    string public constant DEFAULT_VERSION = "convexo.v3.18";
 
-    /// @notice Admin address - MUST be same across all chains for same addresses
+    /// @notice Admin address — MUST be same across all chains for same addresses.
     address public constant ADMIN = 0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8;
 
-    /// @notice Get salt prefix (from env or default)
+    string public constant CONVEXO_PASSPORT_METADATA_URI = "https://metadata.convexo.finance/passport";
+
     function getSaltPrefix() internal view returns (bytes32) {
         string memory version = vm.envOr("DEPLOY_VERSION", DEFAULT_VERSION);
         return keccak256(abi.encodePacked(version));
     }
 
-    /// @notice Metadata URI for Convexo Passport
-    string public constant CONVEXO_PASSPORT_METADATA_URI = "https://metadata.convexo.finance/passport";
-
     // ========================================================================
-    // DEPLOYED CONTRACT ADDRESSES (will be same on all chains)
+    // DEPLOYED CONTRACT ADDRESSES
     // ========================================================================
 
-    // NFT Contracts
+    // NFTs
     address public convexoPassport;
     address public lpIndividuals;
     address public lpBusiness;
@@ -82,31 +81,28 @@ contract DeployDeterministic is Script {
 
     // Infrastructure
     address public reputationManager;
-    address public poolRegistry;
-    address public priceFeedManager;
     address public contractSigner;
-    address public vaultFactory;
+    address public poolRegistry;
     address public hookDeployer;
+    address public vaultFactory;
+
+    // Chain-specific
     address public passportGatedHook;
 
     // ========================================================================
-    // SALT GENERATORS
+    // HELPERS
     // ========================================================================
 
     function getSalt(string memory contractName) internal view returns (bytes32) {
         return keccak256(abi.encodePacked(getSaltPrefix(), contractName));
     }
 
-    /// @notice Check if a contract already exists at an address
     function isDeployed(address addr) internal view returns (bool) {
         uint256 size;
-        assembly {
-            size := extcodesize(addr)
-        }
+        assembly { size := extcodesize(addr) }
         return size > 0;
     }
 
-    /// @notice Deploy via CREATE2 only if not already deployed
     function deployIfNeeded(
         uint256 deployerPrivateKey,
         bytes memory creationCode,
@@ -115,18 +111,11 @@ contract DeployDeterministic is Script {
         string memory name
     ) internal returns (address) {
         address predicted = SafeSingletonDeployer.computeAddress(creationCode, args, salt);
-
         if (isDeployed(predicted)) {
             console.log(string.concat("[SKIP] ", name, " already deployed:"), predicted);
             return predicted;
         }
-
-        address deployed = SafeSingletonDeployer.broadcastDeploy(
-            deployerPrivateKey,
-            creationCode,
-            args,
-            salt
-        );
+        address deployed = SafeSingletonDeployer.broadcastDeploy(deployerPrivateKey, creationCode, args, salt);
         console.log(string.concat("[NEW] Deployed ", name, ":"), deployed);
         return deployed;
     }
@@ -136,7 +125,6 @@ contract DeployDeterministic is Script {
     // ========================================================================
 
     function getZKPassportVerifier() internal pure returns (address) {
-        // Same verifier address on all networks
         return 0x1D000001000EFD9a6371f4d90bB8920D5431c0D8;
     }
 
@@ -183,7 +171,7 @@ contract DeployDeterministic is Script {
     }
 
     // ========================================================================
-    // ADDRESS PREDICTION (Call before deployment to get addresses)
+    // ADDRESS PREDICTION
     // ========================================================================
 
     function predictAllAddresses(address minter) public view {
@@ -191,9 +179,6 @@ contract DeployDeterministic is Script {
         console.log("PREDICTED ADDRESSES (Same on All Chains)");
         console.log("========================================\n");
 
-        // Predict addresses in deployment order
-
-        // 1. Convexo Passport (constructor takes: admin, initialBaseURI, zkPassportVerifier)
         address predictedPassport = SafeSingletonDeployer.computeAddress(
             type(Convexo_Passport).creationCode,
             abi.encode(ADMIN, CONVEXO_PASSPORT_METADATA_URI, getZKPassportVerifier()),
@@ -201,13 +186,11 @@ contract DeployDeterministic is Script {
         );
         console.log("Convexo_Passport:", predictedPassport);
 
-        // 2. Veriff Verifier (needs LP Individuals address - predict it first)
         address predictedLpIndividuals = SafeSingletonDeployer.computeAddress(
             type(Limited_Partners_Individuals).creationCode,
-            abi.encode(ADMIN, minter, address(0)), // verifier will be set separately
+            abi.encode(ADMIN, minter, address(0)),
             getSalt("LPIndividuals")
         );
-
         address predictedVeriffVerifier = SafeSingletonDeployer.computeAddress(
             type(VeriffVerifier).creationCode,
             abi.encode(ADMIN, predictedLpIndividuals),
@@ -215,26 +198,20 @@ contract DeployDeterministic is Script {
         );
         console.log("VeriffVerifier:", predictedVeriffVerifier);
 
-        // 3. Sumsub Verifier (needs LP Business address - predict it first)
         address predictedLpBusiness = SafeSingletonDeployer.computeAddress(
             type(Limited_Partners_Business).creationCode,
-            abi.encode(ADMIN, minter, address(0)), // verifier will be set separately
+            abi.encode(ADMIN, minter, address(0)),
             getSalt("LPBusiness")
         );
-
         address predictedSumsubVerifier = SafeSingletonDeployer.computeAddress(
             type(SumsubVerifier).creationCode,
             abi.encode(ADMIN, predictedLpBusiness),
             getSalt("SumsubVerifier")
         );
         console.log("SumsubVerifier:", predictedSumsubVerifier);
-
-        // Note: LP contracts with verifier callback would have different addresses
-        // For deterministic deployment, we deploy without callback and set it up post-deployment
         console.log("Limited_Partners_Individuals:", predictedLpIndividuals);
         console.log("Limited_Partners_Business:", predictedLpBusiness);
 
-        // 4. Ecreditscoring
         address predictedEcreditscoring = SafeSingletonDeployer.computeAddress(
             type(Ecreditscoring).creationCode,
             abi.encode(ADMIN, minter, predictedLpIndividuals, predictedLpBusiness),
@@ -242,7 +219,6 @@ contract DeployDeterministic is Script {
         );
         console.log("Ecreditscoring:", predictedEcreditscoring);
 
-        // 5. Reputation Manager
         address predictedReputationManager = SafeSingletonDeployer.computeAddress(
             type(ReputationManager).creationCode,
             abi.encode(predictedPassport, predictedLpIndividuals, predictedLpBusiness, predictedEcreditscoring),
@@ -250,25 +226,16 @@ contract DeployDeterministic is Script {
         );
         console.log("ReputationManager:", predictedReputationManager);
 
-        // 6. Contract Signer
         address predictedContractSigner = SafeSingletonDeployer.computeAddress(
             type(ContractSigner).creationCode, abi.encode(ADMIN), getSalt("ContractSigner")
         );
         console.log("ContractSigner:", predictedContractSigner);
 
-        // 7. Pool Registry
         address predictedPoolRegistry = SafeSingletonDeployer.computeAddress(
             type(PoolRegistry).creationCode, abi.encode(ADMIN), getSalt("PoolRegistry")
         );
         console.log("PoolRegistry:", predictedPoolRegistry);
 
-        // 8. Price Feed Manager
-        address predictedPriceFeedManager = SafeSingletonDeployer.computeAddress(
-            type(PriceFeedManager).creationCode, abi.encode(ADMIN), getSalt("PriceFeedManager")
-        );
-        console.log("PriceFeedManager:", predictedPriceFeedManager);
-
-        // 9. Hook Deployer
         address predictedHookDeployer =
             SafeSingletonDeployer.computeAddress(type(HookDeployer).creationCode, "", getSalt("HookDeployer"));
         console.log("HookDeployer:", predictedHookDeployer);
@@ -289,7 +256,7 @@ contract DeployDeterministic is Script {
         (string memory networkName, address poolManager, address usdc) = getNetworkConfig(chainId);
 
         console.log("\n========================================");
-        console.log("DETERMINISTIC DEPLOYMENT");
+        console.log("DETERMINISTIC DEPLOYMENT - MVP");
         console.log("========================================");
         console.log("Network:", networkName);
         console.log("Chain ID:", chainId);
@@ -298,15 +265,13 @@ contract DeployDeterministic is Script {
         console.log("Salt Prefix:", vm.toString(getSaltPrefix()));
         console.log("========================================\n");
 
-        // Show predicted addresses first
         predictAllAddresses(minter);
 
-        // ========================================================================
-        // Phase 1: Deploy Core NFTs and Verifiers
-        // ========================================================================
-        console.log("Phase 1: Deploying Core Contracts...\n");
+        // ====================================================================
+        // Phase 1: Core NFTs + Verifiers
+        // ====================================================================
+        console.log("Phase 1: Core Contracts...\n");
 
-        // 1. Convexo Passport (constructor takes: admin, initialBaseURI, zkPassportVerifier)
         convexoPassport = deployIfNeeded(
             deployerPrivateKey,
             type(Convexo_Passport).creationCode,
@@ -315,7 +280,6 @@ contract DeployDeterministic is Script {
             "Convexo_Passport"
         );
 
-        // 2. LP Individuals (without verifier callback for deterministic address)
         lpIndividuals = deployIfNeeded(
             deployerPrivateKey,
             type(Limited_Partners_Individuals).creationCode,
@@ -324,7 +288,6 @@ contract DeployDeterministic is Script {
             "Limited_Partners_Individuals"
         );
 
-        // 3. LP Business (without verifier callback for deterministic address)
         lpBusiness = deployIfNeeded(
             deployerPrivateKey,
             type(Limited_Partners_Business).creationCode,
@@ -333,7 +296,6 @@ contract DeployDeterministic is Script {
             "Limited_Partners_Business"
         );
 
-        // 4. Veriff Verifier (references LP Individuals)
         veriffVerifier = deployIfNeeded(
             deployerPrivateKey,
             type(VeriffVerifier).creationCode,
@@ -342,7 +304,6 @@ contract DeployDeterministic is Script {
             "VeriffVerifier"
         );
 
-        // 5. Sumsub Verifier (references LP Business)
         sumsubVerifier = deployIfNeeded(
             deployerPrivateKey,
             type(SumsubVerifier).creationCode,
@@ -351,7 +312,6 @@ contract DeployDeterministic is Script {
             "SumsubVerifier"
         );
 
-        // 6. Ecreditscoring
         ecreditscoring = deployIfNeeded(
             deployerPrivateKey,
             type(Ecreditscoring).creationCode,
@@ -360,12 +320,11 @@ contract DeployDeterministic is Script {
             "Ecreditscoring"
         );
 
-        // ========================================================================
-        // Phase 2: Deploy Infrastructure
-        // ========================================================================
-        console.log("\nPhase 2: Deploying Infrastructure...\n");
+        // ====================================================================
+        // Phase 2: Infrastructure
+        // ====================================================================
+        console.log("\nPhase 2: Infrastructure...\n");
 
-        // 7. Reputation Manager
         reputationManager = deployIfNeeded(
             deployerPrivateKey,
             type(ReputationManager).creationCode,
@@ -374,7 +333,6 @@ contract DeployDeterministic is Script {
             "ReputationManager"
         );
 
-        // 8. Contract Signer
         contractSigner = deployIfNeeded(
             deployerPrivateKey,
             type(ContractSigner).creationCode,
@@ -383,7 +341,6 @@ contract DeployDeterministic is Script {
             "ContractSigner"
         );
 
-        // 9. Pool Registry
         poolRegistry = deployIfNeeded(
             deployerPrivateKey,
             type(PoolRegistry).creationCode,
@@ -392,16 +349,6 @@ contract DeployDeterministic is Script {
             "PoolRegistry"
         );
 
-        // 10. Price Feed Manager
-        priceFeedManager = deployIfNeeded(
-            deployerPrivateKey,
-            type(PriceFeedManager).creationCode,
-            abi.encode(ADMIN),
-            getSalt("PriceFeedManager"),
-            "PriceFeedManager"
-        );
-
-        // 11. Hook Deployer
         hookDeployer = deployIfNeeded(
             deployerPrivateKey,
             type(HookDeployer).creationCode,
@@ -410,28 +357,23 @@ contract DeployDeterministic is Script {
             "HookDeployer"
         );
 
-        // ========================================================================
-        // Phase 3: Deploy Network-Specific Contracts (different per chain)
-        // ========================================================================
-        console.log("\nPhase 3: Deploying Network-Specific Contracts...\n");
-
-        // These contracts have chain-specific dependencies (poolManager, usdc)
-        // so they will have different addresses per chain
-        // Using chain-specific salt to make them deterministic per chain
+        // ====================================================================
+        // Phase 3: Chain-Specific (PassportGatedHook + VaultFactory)
+        // ====================================================================
+        console.log("\nPhase 3: Chain-Specific Contracts...\n");
 
         bytes32 chainSalt = keccak256(abi.encodePacked(getSaltPrefix(), "chain", chainId));
 
-        // PassportGatedHook must be deployed via HookDeployer so the address has the correct
-        // permission bits required by Uniswap V4 PoolManager (bits 11, 9, 7 for
-        // beforeAddLiquidity, beforeRemoveLiquidity, beforeSwap).
-        // findPassportGatedHookSalt is a view call — no broadcast, runs locally in forge.
+        // PassportGatedHook — deployed via HookDeployer so address bits == 0x0A80
+        // (beforeAddLiquidity + beforeRemoveLiquidity + beforeSwap)
         if (poolManager != address(0)) {
             bytes32 hookStartingSalt = keccak256(abi.encodePacked(chainSalt, "PassportGatedHook"));
-            (bytes32 hookSalt, address predictedHook) = HookDeployer(hookDeployer).findPassportGatedHookSalt(
+            (bytes32 hookSalt, address predictedHook) = HookDeployer(hookDeployer).findSalt(
                 IPoolManager(poolManager),
                 ReputationManager(reputationManager),
+                ADMIN,
                 hookStartingSalt,
-                500000 // max iterations (~milliseconds locally, no gas cost)
+                500000
             );
 
             if (isDeployed(predictedHook)) {
@@ -440,9 +382,10 @@ contract DeployDeterministic is Script {
             } else {
                 vm.broadcast(deployerPrivateKey);
                 passportGatedHook = address(
-                    HookDeployer(hookDeployer).deployPassportGatedHook(
+                    HookDeployer(hookDeployer).deploy(
                         IPoolManager(poolManager),
                         ReputationManager(reputationManager),
+                        ADMIN,
                         hookSalt
                     )
                 );
@@ -461,12 +404,11 @@ contract DeployDeterministic is Script {
             );
         }
 
-        // ========================================================================
-        // Phase 4: Setup Roles (skip if already configured)
-        // ========================================================================
-        console.log("\nPhase 4: Setting up Roles...\n");
+        // ====================================================================
+        // Phase 4: Role Setup
+        // ====================================================================
+        console.log("\nPhase 4: Roles...\n");
 
-        // Grant MINTER_CALLBACK_ROLE to LP contracts (skip if already granted)
         bytes32 MINTER_CALLBACK_ROLE = keccak256("MINTER_CALLBACK_ROLE");
 
         if (!VeriffVerifier(veriffVerifier).hasRole(MINTER_CALLBACK_ROLE, lpIndividuals)) {
@@ -485,34 +427,29 @@ contract DeployDeterministic is Script {
             console.log("[SKIP] MINTER_CALLBACK_ROLE already granted to LP_Business");
         }
 
-        // ========================================================================
-        // DEPLOYMENT SUMMARY
-        // ========================================================================
+        // ====================================================================
+        // SUMMARY
+        // ====================================================================
         console.log("\n========================================");
         console.log("DEPLOYMENT COMPLETE!");
         console.log("========================================");
-
-        console.log("\n--- DETERMINISTIC ADDRESSES (Same on All Chains) ---");
-        console.log("Convexo_Passport:", convexoPassport);
-        console.log("Limited_Partners_Individuals:", lpIndividuals);
-        console.log("Limited_Partners_Business:", lpBusiness);
-        console.log("Ecreditscoring:", ecreditscoring);
-        console.log("VeriffVerifier:", veriffVerifier);
-        console.log("SumsubVerifier:", sumsubVerifier);
-        console.log("ReputationManager:", reputationManager);
-        console.log("ContractSigner:", contractSigner);
-        console.log("PoolRegistry:", poolRegistry);
-        console.log("PriceFeedManager:", priceFeedManager);
-        console.log("HookDeployer:", hookDeployer);
-
-        console.log("\n--- CHAIN-SPECIFIC ADDRESSES ---");
-        console.log("PassportGatedHook:", passportGatedHook);
-        console.log("VaultFactory:", vaultFactory);
-
+        console.log("\n--- DETERMINISTIC (Same on All Chains) ---");
+        console.log("Convexo_Passport:              ", convexoPassport);
+        console.log("Limited_Partners_Individuals:  ", lpIndividuals);
+        console.log("Limited_Partners_Business:     ", lpBusiness);
+        console.log("Ecreditscoring:                ", ecreditscoring);
+        console.log("VeriffVerifier:                ", veriffVerifier);
+        console.log("SumsubVerifier:                ", sumsubVerifier);
+        console.log("ReputationManager:             ", reputationManager);
+        console.log("ContractSigner:                ", contractSigner);
+        console.log("PoolRegistry:                  ", poolRegistry);
+        console.log("HookDeployer:                  ", hookDeployer);
+        console.log("\n--- CHAIN-SPECIFIC ---");
+        console.log("PassportGatedHook:             ", passportGatedHook);
+        console.log("VaultFactory:                  ", vaultFactory);
         console.log("\n========================================");
-        console.log("NOTE: LP contracts deployed without verifier callback");
-        console.log("The markAsMinted callback requires manual status update");
-        console.log("or use the non-deterministic DeployAll.s.sol for full callback support");
+        console.log("Phase 2 (oracle + ConvexoPoolHook): script/DeployPhase2.s.sol");
+        console.log("Next: Initialize pool via script/InitializePool.s.sol");
         console.log("========================================\n");
     }
 }

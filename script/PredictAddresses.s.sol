@@ -14,7 +14,7 @@ import {ContractSigner} from "../src/contracts/credits/ContractSigner.sol";
 import {VeriffVerifier} from "../src/contracts/identity/VeriffVerifier.sol";
 import {SumsubVerifier} from "../src/contracts/identity/SumsubVerifier.sol";
 import {PoolRegistry} from "../src/contracts/hooks/PoolRegistry.sol";
-import {PriceFeedManager} from "../src/contracts/hooks/PriceFeedManager.sol";
+import {PriceFeedManager} from "../src/contracts/oracles/PriceFeedManager.sol";
 import {HookDeployer} from "../src/contracts/hooks/HookDeployer.sol";
 import {VaultFactory} from "../src/contracts/credits/VaultFactory.sol";
 import {PassportGatedHook} from "../src/contracts/hooks/PassportGatedHook.sol";
@@ -29,13 +29,18 @@ import {PassportGatedHook} from "../src/contracts/hooks/PassportGatedHook.sol";
 ///
 contract PredictAddresses is Script {
     /// @notice Default version - can be overridden via DEPLOY_VERSION env var
-    string public constant DEFAULT_VERSION = "convexo.v3.16";
+    /// IMPORTANT: Must match DEFAULT_VERSION in DeployDeterministic.s.sol
+    string public constant DEFAULT_VERSION = "convexo.v3.18";
 
     /// @notice Admin address - MUST be same across all chains
     address public constant ADMIN = 0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8;
 
     /// @notice Metadata URI for Convexo Passport
     string public constant CONVEXO_PASSPORT_METADATA_URI = "https://metadata.convexo.finance/passport";
+
+    function getZKPassportVerifier() internal pure returns (address) {
+        return 0x1D000001000EFD9a6371f4d90bB8920D5431c0D8;
+    }
 
     function getSaltPrefix() internal view returns (bytes32) {
         string memory version = vm.envOr("DEPLOY_VERSION", DEFAULT_VERSION);
@@ -73,10 +78,10 @@ contract PredictAddresses is Script {
         console.log("    NFT CONTRACTS");
         console.log("================================================================");
 
-        // 1. Convexo Passport (constructor takes: admin, initialBaseURI)
+        // 1. Convexo Passport (constructor takes: admin, initialBaseURI, zkPassportVerifier)
         address convexoPassport = SafeSingletonDeployer.computeAddress(
             type(Convexo_Passport).creationCode,
-            abi.encode(ADMIN, CONVEXO_PASSPORT_METADATA_URI),
+            abi.encode(ADMIN, CONVEXO_PASSPORT_METADATA_URI, getZKPassportVerifier()),
             getSalt("ConvexoPassport")
         );
         console.log("");
@@ -188,9 +193,11 @@ contract PredictAddresses is Script {
         _printChainSpecificAddresses(11155111, "Ethereum Sepolia", reputationManager, contractSigner);
         _printChainSpecificAddresses(84532, "Base Sepolia", reputationManager, contractSigner);
         _printChainSpecificAddresses(1301, "Unichain Sepolia", reputationManager, contractSigner);
+        _printChainSpecificAddresses(421614, "Arbitrum Sepolia", reputationManager, contractSigner);
         _printChainSpecificAddresses(1, "Ethereum Mainnet", reputationManager, contractSigner);
         _printChainSpecificAddresses(8453, "Base Mainnet", reputationManager, contractSigner);
         _printChainSpecificAddresses(130, "Unichain Mainnet", reputationManager, contractSigner);
+        _printChainSpecificAddresses(42161, "Arbitrum One", reputationManager, contractSigner);
 
         console.log("");
         console.log("================================================================");
@@ -219,7 +226,7 @@ contract PredictAddresses is Script {
 
         address passportGatedHook = SafeSingletonDeployer.computeAddress(
             type(PassportGatedHook).creationCode,
-            abi.encode(poolManager, reputationManager),
+            abi.encode(poolManager, reputationManager, ADMIN),
             keccak256(abi.encodePacked(chainSalt, "PassportGatedHook"))
         );
 

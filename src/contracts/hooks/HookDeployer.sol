@@ -2,29 +2,21 @@
 pragma solidity ^0.8.27;
 
 import {PassportGatedHook} from "./PassportGatedHook.sol";
-import {IPoolManager} from "../../interfaces/IPoolManager.sol";
+import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
+import {Hooks} from "v4-core/src/libraries/Hooks.sol";
 import {ReputationManager} from "../identity/ReputationManager.sol";
 
 /// @title HookDeployer
-/// @notice Deploys Uniswap V4 hooks using CREATE2 for deterministic addresses
-/// @dev Hook permissions are encoded in the hook address per Uniswap V4 spec.
-///      The address must have specific bit patterns to indicate which hooks are enabled.
-///      Bottom 14 bits of the address encode hook flags:
-///        bit 13 = beforeInitialize       bit 12 = afterInitialize
-///        bit 11 = beforeAddLiquidity     bit 10 = afterAddLiquidity
-///        bit  9 = beforeRemoveLiquidity  bit  8 = afterRemoveLiquidity
-///        bit  7 = beforeSwap             bit  6 = afterSwap
-///        bit  5 = beforeDonate           bit  4 = afterDonate
-///        bit  3 = beforeSwapReturnDelta  bit  2 = afterSwapReturnDelta
-///        bit  1 = afterAddLiquidityReturnDelta
-///        bit  0 = afterRemoveLiquidityReturnDelta
+/// @notice Deploys PassportGatedHook via CREATE2 for a deterministic address.
 ///
-///      This deployer creates PassportGatedHook which allows LP pool access to users
-///      who hold either Convexo Passport (ZKPassport) OR Convexo LPs (Veriff) NFT.
+/// Uniswap V4 encodes hook permissions in the bottom 14 bits of the hook address.
+/// PassportGatedHook requires: beforeAddLiquidity (bit 11), beforeRemoveLiquidity (bit 9), beforeSwap (bit 7).
+/// Required bit pattern: 0b_00_1010_1000_0000 = 0xA80
+///
+/// Workflow:
+///   1. Call findSalt() off-chain to get a salt that produces the correct address.
+///   2. Call deploy() with that salt to deploy at the validated address.
 contract HookDeployer {
-    // ============ Events ============
-
-    /// @notice Emitted when a PassportGatedHook is deployed
     event PassportGatedHookDeployed(
         address indexed hook,
         address indexed poolManager,
@@ -32,165 +24,86 @@ contract HookDeployer {
         bytes32 salt
     );
 
-    // ============ PassportGatedHook Deployment ============
+    // Required bits: beforeAddLiquidity (11), beforeRemoveLiquidity (9), beforeSwap (7)
+    uint160 private constant REQUIRED_MASK =
+        Hooks.BEFORE_ADD_LIQUIDITY_FLAG | Hooks.BEFORE_REMOVE_LIQUIDITY_FLAG | Hooks.BEFORE_SWAP_FLAG;
 
-    /// @notice Deploy a PassportGatedHook with CREATE2
-    /// @param poolManager The Uniswap V4 PoolManager address
-    /// @param reputationManager The ReputationManager contract address
-    /// @param salt The salt for CREATE2 deployment
-    /// @return hook The deployed hook address
-    function deployPassportGatedHook(IPoolManager poolManager, ReputationManager reputationManager, bytes32 salt)
+    // All other hook bits must be zero
+    uint160 private constant FORBIDDEN_MASK = uint160((1 << 14) - 1) & ~REQUIRED_MASK;
+
+    /// @notice Deploy a PassportGatedHook with CREATE2.
+    /// @param poolManager       Uniswap V4 PoolManager address
+    /// @param reputationManager Convexo ReputationManager address
+    /// @param admin             Admin for router allowlisting
+    /// @param salt              CREATE2 salt (find with findSalt())
+    /// @return hook             Deployed hook address
+    function deploy(IPoolManager poolManager, ReputationManager reputationManager, address admin, bytes32 salt)
         external
         returns (PassportGatedHook hook)
     {
-        hook = new PassportGatedHook{salt: salt}(poolManager, reputationManager);
+        hook = new PassportGatedHook{salt: salt}(poolManager, reputationManager, admin);
         emit PassportGatedHookDeployed(address(hook), address(poolManager), address(reputationManager), salt);
     }
 
-    /// @notice Compute the address of a PassportGatedHook before deployment
-    /// @param poolManager The Uniswap V4 PoolManager address
-    /// @param reputationManager The ReputationManager contract address
-    /// @param salt The salt for CREATE2 deployment
-    /// @return The predicted hook address
-    function computePassportGatedHookAddress(IPoolManager poolManager, ReputationManager reputationManager, bytes32 salt)
+    /// @notice Predict the address of a PassportGatedHook before deployment.
+    function computeAddress(IPoolManager poolManager, ReputationManager reputationManager, address admin, bytes32 salt)
         external
         view
         returns (address)
     {
         bytes32 bytecodeHash = keccak256(
-            abi.encodePacked(type(PassportGatedHook).creationCode, abi.encode(poolManager, reputationManager))
+            abi.encodePacked(
+                type(PassportGatedHook).creationCode,
+                abi.encode(poolManager, reputationManager, admin)
+            )
         );
-
         return address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, bytecodeHash)))));
     }
 
-    // ============ Salt Finding Functions ============
-
-    /// @notice Find a salt that produces a PassportGatedHook address with the correct permissions
-    /// @dev For PassportGatedHook, we need: beforeAddLiquidity (bit11), beforeRemoveLiquidity (bit9), beforeSwap (bit7)
-    /// @param poolManager The Uniswap V4 PoolManager address
-    /// @param reputationManager The ReputationManager contract address
-    /// @param startingSalt The starting salt to iterate from
-    /// @param maxIterations The maximum number of iterations to try
-    /// @return salt The salt that produces the correct address
-    /// @return hookAddress The resulting hook address
-    function findPassportGatedHookSalt(
-        IPoolManager poolManager,
-        ReputationManager reputationManager,
-        bytes32 startingSalt,
-        uint256 maxIterations
-    ) external view returns (bytes32 salt, address hookAddress) {
-        bytes32 bytecodeHash = keccak256(
-            abi.encodePacked(type(PassportGatedHook).creationCode, abi.encode(poolManager, reputationManager))
-        );
-
-        uint256 currentSalt = uint256(startingSalt);
-
-        for (uint256 i = 0; i < maxIterations; i++) {
-            bytes32 saltToTry = bytes32(currentSalt + i);
-
-            address predicted = address(
-                uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), saltToTry, bytecodeHash))))
-            );
-
-            if (_validateHookPermissions(predicted)) {
-                return (saltToTry, predicted);
-            }
-        }
-
-        revert("No valid salt found within iteration limit");
-    }
-
-    /// @notice Validate that an address has the correct hook permission bits set
-    /// @dev Checks bottom 14 bits per Uniswap V4 Hooks library encoding:
-    ///      Required: beforeAddLiquidity (bit11), beforeRemoveLiquidity (bit9), beforeSwap (bit7)
-    ///      Must not have: all other hook flags (bits 13, 12, 10, 8, 6, 5, 4, 3, 2, 1, 0)
-    /// @param predicted The address to validate
-    /// @return isValid True if the address has correct permission bits
-    function _validateHookPermissions(address predicted) internal pure returns (bool isValid) {
-        uint160 addr = uint160(predicted);
-
-        // Required permissions (Uniswap V4 bottom-bit encoding)
-        bool hasBeforeAddLiquidity = (addr & (1 << 11)) != 0;
-        bool hasBeforeRemoveLiquidity = (addr & (1 << 9)) != 0;
-        bool hasBeforeSwap = (addr & (1 << 7)) != 0;
-
-        // Unwanted permissions (should NOT be set)
-        bool noBeforeInitialize = (addr & (1 << 13)) == 0;
-        bool noAfterInitialize = (addr & (1 << 12)) == 0;
-        bool noAfterAddLiquidity = (addr & (1 << 10)) == 0;
-        bool noAfterRemoveLiquidity = (addr & (1 << 8)) == 0;
-        bool noAfterSwap = (addr & (1 << 6)) == 0;
-        bool noBeforeDonate = (addr & (1 << 5)) == 0;
-        bool noAfterDonate = (addr & (1 << 4)) == 0;
-        bool noBeforeSwapReturnDelta = (addr & (1 << 3)) == 0;
-        bool noAfterSwapReturnDelta = (addr & (1 << 2)) == 0;
-        bool noAfterAddLiquidityReturnDelta = (addr & (1 << 1)) == 0;
-        bool noAfterRemoveLiquidityReturnDelta = (addr & (1 << 0)) == 0;
-
-        return hasBeforeAddLiquidity && hasBeforeRemoveLiquidity && hasBeforeSwap
-            && noBeforeInitialize && noAfterInitialize && noAfterAddLiquidity && noAfterRemoveLiquidity
-            && noAfterSwap && noBeforeDonate && noAfterDonate && noBeforeSwapReturnDelta
-            && noAfterSwapReturnDelta && noAfterAddLiquidityReturnDelta && noAfterRemoveLiquidityReturnDelta;
-    }
-
-    /// @notice Check if an address has valid hook permissions
-    /// @param hookAddress The address to check
-    /// @return isValid True if the address has valid hook permissions
-    function isValidHookAddress(address hookAddress) external pure returns (bool isValid) {
-        return _validateHookPermissions(hookAddress);
-    }
-
-    // ============ Legacy Functions (Kept for Backward Compatibility) ============
-
-    /// @notice Deploy a PassportGatedHook with CREATE2 (legacy function name)
-    function deploy(IPoolManager poolManager, ReputationManager reputationManager, bytes32 salt)
-        external
-        returns (PassportGatedHook hook)
-    {
-        hook = new PassportGatedHook{salt: salt}(poolManager, reputationManager);
-        emit PassportGatedHookDeployed(address(hook), address(poolManager), address(reputationManager), salt);
-    }
-
-    /// @notice Compute the address of a PassportGatedHook before deployment (legacy function name)
-    function computeAddress(IPoolManager poolManager, ReputationManager reputationManager, bytes32 salt)
-        external
-        view
-        returns (address)
-    {
-        bytes32 bytecodeHash = keccak256(
-            abi.encodePacked(type(PassportGatedHook).creationCode, abi.encode(poolManager, reputationManager))
-        );
-
-        return address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, bytecodeHash)))));
-    }
-
-    /// @notice Find a salt for PassportGatedHook (legacy function name, same as findPassportGatedHookSalt)
+    /// @notice Find a salt whose CREATE2 address has the correct permission bits.
+    /// @param poolManager       Uniswap V4 PoolManager address
+    /// @param reputationManager Convexo ReputationManager address
+    /// @param admin             Admin address (affects bytecode hash)
+    /// @param startingSalt      Starting point for iteration
+    /// @param maxIterations     Maximum salts to try before reverting
+    /// @return salt             Valid salt
+    /// @return hookAddress      Resulting hook address
     function findSalt(
         IPoolManager poolManager,
         ReputationManager reputationManager,
+        address admin,
         bytes32 startingSalt,
         uint256 maxIterations
     ) external view returns (bytes32 salt, address hookAddress) {
         bytes32 bytecodeHash = keccak256(
-            abi.encodePacked(type(PassportGatedHook).creationCode, abi.encode(poolManager, reputationManager))
+            abi.encodePacked(
+                type(PassportGatedHook).creationCode,
+                abi.encode(poolManager, reputationManager, admin)
+            )
         );
 
-        uint256 currentSalt = uint256(startingSalt);
-
+        uint256 current = uint256(startingSalt);
         for (uint256 i = 0; i < maxIterations; i++) {
-            bytes32 saltToTry = bytes32(currentSalt + i);
-
+            bytes32 s = bytes32(current + i);
             address predicted = address(
-                uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), saltToTry, bytecodeHash))))
+                uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), s, bytecodeHash))))
             );
-
-            if (_validateHookPermissions(predicted)) {
-                return (saltToTry, predicted);
+            if (_hasValidPermissions(predicted)) {
+                return (s, predicted);
             }
         }
-
         revert("No valid salt found within iteration limit");
     }
-}
 
+    /// @notice Check whether an address has the exact required permission bits.
+    function isValidHookAddress(address hookAddress) external pure returns (bool) {
+        return _hasValidPermissions(hookAddress);
+    }
+
+    // ─── Internal ─────────────────────────────────────────────────────────────
+
+    function _hasValidPermissions(address addr) internal pure returns (bool) {
+        uint160 bits = uint160(addr);
+        return (bits & REQUIRED_MASK) == REQUIRED_MASK && (bits & FORBIDDEN_MASK) == 0;
+    }
+}

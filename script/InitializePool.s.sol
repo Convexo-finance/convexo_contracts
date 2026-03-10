@@ -2,8 +2,10 @@
 pragma solidity ^0.8.27;
 
 import {Script, console} from "forge-std/Script.sol";
-import {IPoolManager} from "../src/interfaces/IPoolManager.sol";
-import {PoolKey} from "../src/interfaces/IHooks.sol";
+import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
+import {PoolKey} from "v4-core/src/types/PoolKey.sol";
+import {Currency} from "v4-core/src/types/Currency.sol";
+import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
 import {HookDeployer} from "../src/contracts/hooks/HookDeployer.sol";
 
 /// @title InitializePool
@@ -98,13 +100,13 @@ contract InitializePool is Script {
 
         console.log("Hook permission bits: OK (bits 11, 9, 7 set)");
 
-        // Build PoolKey
+        // Build PoolKey using official v4-core types
         PoolKey memory key = PoolKey({
-            currency0: currency0,
-            currency1: currency1,
+            currency0: Currency.wrap(currency0),
+            currency1: Currency.wrap(currency1),
             fee: FEE,
             tickSpacing: TICK_SPACING,
-            hooks: hookAddress
+            hooks: IHooks(hookAddress)
         });
 
         // Initialize the pool

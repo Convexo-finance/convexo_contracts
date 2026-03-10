@@ -29,7 +29,8 @@ src/contracts/
   identity/    Convexo_Passport, LP_Individuals, LP_Business, Ecreditscoring,
                ReputationManager, VeriffVerifier, SumsubVerifier
   credits/     VaultFactory, TokenizedBondVault (ERC-7540), ContractSigner, Ecreditscoring
-  hooks/       PassportGatedHook, BaseHook, HookDeployer, PoolRegistry, PriceFeedManager
+  hooks/       PassportGatedHook, HookDeployer, PoolRegistry, PriceFeedManager
+               BaseHook (abstract base — not deployed, inherited by PassportGatedHook)
 src/interfaces/  All interfaces (flat)
 script/          DeployDeterministic.s.sol, PredictAddresses.s.sol
 scripts/         deploy.sh, verify-all.sh, update-addresses.sh, extract-abis.sh

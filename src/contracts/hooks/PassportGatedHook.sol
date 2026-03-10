@@ -2,65 +2,69 @@
 pragma solidity ^0.8.27;
 
 import {BaseHook} from "./BaseHook.sol";
-import {IHooks, PoolKey, BeforeSwapDelta, ModifyLiquidityParams, SwapParams, Permissions} from "../../interfaces/IHooks.sol";
-import {IPoolManager} from "../../interfaces/IPoolManager.sol";
+import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
+import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
+import {Hooks} from "v4-core/src/libraries/Hooks.sol";
+import {PoolKey} from "v4-core/src/types/PoolKey.sol";
+import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/src/types/BeforeSwapDelta.sol";
+import {ModifyLiquidityParams, SwapParams} from "v4-core/src/types/PoolOperation.sol";
 import {ReputationManager} from "../identity/ReputationManager.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 /// @title PassportGatedHook
-/// @notice Uniswap V4 hook that gates LP pool access to verified KYC/KYB holders
-/// @dev Allows access to users who hold ANY of:
-///      - Convexo_Passport NFT (ZKPassport - International KYC) - Tier 1
-///      - Limited_Partners_Individuals NFT (Veriff - Individual KYC) - Tier 2
-///      - Limited_Partners_Business NFT (Sumsub - Business KYB) - Tier 2
-///      - Ecreditscoring NFT (AI Credit Score) - Tier 3
-///      
-///      This ensures all LP pool participants have completed verification
-///      through one of the supported verification methods.
+/// @notice Uniswap V4 hook that gates LP pool access to verified KYC/KYB holders.
 ///
-///      Access Matrix:
-///      | NFT                  | Can Swap | Can Add Liquidity | Can Remove Liquidity |
-///      |----------------------|----------|-------------------|----------------------|
-///      | None                 | ✗        | ✗                 | ✗                    |
-///      | Passport (Tier 1)    | ✓        | ✓                 | ✓                    |
-///      | LP Individual (T2)   | ✓        | ✓                 | ✓                    |
-///      | LP Business (T2)     | ✓        | ✓                 | ✓                    |
-///      | Ecreditscoring (T3)  | ✓        | ✓                 | ✓                    |
-contract PassportGatedHook is BaseHook {
-    /// @notice The ReputationManager contract for checking KYC status
+/// Access tiers (any of the following grants access):
+///   - Tier 1: Convexo Passport NFT (ZKPassport)
+///   - Tier 2: LP_Individuals NFT (Veriff KYC) or LP_Business NFT (Sumsub KYB)
+///   - Tier 3: ECreditScoring NFT (AI credit score)
+///
+/// SECURITY — sender vs. user:
+///   In Uniswap V4, `sender` is the address that called poolManager.unlock() — the
+///   router or aggregator, NOT the end user. We gate on `sender` as a router allowlist
+///   and read the actual user from `hookData` (encoded by the trusted router).
+///   Any router that wants to interact with these pools must be explicitly allowed.
+contract PassportGatedHook is BaseHook, AccessControl {
+    bytes32 public constant ROUTER_ADMIN_ROLE = keccak256("ROUTER_ADMIN_ROLE");
+
     ReputationManager public immutable reputationManager;
 
-    /// @notice Emitted when a user is granted access to pool operations
+    /// @notice Routers allowed to submit KYC'd user transactions to this pool.
+    ///         The router is responsible for passing the real user address in hookData.
+    mapping(address => bool) public allowedRouters;
+
+    event RouterAllowed(address indexed router);
+    event RouterRevoked(address indexed router);
     event AccessGranted(address indexed user, string operation, ReputationManager.ReputationTier tier);
 
-    /// @notice Error thrown when user doesn't have required KYC (no Passport or LPs NFT)
+    error RouterNotAllowed();
     error MustHaveKYCVerification();
-
-    /// @notice Error thrown when reputation manager address is invalid
     error InvalidReputationManager();
 
-    /// @notice Constructor
-    /// @param _poolManager The Uniswap V4 PoolManager address
-    /// @param _reputationManager The ReputationManager contract address
-    constructor(IPoolManager _poolManager, ReputationManager _reputationManager) BaseHook(_poolManager) {
-        if (address(_reputationManager) == address(0)) {
-            revert InvalidReputationManager();
-        }
+    /// @param _poolManager    Uniswap V4 PoolManager address
+    /// @param _reputationManager   Convexo ReputationManager (NFT tier checker)
+    /// @param admin           Address granted ROUTER_ADMIN_ROLE (can add/remove routers)
+    constructor(IPoolManager _poolManager, ReputationManager _reputationManager, address admin)
+        BaseHook(_poolManager)
+    {
+        if (address(_reputationManager) == address(0)) revert InvalidReputationManager();
         reputationManager = _reputationManager;
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(ROUTER_ADMIN_ROLE, admin);
     }
 
-    /// @notice Returns the hook permissions
-    /// @dev Enables beforeSwap, beforeAddLiquidity, and beforeRemoveLiquidity hooks.
-    ///      Hook address must have bits 11 (beforeAddLiquidity), 9 (beforeRemoveLiquidity),
-    ///      and 7 (beforeSwap) set — deploy via HookDeployer.findPassportGatedHookSalt().
-    function getHookPermissions() public pure override returns (Permissions memory) {
-        return Permissions({
+    /// @notice Hook permissions: gate swap, addLiquidity, removeLiquidity.
+    ///         Deploy address must have bits 11 (beforeAddLiquidity), 9 (beforeRemoveLiquidity),
+    ///         7 (beforeSwap) set — use HookDeployer.findPassportGatedHookSalt().
+    function getHookPermissions() public pure virtual override returns (Hooks.Permissions memory) {
+        return Hooks.Permissions({
             beforeInitialize: false,
             afterInitialize: false,
-            beforeAddLiquidity: true,               // Gate adding liquidity (bit 11)
+            beforeAddLiquidity: true,
             afterAddLiquidity: false,
-            beforeRemoveLiquidity: true,            // Gate removing liquidity (bit 9)
+            beforeRemoveLiquidity: true,
             afterRemoveLiquidity: false,
-            beforeSwap: true,                       // Gate swapping (bit 7)
+            beforeSwap: true,
             afterSwap: false,
             beforeDonate: false,
             afterDonate: false,
@@ -71,66 +75,68 @@ contract PassportGatedHook is BaseHook {
         });
     }
 
-    /// @notice Check if user has KYC verification (Passport OR LPs NFT)
-    /// @param user The address to check
-    /// @dev Reverts if user doesn't have Tier 1+ (no KYC verification)
-    function _checkKYCAccess(address user) internal view {
-        if (!reputationManager.canAccessLPPools(user)) {
-            revert MustHaveKYCVerification();
-        }
+    // ─── Router management ────────────────────────────────────────────────────
+
+    function allowRouter(address router) external onlyRole(ROUTER_ADMIN_ROLE) {
+        allowedRouters[router] = true;
+        emit RouterAllowed(router);
     }
 
-    /// @notice External function to check if a user has LP pool access
-    /// @param user The address to check
-    /// @return hasAccess True if user has Passport OR LPs NFT
-    function hasLPPoolAccess(address user) external view returns (bool hasAccess) {
+    function revokeRouter(address router) external onlyRole(ROUTER_ADMIN_ROLE) {
+        allowedRouters[router] = false;
+        emit RouterRevoked(router);
+    }
+
+    // ─── View helpers ─────────────────────────────────────────────────────────
+
+    function hasLPPoolAccess(address user) external view returns (bool) {
         return reputationManager.canAccessLPPools(user);
     }
 
-    /// @notice Get the reputation tier of a user
-    /// @param user The address to check
-    /// @return tier The user's reputation tier
-    function getUserTier(address user) external view returns (ReputationManager.ReputationTier tier) {
+    function getUserTier(address user) external view returns (ReputationManager.ReputationTier) {
         return reputationManager.getReputationTier(user);
     }
 
-    /// @notice Hook called before a swap is executed
-    /// @dev Overrides internal hook — BaseHook enforces onlyPoolManager on the external wrapper
-    /// @param sender The address initiating the swap (original msg.sender passed by PoolManager)
-    function _beforeSwap(address sender, PoolKey calldata, SwapParams calldata, bytes calldata)
+    // ─── Internal helpers ─────────────────────────────────────────────────────
+
+    /// @dev Decodes the real user from hookData and validates their KYC tier.
+    ///      hookData must be abi.encode(address user) supplied by the trusted router.
+    function _checkAccess(address router, bytes calldata hookData)
         internal
-        override
-        returns (bytes4, BeforeSwapDelta, uint24)
+        returns (ReputationManager.ReputationTier tier)
     {
-        _checkKYCAccess(sender);
-        emit AccessGranted(sender, "swap", reputationManager.getReputationTier(sender));
-        return (IHooks.beforeSwap.selector, BeforeSwapDelta.wrap(0), 0);
+        if (!allowedRouters[router]) revert RouterNotAllowed();
+        address user = abi.decode(hookData, (address));
+        tier = reputationManager.getReputationTier(user);
+        if (tier == ReputationManager.ReputationTier.None) revert MustHaveKYCVerification();
     }
 
-    /// @notice Hook called before liquidity is added to a pool
-    /// @dev Overrides internal hook — BaseHook enforces onlyPoolManager on the external wrapper
-    /// @param sender The address adding liquidity (original msg.sender passed by PoolManager)
-    function _beforeAddLiquidity(address sender, PoolKey calldata, ModifyLiquidityParams calldata, bytes calldata)
-        internal
-        override
-        returns (bytes4)
+    // ─── Hook implementations ─────────────────────────────────────────────────
+
+    function _beforeSwap(address sender, PoolKey calldata, SwapParams calldata, bytes calldata hookData)
+        internal virtual override returns (bytes4, BeforeSwapDelta, uint24)
     {
-        _checkKYCAccess(sender);
-        emit AccessGranted(sender, "addLiquidity", reputationManager.getReputationTier(sender));
+        ReputationManager.ReputationTier tier = _checkAccess(sender, hookData);
+        address user = abi.decode(hookData, (address));
+        emit AccessGranted(user, "swap", tier);
+        return (IHooks.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
+    }
+
+    function _beforeAddLiquidity(address sender, PoolKey calldata, ModifyLiquidityParams calldata, bytes calldata hookData)
+        internal virtual override returns (bytes4)
+    {
+        ReputationManager.ReputationTier tier = _checkAccess(sender, hookData);
+        address user = abi.decode(hookData, (address));
+        emit AccessGranted(user, "addLiquidity", tier);
         return IHooks.beforeAddLiquidity.selector;
     }
 
-    /// @notice Hook called before liquidity is removed from a pool
-    /// @dev Overrides internal hook — BaseHook enforces onlyPoolManager on the external wrapper
-    /// @param sender The address removing liquidity (original msg.sender passed by PoolManager)
-    function _beforeRemoveLiquidity(address sender, PoolKey calldata, ModifyLiquidityParams calldata, bytes calldata)
-        internal
-        override
-        returns (bytes4)
+    function _beforeRemoveLiquidity(address sender, PoolKey calldata, ModifyLiquidityParams calldata, bytes calldata hookData)
+        internal virtual override returns (bytes4)
     {
-        _checkKYCAccess(sender);
-        emit AccessGranted(sender, "removeLiquidity", reputationManager.getReputationTier(sender));
+        ReputationManager.ReputationTier tier = _checkAccess(sender, hookData);
+        address user = abi.decode(hookData, (address));
+        emit AccessGranted(user, "removeLiquidity", tier);
         return IHooks.beforeRemoveLiquidity.selector;
     }
 }
-

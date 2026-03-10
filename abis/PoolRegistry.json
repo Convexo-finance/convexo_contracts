@@ -43,7 +43,7 @@
       {
         "name": "poolId",
         "type": "bytes32",
-        "internalType": "bytes32"
+        "internalType": "PoolId"
       }
     ],
     "outputs": [
@@ -62,7 +62,7 @@
       {
         "name": "poolId",
         "type": "bytes32",
-        "internalType": "bytes32"
+        "internalType": "PoolId"
       }
     ],
     "outputs": [
@@ -72,22 +72,39 @@
         "internalType": "struct PoolRegistry.PoolInfo",
         "components": [
           {
-            "name": "poolAddress",
-            "type": "address",
-            "internalType": "address"
+            "name": "key",
+            "type": "tuple",
+            "internalType": "struct PoolKey",
+            "components": [
+              {
+                "name": "currency0",
+                "type": "address",
+                "internalType": "Currency"
+              },
+              {
+                "name": "currency1",
+                "type": "address",
+                "internalType": "Currency"
+              },
+              {
+                "name": "fee",
+                "type": "uint24",
+                "internalType": "uint24"
+              },
+              {
+                "name": "tickSpacing",
+                "type": "int24",
+                "internalType": "int24"
+              },
+              {
+                "name": "hooks",
+                "type": "address",
+                "internalType": "contract IHooks"
+              }
+            ]
           },
           {
-            "name": "token0",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "token1",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "hookAddress",
+            "name": "hook",
             "type": "address",
             "internalType": "address"
           },
@@ -133,7 +150,7 @@
       {
         "name": "",
         "type": "bytes32",
-        "internalType": "bytes32"
+        "internalType": "PoolId"
       }
     ],
     "stateMutability": "view"
@@ -206,7 +223,7 @@
       {
         "name": "poolId",
         "type": "bytes32",
-        "internalType": "bytes32"
+        "internalType": "PoolId"
       }
     ],
     "outputs": [
@@ -225,7 +242,7 @@
       {
         "name": "",
         "type": "bytes32",
-        "internalType": "bytes32"
+        "internalType": "PoolId"
       }
     ],
     "outputs": [
@@ -251,7 +268,7 @@
       {
         "name": "",
         "type": "bytes32",
-        "internalType": "bytes32"
+        "internalType": "PoolId"
       }
     ],
     "stateMutability": "view"
@@ -263,27 +280,44 @@
       {
         "name": "",
         "type": "bytes32",
-        "internalType": "bytes32"
+        "internalType": "PoolId"
       }
     ],
     "outputs": [
       {
-        "name": "poolAddress",
-        "type": "address",
-        "internalType": "address"
+        "name": "key",
+        "type": "tuple",
+        "internalType": "struct PoolKey",
+        "components": [
+          {
+            "name": "currency0",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          {
+            "name": "currency1",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          {
+            "name": "fee",
+            "type": "uint24",
+            "internalType": "uint24"
+          },
+          {
+            "name": "tickSpacing",
+            "type": "int24",
+            "internalType": "int24"
+          },
+          {
+            "name": "hooks",
+            "type": "address",
+            "internalType": "contract IHooks"
+          }
+        ]
       },
       {
-        "name": "token0",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "token1",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "hookAddress",
+        "name": "hook",
         "type": "address",
         "internalType": "address"
       },
@@ -305,24 +339,36 @@
     "name": "registerPool",
     "inputs": [
       {
-        "name": "poolAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "token0",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "token1",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "hookAddress",
-        "type": "address",
-        "internalType": "address"
+        "name": "key",
+        "type": "tuple",
+        "internalType": "struct PoolKey",
+        "components": [
+          {
+            "name": "currency0",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          {
+            "name": "currency1",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          {
+            "name": "fee",
+            "type": "uint24",
+            "internalType": "uint24"
+          },
+          {
+            "name": "tickSpacing",
+            "type": "int24",
+            "internalType": "int24"
+          },
+          {
+            "name": "hooks",
+            "type": "address",
+            "internalType": "contract IHooks"
+          }
+        ]
       },
       {
         "name": "description",
@@ -334,7 +380,7 @@
       {
         "name": "poolId",
         "type": "bytes32",
-        "internalType": "bytes32"
+        "internalType": "PoolId"
       }
     ],
     "stateMutability": "nonpayable"
@@ -346,7 +392,7 @@
       {
         "name": "poolId",
         "type": "bytes32",
-        "internalType": "bytes32"
+        "internalType": "PoolId"
       }
     ],
     "outputs": [],
@@ -414,7 +460,7 @@
       {
         "name": "poolId",
         "type": "bytes32",
-        "internalType": "bytes32"
+        "internalType": "PoolId"
       },
       {
         "name": "isActive",
@@ -433,30 +479,12 @@
         "name": "poolId",
         "type": "bytes32",
         "indexed": true,
-        "internalType": "bytes32"
+        "internalType": "PoolId"
       },
       {
-        "name": "poolAddress",
+        "name": "hook",
         "type": "address",
         "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "hookAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "token0",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "token1",
-        "type": "address",
-        "indexed": false,
         "internalType": "address"
       },
       {
@@ -476,20 +504,20 @@
         "name": "poolId",
         "type": "bytes32",
         "indexed": true,
-        "internalType": "bytes32"
+        "internalType": "PoolId"
       }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "PoolUpdated",
+    "name": "PoolStatusUpdated",
     "inputs": [
       {
         "name": "poolId",
         "type": "bytes32",
         "indexed": true,
-        "internalType": "bytes32"
+        "internalType": "PoolId"
       },
       {
         "name": "isActive",

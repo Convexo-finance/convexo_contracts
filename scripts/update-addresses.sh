@@ -84,24 +84,26 @@ compute_addresses() {
     HOOK_DEPLOYER=$(echo "$PREDICTION_OUTPUT" | grep -A1 "HookDeployer" | grep "Address:" | awk '{print $2}')
 }
 
-# Get chain-specific addresses from prediction output
-get_chain_specific_from_prediction() {
-    local chain_id=$1
+# Get an address by contract name from the broadcast file's additionalContracts.
+# PassportGatedHook is deployed via HookDeployer (not SafeSingletonDeployer), so its
+# address cannot be predicted without running findSalt(). VaultFactory is chain-specific
+# and also reliably captured here. The broadcast file is the source of truth for both.
+get_from_broadcast() {
+    local broadcast_file=$1
+    local contract_name=$2
 
-    # Extract chain-specific section and get addresses
-    # Look for the chain section by chain ID, limit to 12 lines (one chain section)
-    local section=$(echo "$PREDICTION_OUTPUT" | grep -A12 "Chain ID: $chain_id " | head -12)
-
-    PASSPORT_GATED_HOOK=$(echo "$section" | grep -A1 "PassportGatedHook:" | grep "Address:" | head -1 | awk '{print $2}')
-    VAULT_FACTORY=$(echo "$section" | grep -A1 "VaultFactory:" | grep "Address:" | head -1 | awk '{print $2}')
+    jq -r --arg name "$contract_name" \
+        '[.transactions[].additionalContracts[]? | select(.contractName == $name)] | last | .address // empty' \
+        "$broadcast_file" 2>/dev/null
 }
 
-# Get chain-specific addresses - computed from prediction (CREATE2)
+# Get chain-specific addresses from the broadcast file (source of truth)
 get_chain_specific_addresses() {
     local chain_id=$1
+    local broadcast_file="$BROADCAST_DIR/$chain_id/run-latest.json"
 
-    # Use prediction output to get chain-specific addresses (deterministic)
-    get_chain_specific_from_prediction "$chain_id"
+    PASSPORT_GATED_HOOK=$(get_from_broadcast "$broadcast_file" "PassportGatedHook")
+    VAULT_FACTORY=$(get_from_broadcast "$broadcast_file" "VaultFactory")
 }
 
 update_chain_addresses() {
@@ -135,7 +137,7 @@ update_chain_addresses() {
 
     local temp_json=$(mktemp)
     local deploy_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    local version="${DEPLOY_VERSION:-convexo.v3.17}"
+    local version="${DEPLOY_VERSION}"
 
     # Start fresh for this chain (remove legacy data)
     if [ -f "$ADDRESSES_FILE" ]; then
@@ -212,14 +214,14 @@ update_chain_addresses() {
     # Update contract count
     jq --arg chain_id "$chain_id" \
        --argjson count "$found_count" \
-       '.[$chain_id].contract_count = "\($count)/12"' \
+       '.[$chain_id].contract_count = "\($count)/13"' \
        "$temp_json" > "${temp_json}.tmp" && mv "${temp_json}.tmp" "$temp_json"
 
     # Validate JSON before moving
     if jq empty "$temp_json" 2>/dev/null; then
         mv "$temp_json" "$ADDRESSES_FILE"
         echo ""
-        echo "✅ Updated addresses.json for $chain_name ($found_count/12 contracts)"
+        echo "✅ Updated addresses.json for $chain_name ($found_count/13 contracts)"
     else
         echo "❌ Error: Invalid JSON generated"
         rm -f "$temp_json"

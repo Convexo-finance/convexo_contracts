@@ -1,6 +1,6 @@
 # Convexo Contracts Reference
 
-**Version 3.17** | Solidity ^0.8.27 | **Arbitrum support + Treasury deprecated + Folder reorganization + ZKPassport on-chain trustless verification**
+**Version 3.18** | Solidity ^0.8.27 | **Arbitrum support + Treasury deprecated + Folder reorganization + ZKPassport on-chain trustless verification + KYC-gated Uniswap V4 pool MVP + Oracle/Phase2 contracts ready**
 
 > **📍 Contract Addresses:** See [addresses.json](./addresses.json)
 
@@ -19,7 +19,39 @@
 | **1301** | Unichain Sepolia | Testnet | unichain-sepolia.blockscout.com |
 | **421614** | Arbitrum Sepolia | Testnet | sepolia.arbiscan.io |
 
-**Note:** Arbitrum One (42161) and Arbitrum Sepolia (421614) added in v3.17. All addresses pending redeploy with salt `convexo.v3.17`.
+**Note:** Arbitrum One (42161) and Arbitrum Sepolia (421614) added in v3.17. All addresses pending redeploy with salt `convexo.v3.18`.
+
+---
+
+## Contract Folder Structure (v3.18)
+
+```
+src/contracts/
+  identity/       NFTs + verifiers (deployed)
+    Convexo_Passport.sol
+    Limited_Partners_Individuals.sol
+    Limited_Partners_Business.sol
+    ReputationManager.sol
+    VeriffVerifier.sol
+    SumsubVerifier.sol
+  credits/        Vault + scoring (deployed)
+    Ecreditscoring.sol
+    TokenizedBondVault.sol
+    VaultFactory.sol
+    ContractSigner.sol
+  hooks/          Uniswap V4 hooks
+    BaseHook.sol              abstract base (not deployed directly)
+    PassportGatedHook.sol     MVP - deployed, KYC gate for pools
+    HookDeployer.sol          MVP - deployed, CREATE2 factory for PassportGatedHook
+    PoolRegistry.sol          MVP - deployed, pool catalog
+    ConvexoPoolHook.sol       Phase 2 - oracle price band + rebalance (code ready, not deployed)
+    ConvexoHookDeployer.sol   Phase 2 - factory for ConvexoPoolHook (code ready, not deployed)
+    libraries/
+      OracleMath.sol          Phase 2 - sqrtPriceX96 math library
+  oracles/        Price feeds (Phase 2, code ready, not deployed)
+    PriceFeedManager.sol      oracle registry, Chainlink-compatible
+    ManualPriceAggregator.sol IAggregatorV3 drop-in, admin sets price manually
+```
 
 ---
 
@@ -872,6 +904,33 @@ event VaultCreated(
 )
 event ProtocolFeeCollectorUpdated(address indexed oldCollector, address indexed newCollector)
 ```
+
+---
+
+## Roadmap
+
+### MVP (v3.18 — Current)
+- KYC-gated Uniswap V4 pool via PassportGatedHook
+- Users with any Convexo NFT (Tier 1+) can swap USDC/ECOP
+- Pool managed manually by admin liquidity positions
+- 172 tests passing
+
+### Phase 2 — Oracle-Anchored Pool
+Deploy the oracle contracts + ConvexoPoolHook:
+- PriceFeedManager + ManualPriceAggregator — admin sets USDC/COP rate daily
+- ConvexoPoolHook — price band guard (2%) blocks swaps pushing pool off-peg
+- Backend keeper — automatic rebalance when pool drifts
+- Upgrade path: swap ManualPriceAggregator for Chainlink with zero contract changes
+
+### Phase 3 — Chainlink Integration
+- Replace ManualPriceAggregator with real Chainlink USDC/COP feed
+- Fully automatic price tracking — no human intervention
+- Add Chainlink Proof of Reserves for ECOP backing verification (see docs/oracles/ORACLES_REFERENCE.md)
+
+### Phase 4 — Multi-Pool Expansion
+- EURC/ECOP pool (Euro-pegged)
+- Additional stablecoin pairs
+- Yield strategies on idle pool liquidity
 
 ---
 
