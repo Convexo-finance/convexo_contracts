@@ -3,8 +3,8 @@
 Compliant on-chain lending infrastructure connecting international investors with Latin American SMEs via stablecoins, NFT-permissioned liquidity pools, and tokenized bond vaults.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/Tests-122%2F122%20Passing-brightgreen)](./test)
-[![Version](https://img.shields.io/badge/Version-3.17-purple)](./docs/CONTRACTS_REFERENCE.md)
+[![Tests](https://img.shields.io/badge/Tests-172%2F172%20Passing-brightgreen)](./test)
+[![Version](https://img.shields.io/badge/Version-3.18-purple)](./CHANGELOG.md)
 
 ---
 
@@ -39,7 +39,17 @@ test/            122 tests across 9 suites
 
 **Supported networks:** Ethereum (1, 11155111) · Base (8453, 84532) · Unichain (130, 1301) · Arbitrum (42161, 421614)
 
-**Deployment:** Deterministic via CREATE2 — same addresses on all chains (salt `convexo.v3.17`). VaultFactory and hook contracts are chain-specific.
+**Deployment:** Deterministic via CREATE2 — same addresses on all chains (salt `convexo.v3.18`). VaultFactory and hook contracts are chain-specific (hooks must have correct Uniswap permission bits in their address).
+
+### Live Pools (Phase 1)
+
+| Network | Hook | Status |
+|---------|------|--------|
+| ETH Sepolia (11155111) — **PRIMARY TESTNET** | `0xA4c7d0f1bb255460C7b3CBE9910318CB57Cb8A80` | ✅ LIVE — 6,250 USDC + 500 USDC backstop |
+| Base Sepolia (84532) | `0xdCfF77e89904e9Bead3f456D04629Ca8Eb7e8a80` | ✅ Seeded (no ZKPassport verifier — secondary) |
+| Base Mainnet (8453) | `0x04E3281B87321aD1dCF9ed9edB9BeE6268EB12f3` | Pool pending |
+
+ETH Sepolia is the primary testnet because the ZKPassport verifier (`0x1D000001000EFD9a6371f4d90bB8920D5431c0D8`) is deployed on ETH Mainnet, ETH Sepolia, and Base Mainnet — but NOT Base Sepolia.
 
 ---
 
@@ -58,6 +68,7 @@ cp .env.example .env   # add PRIVATE_KEY, MINTER_ADDRESS, API keys
 # Build & test
 forge build
 forge test
+forge test --gas-report
 ```
 
 ---
@@ -89,6 +100,33 @@ forge build → forge test → deploy → update-addresses → verify → extrac
 ```
 
 To redeploy after code changes, bump the version salt in `script/DeployDeterministic.s.sol` or pass `DEPLOY_VERSION=convexo.vX.XX ./scripts/deploy.sh <network>`.
+
+### Pool setup scripts (after Phase 1 deploy)
+
+```bash
+# Mint test NFT (deployer needs NFT to pass hook KYC check when adding liquidity)
+LP_INDIVIDUALS_ADDRESS=0xE244e4B2B37EA6f6453d3154da548e7f2e1e5Df3 \
+  forge script script/MintTestNFT.s.sol --rpc-url $RPC --broadcast
+
+# If hook has wrong address bits: redeploy with correct 0x0A80 bits
+forge script script/RedeployPassportGatedHook.s.sol --rpc-url $RPC --broadcast
+
+# Initialize USDC/ECOP pool at rate 3650
+HOOK_ADDRESS=<hook> TOKEN0=<usdc> TOKEN1=<ecop> RATE=3650 \
+  forge script script/InitializePool.s.sol --rpc-url $RPC --broadcast
+
+# Add concentrated liquidity ±5%
+HOOK_ADDRESS=<hook> TOKEN0=<usdc> TOKEN1=<ecop> RATE=3650 AMOUNT0=6250000000 \
+  forge script script/AddLiquidity.s.sol --rpc-url $RPC --broadcast
+
+# Add full-range backstop (500 USDC)
+HOOK_ADDRESS=<hook> TOKEN0=<usdc> TOKEN1=<ecop> RATE=3650 AMOUNT0=500000000 \
+  FULL_RANGE=true SKIP_ALLOW_ROUTER=true \
+  forge script script/AddLiquidity.s.sol --rpc-url $RPC --broadcast
+
+# Allow Universal Router for swaps
+HOOK=<hook> UNIVERSAL_ROUTER=<router> RPC=<rpc> bash scripts/allow-router.sh
+```
 
 ---
 

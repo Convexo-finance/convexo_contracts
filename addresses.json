@@ -53,8 +53,8 @@
         "explorer": "https://sepolia.etherscan.io/address/0x69068b03dDb9Ca72B532dB694F075D91e08fB402"
       },
       "passport_gated_hook": {
-        "address": "0x6B56590865Eecf2a0Ee5988ABecB924a33749D46",
-        "explorer": "https://sepolia.etherscan.io/address/0x6B56590865Eecf2a0Ee5988ABecB924a33749D46"
+        "address": "0xA4c7d0f1bb255460C7b3CBE9910318CB57Cb8A80",
+        "explorer": "https://sepolia.etherscan.io/address/0xA4c7d0f1bb255460C7b3CBE9910318CB57Cb8A80"
       },
       "vault_factory": {
         "address": "0x3D0290F255D4eB1EFe1384618a827C2E26b0df67",
@@ -117,12 +117,22 @@
         "explorer": "https://sepolia.basescan.org/address/0x69068b03dDb9Ca72B532dB694F075D91e08fB402"
       },
       "passport_gated_hook": {
-        "address": "0x6aCd362aAe223f360C4c2e03cBD36190450b965E",
-        "explorer": "https://sepolia.basescan.org/address/0x6aCd362aAe223f360C4c2e03cBD36190450b965E"
+        "address": "0xdCfF77e89904e9Bead3f456D04629Ca8Eb7e8a80",
+        "explorer": "https://sepolia.basescan.org/address/0xdCfF77e89904e9Bead3f456D04629Ca8Eb7e8a80",
+        "note": "Redeployed v2 - correct v4-core 1.0.x permission bits (0x0A80)"
       },
       "vault_factory": {
         "address": "0x40Fa2aCCd9eb44ad154Da2ca84519E899D8E22Ae",
         "explorer": "https://sepolia.basescan.org/address/0x40Fa2aCCd9eb44ad154Da2ca84519E899D8E22Ae"
+      },
+      "usdc_ecop_pool": {
+        "hook": "0xdCfF77e89904e9Bead3f456D04629Ca8Eb7e8a80",
+        "token0_usdc": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "token1_ecop": "0xb934dCB57fB0673B7BC0Fca590c5508f1CDE955D",
+        "fee": 500,
+        "tick_spacing": 10,
+        "init_rate": 3650,
+        "status": "LIVE - concentrated position 6250 USDC + full-range backstop 500 USDC"
       }
     },
     "contract_count": "13/13"

@@ -1,6 +1,6 @@
 # Frontend Integration Guide
 
-**Version 3.17** · Solidity ^0.8.27 · React + Viem + Wagmi
+**Version 3.18** · Solidity ^0.8.27 · React + Viem + Wagmi
 **IPFS Gateway:** `lime-famous-condor-7.mypinata.cloud`
 **Addresses:** always load from `addresses.json` via `getContracts(chainId)`
 
@@ -17,6 +17,7 @@
 7. [React Hooks](#react-hooks)
 8. [UI Examples](#ui-examples)
 9. [Access Control Summary](#access-control-summary)
+10. [USDC/ECOP Pool Swap Integration](#usdcecop-pool-swap-integration)
 
 ---
 
@@ -742,4 +743,97 @@ TIER 3 — Vault Creator (Backend-Mint):
 
 ---
 
-*Version 3.17 · March 2026*
+---
+
+## USDC/ECOP Pool Swap Integration
+
+**Status: LIVE on Base Sepolia (84532) as of 2026-04-10**
+
+### Pool parameters
+
+| Parameter | Value |
+|-----------|-------|
+| Hook | `0xdCfF77e89904e9Bead3f456D04629Ca8Eb7e8a80` (Base Sepolia) |
+| Token0 (USDC) | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
+| Token1 (ECOP) | `0xb934dCB57fB0673B7BC0Fca590c5508f1CDE955D` |
+| Fee | 500 (0.05%) |
+| Tick spacing | 10 |
+| Init rate | 3650 COP/USDC |
+| Access | Tier 1+ (Convexo Passport) |
+
+### Critical: hookData requirement
+
+Every V4 swap and liquidity call **must** pass `hookData = abi.encode(userAddress)`. The hook decodes this to get the real user (since `msg.sender` is the router). Without hookData the swap reverts with `UnauthorizedUser`.
+
+```typescript
+// The hook decodes: address user = abi.decode(hookData, (address))
+const hookData = encodeAbiParameters([{ type: 'address' }], [userAddress]);
+```
+
+### Critical: router allowlist
+
+The hook only accepts calls from pre-approved routers. **PositionManager is already allowed.** Before swap calls work, the Universal Router address must be allowlisted via `allowRouter(universalRouterAddress)` (ROUTER_ADMIN_ROLE — one admin tx).
+
+### useV4Swap hook (Phase 6)
+
+```typescript
+// hooks/useV4Swap.ts
+import { usePublicClient, useWriteContract, useAccount } from 'wagmi';
+import { encodeAbiParameters, parseUnits } from 'viem';
+import { getContracts } from '../config/contracts';
+
+// Universal Router on Base Sepolia: check addresses.json for per-chain value
+const UNIVERSAL_ROUTER = '0x...'; // from addresses.json
+
+export function useV4Swap(chainId: number) {
+  const { address: userAddress } = useAccount();
+  const contracts = getContracts(chainId);
+  const { writeContract, data: hash, isPending, error } = useWriteContract();
+
+  // hookData encodes the real user — required by PassportGatedHook
+  const hookData = userAddress
+    ? encodeAbiParameters([{ type: 'address' }], [userAddress])
+    : '0x';
+
+  const swapUSDCforECOP = (usdcAmount: string) => {
+    // Wire to Universal Router V4 swap with hookData
+    // See convexo_frontend/SEQUENCES.md Section 11 for full flow diagram
+  };
+
+  return { swapUSDCforECOP, hookData, hash, isPending, error };
+}
+```
+
+### getContracts update for v3.18
+
+Add `ECOP` and `PASSPORT_GATED_HOOK` to the `getContracts` return:
+
+```typescript
+export function getContracts(chainId: number) {
+  const chain = addresses[chainId.toString()];
+  if (!chain) throw new Error(`Chain ${chainId} not supported`);
+  return {
+    // ... existing fields ...
+    PASSPORT_GATED_HOOK: chain.contracts.passport_gated_hook?.address,
+    ECOP:                chain.external?.ecop,
+    // Phase 2 (not yet deployed)
+    CONVEXO_POOL_HOOK:   chain.contracts.convexo_pool_hook?.address,
+    MANUAL_PRICE_AGG:    chain.contracts.manual_price_aggregator?.address,
+  };
+}
+```
+
+### Pool status events to watch
+
+```typescript
+// PassportGatedHook emits on each guarded operation:
+// SwapAllowed(address indexed user)
+// LiquidityAdded(address indexed user)
+// LiquidityRemoved(address indexed user)
+// RouterAllowed(address indexed router)
+// RouterRevoked(address indexed router)
+```
+
+---
+
+*Version 3.18 · April 2026*

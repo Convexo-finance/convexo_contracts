@@ -19,7 +19,7 @@
 | **1301** | Unichain Sepolia | Testnet | unichain-sepolia.blockscout.com |
 | **421614** | Arbitrum Sepolia | Testnet | sepolia.arbiscan.io |
 
-**Note:** Arbitrum One (42161) and Arbitrum Sepolia (421614) added in v3.17. All addresses pending redeploy with salt `convexo.v3.18`.
+**Note:** Arbitrum One (42161) and Arbitrum Sepolia (421614) added in v3.17. All 13 core contracts fully deployed at deterministic CREATE2 addresses with salt `convexo.v3.18` on all 7 chains (ETH Mainnet pending). See `addresses.json` for per-chain addresses.
 
 ---
 
