@@ -199,6 +199,16 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         _baseTokenURI = newBaseURI;
     }
 
+    /// @notice Clear a passport identifier mapping (DEFAULT_ADMIN_ROLE only).
+    /// @dev Needed for testnet: all ZKPassport devMode proofs produce uniqueIdentifier = bytes32(1).
+    ///      Once any address mints with a mock passport, the identifier is permanently locked and
+    ///      no other mock passport can ever mint. This lets admin clear it for re-testing.
+    ///      On mainnet, each real passport has a cryptographically unique identifier and
+    ///      this function is never needed.
+    function clearIdentifier(bytes32 identifierHash) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        delete passportIdentifierToAddress[identifierHash];
+    }
+
     // ─── Views ────────────────────────────────────────────────────────────
 
     /// @inheritdoc IConvexoPassport

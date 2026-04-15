@@ -55,6 +55,10 @@ interface IConvexoPassport {
     /// @notice Revoke a passport (REVOKER_ROLE only)
     function revokePassport(uint256 tokenId) external;
 
+    /// @notice Clear a passport identifier mapping (DEFAULT_ADMIN_ROLE only).
+    /// Needed on testnet: all ZKPassport devMode proofs share uniqueIdentifier = bytes32(1).
+    function clearIdentifier(bytes32 identifierHash) external;
+
     /// @notice Check if address holds an active passport
     function holdsActivePassport(address holder) external view returns (bool);
 
