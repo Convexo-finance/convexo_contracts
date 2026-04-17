@@ -133,12 +133,16 @@ contract AddLiquidity is Script {
         address positionManager = getPositionManager();
 
         // ── Compute sqrtPriceX96 from rate ─────────────────────────────────────
-        // For USDC(6dec)/ECOP(18dec): priceRaw = rate * 10^(18-6) = rate * 1e12
-        // sqrtPriceX96 = sqrt(priceRaw * Q96^2)
-        // Split to avoid overflow: sqrt(priceRaw) * Q96
-        // priceRaw = 4200 * 1e12 = 4.2e15 → sqrt = ~64,807,407 → * Q96 = ~5.13e36 (fits uint160)
-        uint256 priceRaw = rate * 1e12;
-        uint160 sqrtPriceX96 = _sqrtPriceX96FromRate(priceRaw);
+        // TOKEN0 env var = USDC, TOKEN1 env var = ECOP (caller convention).
+        // After V4 address sorting, ECOP may end up as currency0 if its address
+        // is numerically lower than USDC (e.g. ETH Sepolia).
+        //
+        // Standard (USDC=currency0): priceRaw = rate * 1e12
+        // Inverted (ECOP=currency0): sqrtPriceX96 = Q96 / sqrt(rate * 1e12)
+        bool usdcIsCurrency0 = (token0Env < token1Env); // TOKEN0 is USDC
+        uint160 sqrtPriceX96 = usdcIsCurrency0
+            ? _sqrtPriceX96FromRate(rate)
+            : _sqrtPriceX96Inverted(rate);
 
         // ── Compute tick range from sqrtPriceX96 ──────────────────────────────
         int24 tickLower;
@@ -281,17 +285,25 @@ contract AddLiquidity is Script {
         console.log("========================================\n");
     }
 
-    // ── Internal: sqrtPriceX96 from raw price ratio ────────────────────────────
-    // priceRaw = token1_units_per_token0_unit (already decimal-adjusted)
-    // sqrtPriceX96 = sqrt(priceRaw) * 2^96
-    function _sqrtPriceX96FromRate(uint256 priceRaw) internal pure returns (uint160) {
-        // ratioX192 = priceRaw * Q96 * Q96
-        // We compute sqrt(ratioX192) = sqrt(priceRaw) * Q96
-        // To avoid overflow: compute sqrt(priceRaw * Q96) * sqrt(Q96)
-        // Q96 = 2^96, sqrt(Q96) = 2^48 = 281474976710656
-        uint256 inner = _sqrt(priceRaw * Q96);
-        uint256 sq = inner * (1 << 48);
-        return uint160(sq);
+    // ── Internal: sqrtPriceX96 helpers ────────────────────────────────────────
+
+    // Standard: USDC=currency0 (6 dec), ECOP=currency1 (18 dec)
+    // price = rate * 1e12  (ECOP_raw per USDC_raw)
+    // sqrtPriceX96 = sqrt(rate * 1e12) * 2^48
+    function _sqrtPriceX96FromRate(uint256 rate) internal pure returns (uint160) {
+        uint256 priceRaw = rate * 1e12;
+        uint256 inner    = _sqrt(priceRaw * Q96);
+        uint256 result   = inner * (1 << 48);
+        return uint160(result);
+    }
+
+    // Inverted: ECOP=currency0 (18 dec), USDC=currency1 (6 dec)
+    // price = 1 / (rate * 1e12)  (USDC_raw per ECOP_raw)
+    // sqrtPriceX96 = 2^96 / sqrt(rate * 1e12)
+    function _sqrtPriceX96Inverted(uint256 rate) internal pure returns (uint160) {
+        uint256 sqrtDenom = _sqrt(rate * 1e12);
+        uint256 result    = (1 << 96) / sqrtDenom;
+        return uint160(result);
     }
 
     // Babylonian sqrt

@@ -53,8 +53,8 @@ contract InitializePool is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address hookAddress        = vm.envAddress("HOOK_ADDRESS");
-        address token0Env          = vm.envAddress("TOKEN0");
-        address token1Env          = vm.envAddress("TOKEN1");
+        address token0Env          = vm.envAddress("TOKEN0");  // pass USDC here
+        address token1Env          = vm.envAddress("TOKEN1");  // pass ECOP here
 
         // RATE = human-readable COP per USDC (e.g. 3650 means 1 USDC = 3650 ECOP)
         // Script computes sqrtPriceX96 internally — no manual hex needed.
@@ -66,11 +66,19 @@ contract InitializePool is Script {
             ? (token0Env, token1Env)
             : (token1Env, token0Env);
 
-        // Compute sqrtPriceX96 from rate
-        // USDC=token0 (6 dec), ECOP=token1 (18 dec)
-        // priceRaw = rate * 10^(18-6) = rate * 1e12
-        // sqrtPriceX96 = sqrt(priceRaw) * Q96 = sqrt(priceRaw * Q96^2)
-        uint160 sqrtPriceX96 = _sqrtPriceX96FromRate(rate);
+        // Compute sqrtPriceX96 from rate, accounting for actual currency ordering.
+        // Pass TOKEN0 = USDC, TOKEN1 = ECOP. If ECOP address < USDC address (e.g. ETH Sepolia),
+        // V4 puts ECOP as currency0 and USDC as currency1, so the price direction is inverted.
+        //
+        // Standard (USDC=currency0, ECOP=currency1):
+        //   priceRaw = rate * 1e12  →  sqrtPriceX96 = sqrt(priceRaw) * 2^48
+        //
+        // Inverted (ECOP=currency0, USDC=currency1):
+        //   priceRaw = 1/(rate * 1e12)  →  sqrtPriceX96 = 2^96 / sqrt(rate * 1e12)
+        bool usdcIsCurrency0 = (token0Env < token1Env); // TOKEN0 is USDC
+        uint160 sqrtPriceX96 = usdcIsCurrency0
+            ? _sqrtPriceX96FromRate(rate)
+            : _sqrtPriceX96Inverted(rate);
 
         address poolManager = getPoolManager();
 
@@ -110,16 +118,25 @@ contract InitializePool is Script {
         console.log("========================================\n");
     }
 
-    // ── Internal: sqrtPriceX96 from human-readable rate ───────────────────────
-    // rate = COP per USDC (e.g. 3650)
-    // USDC=token0 (6 dec), ECOP=token1 (18 dec)
-    // priceRaw = rate * 1e12  (= ECOP_raw / USDC_raw at this exchange rate)
-    // sqrtPriceX96 = sqrt(priceRaw * Q96^2) = sqrt(priceRaw * Q96) * sqrt(Q96)
-    //              = sqrt(priceRaw * Q96) * 2^48
+    // ── Internal: sqrtPriceX96 helpers ───────────────────────────────────────
+
+    // Standard: USDC=currency0 (6 dec), ECOP=currency1 (18 dec)
+    // price = ECOP_raw / USDC_raw = rate * 1e12
+    // sqrtPriceX96 = sqrt(rate * 1e12) * 2^48
     function _sqrtPriceX96FromRate(uint256 rate) internal pure returns (uint160) {
         uint256 priceRaw = rate * 1e12;
-        uint256 inner    = _sqrt(priceRaw * Q96);   // sqrt(priceRaw * 2^96)
-        uint256 result   = inner * (1 << 48);        // * sqrt(2^96) = * 2^48
+        uint256 inner    = _sqrt(priceRaw * Q96);
+        uint256 result   = inner * (1 << 48);
+        return uint160(result);
+    }
+
+    // Inverted: ECOP=currency0 (18 dec), USDC=currency1 (6 dec)
+    // price = USDC_raw / ECOP_raw = 1 / (rate * 1e12)
+    // sqrtPriceX96 = 2^96 / sqrt(rate * 1e12)
+    function _sqrtPriceX96Inverted(uint256 rate) internal pure returns (uint160) {
+        uint256 sqrtDenom = _sqrt(rate * 1e12);
+        // Q96 as uint256 to avoid overflow before division
+        uint256 result = (1 << 96) / sqrtDenom;
         return uint160(result);
     }
 

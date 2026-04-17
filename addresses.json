@@ -1,7 +1,7 @@
 {
   "11155111": {
     "name": "Ethereum Sepolia",
-    "version": "convexo.v3.18",
+    "version": "convexo.v3.19",
     "external": {
       "usdc": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
       "pool_manager": "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
@@ -9,8 +9,9 @@
     },
     "contracts": {
       "convexo_passport": {
-        "address": "0x648D128c117bC83aEAAd408ab69F0E5cb6291790",
-        "explorer": "https://sepolia.etherscan.io/address/0x648D128c117bC83aEAAd408ab69F0E5cb6291790"
+        "address": "0xCde95545f2446C2CfdDA7439493AD453014AC562",
+        "explorer": "https://sepolia.etherscan.io/address/0xCde95545f2446C2CfdDA7439493AD453014AC562",
+        "note": "v3.19 — devMode expiry guard added"
       },
       "lp_individuals": {
         "address": "0xE244e4B2B37EA6f6453d3154da548e7f2e1e5Df3",
@@ -33,8 +34,9 @@
         "explorer": "https://sepolia.etherscan.io/address/0x51056F2F2aa64b439E3b9e46C1AcaAE70C5B7EFA"
       },
       "reputation_manager": {
-        "address": "0x50b81F36a95E1363288Ef44aD7E48A8CaCDFa349",
-        "explorer": "https://sepolia.etherscan.io/address/0x50b81F36a95E1363288Ef44aD7E48A8CaCDFa349"
+        "address": "0x28a9b3bA5ddf3D7542a2BCC00Bc7eC72363bEB8b",
+        "explorer": "https://sepolia.etherscan.io/address/0x28a9b3bA5ddf3D7542a2BCC00Bc7eC72363bEB8b",
+        "note": "v3.19 — points to new Convexo_Passport"
       },
       "contract_signer": {
         "address": "0x5ece4eE045Ff2115fE5d89e7fe277e676EDABD78",
@@ -53,12 +55,22 @@
         "explorer": "https://sepolia.etherscan.io/address/0x69068b03dDb9Ca72B532dB694F075D91e08fB402"
       },
       "passport_gated_hook": {
-        "address": "0xA4c7d0f1bb255460C7b3CBE9910318CB57Cb8A80",
-        "explorer": "https://sepolia.etherscan.io/address/0xA4c7d0f1bb255460C7b3CBE9910318CB57Cb8A80"
+        "address": "0xaDdEb4E0cC9E7Eaf96ccC24aEEccb6C1c3758a80",
+        "explorer": "https://sepolia.etherscan.io/address/0xaDdEb4E0cC9E7Eaf96ccC24aEEccb6C1c3758a80",
+        "note": "v3.19 — points to new ReputationManager. UniversalRouter + PositionManager allowed."
       },
       "vault_factory": {
         "address": "0x3D0290F255D4eB1EFe1384618a827C2E26b0df67",
         "explorer": "https://sepolia.etherscan.io/address/0x3D0290F255D4eB1EFe1384618a827C2E26b0df67"
+      },
+      "usdc_ecop_pool": {
+        "hook": "0xaDdEb4E0cC9E7Eaf96ccC24aEEccb6C1c3758a80",
+        "currency0_ecop": "0x19ac2612e560b2bbedf88660a2566ef53c0a15a1",
+        "currency1_usdc": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+        "fee": 500,
+        "tick_spacing": 10,
+        "init_rate": 3650,
+        "status": "LIVE — concentrated 6250 USDC + full-range backstop 500 USDC. Both USDC+ECOP deposited."
       }
     },
     "contract_count": "13/13"

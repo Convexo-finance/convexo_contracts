@@ -134,8 +134,9 @@ contract Convexo_Passport is ERC721, ERC721URIStorage, ERC721Burnable, AccessCon
         );
         if (!nationalityCompliant) revert NationalityNotCompliant();
 
-        // 8. Document not expired
-        if (!helper.isExpiryDateAfterOrEqual(block.timestamp, zkParams.committedInputs)) {
+        // 8. Document not expired (skip in devMode — mock passports have past expiry dates)
+        if (!zkParams.serviceConfig.devMode &&
+            !helper.isExpiryDateAfterOrEqual(block.timestamp, zkParams.committedInputs)) {
             revert PassportExpired();
         }
 

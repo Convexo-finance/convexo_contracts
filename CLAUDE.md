@@ -272,3 +272,64 @@ The frontend uses:
 - `ECOP` token addresses (per chain, see addresses.json)
 
 All ABIs are in `abis/` and auto-exported on `forge build`.
+
+---
+
+## Security rules (mandatory — apply to every contract change)
+
+These are non-negotiable patterns learned from production audits. Do not skip them.
+
+### 1. Always use SafeERC20 for token transfers
+Never use raw `token.transfer()` or `token.transferFrom()`. Some tokens don't return bool (old USDT, etc).
+
+```solidity
+// ✅ Correct
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+using SafeERC20 for IERC20;
+usdc.safeTransfer(recipient, amount);
+usdc.safeTransferFrom(msg.sender, address(this), amount);
+
+// ❌ Wrong
+require(usdc.transfer(recipient, amount), "failed");
+```
+
+### 2. Checks-Effects-Interactions (CEI) on every state-changing function
+Always update state BEFORE external calls. Never call external contracts with stale state.
+
+```solidity
+// ✅ Correct
+balances[msg.sender] -= amount;   // effect first
+token.safeTransfer(msg.sender, amount);  // then external call
+
+// ❌ Wrong
+token.safeTransfer(msg.sender, amount);  // external call first
+balances[msg.sender] -= amount;          // reentrancy window!
+```
+
+### 3. ReentrancyGuard on all fund-moving functions
+Any function that transfers tokens or ETH must have `nonReentrant`.
+
+### 4. Token decimal awareness
+USDC = 6 decimals. ECOP = 18 decimals. The 12-decimal gap (`1e12`) is used throughout pool math (sqrtPriceX96 formulas). Never assume 18 decimals for amounts.
+
+### 5. Uniswap V4 pool key — currency ordering is address-sorted
+V4 requires `currency0 < currency1` by address. Never hardcode which token is currency0/currency1.
+Always detect at deploy/init time:
+```solidity
+bool usdcIsCurrency0 = (usdcAddress < ecopAddress);
+Currency currency0 = usdcIsCurrency0 ? Currency.wrap(usdc) : Currency.wrap(ecop);
+Currency currency1 = usdcIsCurrency0 ? Currency.wrap(ecop) : Currency.wrap(usdc);
+```
+
+### 6. Hook addresses encode permissions — never change bytecode without re-finding salt
+The lower 14 bits of a hook's address must match `getHookPermissions()`. Changing the contract changes bytecode → changes CREATE2 address → permission bits change → deploy reverts.
+Use `HookDeployer.findPassportGatedHookSalt()` to find a valid salt before every redeploy.
+
+---
+
+## Testing rules
+
+- Fork tests required for any Uniswap V4 integration (pool init, liquidity, swaps)
+- Fuzz all math that involves `mulDiv`, `sqrtPriceX96`, or share pricing
+- Invariant: vault `totalRaised` must always equal `usdc.balanceOf(vault)` before any withdrawal
+- Run `forge test` before every commit. 172 tests must all pass.

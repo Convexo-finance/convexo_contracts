@@ -5,6 +5,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IContractSigner} from "../../interfaces/IContractSigner.sol";
 import {ReputationManager} from "../identity/ReputationManager.sol";
@@ -35,6 +36,7 @@ import {ReputationManager} from "../identity/ReputationManager.sol";
 ///   0x620ee8e4 = ERC-7540 async redeem
 contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
     using Math for uint256;
+    using SafeERC20 for IERC20;
 
     bytes32 public constant VAULT_MANAGER_ROLE = keccak256("VAULT_MANAGER_ROLE");
 
@@ -309,7 +311,7 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
             _isInvestor[receiver] = true;
         }
 
-        require(usdc.transferFrom(msg.sender, address(this), assets), "USDC transfer failed");
+        usdc.safeTransferFrom(msg.sender, address(this), assets);
         _mint(receiver, shares);
         vaultInfo.totalRaised += assets;
 
@@ -342,7 +344,7 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
 
         _burn(msg.sender, shares);
         vaultInfo.totalRaised -= assets;
-        require(usdc.transfer(msg.sender, assets), "USDC transfer failed");
+        usdc.safeTransfer(msg.sender, assets);
 
         // Revert to Pending if target no longer met
         if (vaultInfo.totalRaised < vaultInfo.principalAmount) {
@@ -469,7 +471,7 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
         rs.remainingLockedShares -= sharesToBurn;
         rs.assetsClaimed += assets;
 
-        require(usdc.transfer(receiver, assets), "USDC transfer failed");
+        usdc.safeTransfer(receiver, assets);
         emit Withdraw(controller, receiver, controller, assets, sharesToBurn);
 
         _checkVaultCompletion();
@@ -517,7 +519,7 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
         require(doc.isExecuted, "Contract not fully signed");
         require(!doc.isCancelled, "Contract cancelled");
 
-        require(usdc.transfer(vaultInfo.borrower, vaultInfo.principalAmount), "USDC transfer failed");
+        usdc.safeTransfer(vaultInfo.borrower, vaultInfo.principalAmount);
         vaultInfo.state = VaultState.Repaying;
         vaultInfo.fundsWithdrawnAt = block.timestamp;
         emit FundsWithdrawn(vaultInfo.borrower, vaultInfo.principalAmount);
@@ -528,7 +530,7 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
     function makeRepayment(uint256 amount) external nonReentrant {
         require(vaultInfo.state == VaultState.Repaying, "Not in repaying state");
         require(amount > 0, "Zero amount");
-        require(usdc.transferFrom(msg.sender, address(this), amount), "USDC transfer failed");
+        usdc.safeTransferFrom(msg.sender, address(this), amount);
 
         vaultInfo.totalRepaid += amount;
         emit RepaymentMade(msg.sender, amount, vaultInfo.totalRepaid);
@@ -568,7 +570,7 @@ contract TokenizedBondVault is ERC20, AccessControl, ReentrancyGuard {
         require(available > 0, "No fees to collect");
 
         protocolFeesWithdrawn += available;
-        require(usdc.transfer(protocolFeeCollector, available), "USDC transfer failed");
+        usdc.safeTransfer(protocolFeeCollector, available);
         emit ProtocolFeesCollected(available);
 
         _checkVaultCompletion();
