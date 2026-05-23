@@ -53,7 +53,7 @@ contract DeployDeterministic is Script {
 
     /// @notice Salt version — bump to get new addresses after ABI-breaking changes.
     ///         Example: DEPLOY_VERSION=convexo.v3.18 ./scripts/deploy.sh base-sepolia
-    string public constant DEFAULT_VERSION = "convexo.v3.18";
+    string public constant DEFAULT_VERSION = "convexo.v3.21";
 
     /// @notice Admin address — MUST be same across all chains for same addresses.
     address public constant ADMIN = 0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8;

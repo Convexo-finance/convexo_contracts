@@ -4,6 +4,70 @@ Format: version tag → what changed → deploy status.
 
 ---
 
+## v3.21 — 2026-05-01 (ETH Sepolia — ManualPriceAggregator deploy + unified version tag)
+
+### Phase B — ManualPriceAggregator deployed on ETH Sepolia
+
+- Deployed `ManualPriceAggregator(ADMIN, 8, "USDC / COP")` on ETH Sepolia (11155111)
+- `PRICE_SETTER_ROLE` granted to backend keeper EOA — enables `rates.service.upsertRate()` rate sync
+- Initial price set: `setPrice(420000000000)` = 4200.00000000 COP/USDC (8 decimals)
+- Address recorded in `addresses.json["11155111"].manual_price_aggregator`
+- `MANUAL_PRICE_AGGREGATOR_ADDRESS` added to Railway backend env
+- `ManualPriceAggregator` added to `scripts/extract-abis.sh` extraction list
+
+### Version tag unification
+
+- `DEFAULT_VERSION` in `script/DeployDeterministic.s.sol` bumped from `convexo.v3.18` to `convexo.v3.21`
+  (reflects actual ETH Sepolia state: v3.19 base + v3.20 hook)
+- `scripts/extract-abis.sh` version string updated from `3.17` to `3.21`
+- README badge updated to `Version-3.21`
+
+---
+
+## v3.20 — 2026-04-22 (ETH Sepolia — hook redeploy + pool reseeded)
+
+### PassportGatedHook redeployed on ETH Sepolia
+
+**Problem:** Previous hook (`0xaDdEb4E0...8a80`) pointed to the v3.18 ReputationManager
+(`0x50b81F36...`) which referenced the old v3.18 Passport — users with the v3.19 Passport
+NFT were failing the KYC gate.
+
+**Solution:** Redeployed `PassportGatedHook` using `script/RedeployPassportGatedHook.s.sol`
+pointing to the v3.19 ReputationManager (`0x28a9b3bA5ddf3D7542a2BCC00Bc7eC72363bEB8b`).
+Added `setReputationManager(address)` (DEFAULT_ADMIN_ROLE) to the hook so future RM upgrades
+only require a cast call instead of a full hook redeploy.
+
+**New PassportGatedHook (ETH Sepolia 11155111):** `0xd3f980f48638783a8324ff99301028f08bda8a80`
+
+- Old pool (wrong hook) abandoned. New pool initialized from scratch.
+- Liquidity reseeded: 6,250 USDC concentrated ±5% + 500 USDC full-range backstop (LP tokenId 26391)
+- Universal Router `0x3A9D48AB9751398BbFa63ad67599Bb04e4BdF98b` added to allowlist ✅
+- Position Manager `0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4` added to allowlist ✅
+- Access: Tier >= 1 (Convexo Passport v3.19) can swap
+
+---
+
+## v3.19 — 2026-04-11 (ETH Sepolia — Passport + ReputationManager redeploy)
+
+### Passport upgraded with devMode expiry guard
+
+**Change:** Added `devMode` flag to `Convexo_Passport` — when `devMode = true`, the UTC-day
+proof expiry check is skipped. Enables testnet development without re-scanning the NFC chip
+every 24 hours. `devMode` is DEFAULT off on mainnet. REVOKER_ROLE can toggle.
+
+**Why:** The ZKPassport proof commits to today's UTC calendar date (YYYYMMDD). On testnet,
+developers were hitting `PassportExpired()` on day boundaries during iteration.
+
+Because `ReputationManager` holds all four NFT contract addresses as `immutable` fields,
+changing the Passport address (new CREATE2 address under salt `convexo.v3.19`) required
+redeploying `ReputationManager` as well.
+
+**New addresses (ETH Sepolia 11155111 only — all other chains unchanged at v3.18):**
+- `Convexo_Passport (v3.19)`: `0xCde95545f2446C2CfdDA7439493AD453014AC562`
+- `ReputationManager (v3.19)`: `0x28a9b3bA5ddf3D7542a2BCC00Bc7eC72363bEB8b`
+
+---
+
 ## v3.18.1 — 2026-04-10 (Base Sepolia pool live)
 
 ### USDC/ECOP Pool — Base Sepolia LIVE

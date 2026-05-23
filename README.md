@@ -4,7 +4,7 @@ Compliant on-chain lending infrastructure connecting international investors wit
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/Tests-172%2F172%20Passing-brightgreen)](./test)
-[![Version](https://img.shields.io/badge/Version-3.18-purple)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-3.21-purple)](./CHANGELOG.md)
 
 ---
 
@@ -45,7 +45,7 @@ test/            122 tests across 9 suites
 
 | Network | Hook | Status |
 |---------|------|--------|
-| ETH Sepolia (11155111) — **PRIMARY TESTNET** | `0xA4c7d0f1bb255460C7b3CBE9910318CB57Cb8A80` | ✅ LIVE — 6,250 USDC + 500 USDC backstop |
+| ETH Sepolia (11155111) — **PRIMARY TESTNET** | `0xd3f980f48638783a8324ff99301028f08bda8a80` | ✅ LIVE — 6,250 USDC + 500 USDC backstop (LP tokenId 26391) |
 | Base Sepolia (84532) | `0xdCfF77e89904e9Bead3f456D04629Ca8Eb7e8a80` | ✅ Seeded (no ZKPassport verifier — secondary) |
 | Base Mainnet (8453) | `0x04E3281B87321aD1dCF9ed9edB9BeE6268EB12f3` | Pool pending |
 
@@ -127,6 +127,98 @@ HOOK_ADDRESS=<hook> TOKEN0=<usdc> TOKEN1=<ecop> RATE=3650 AMOUNT0=500000000 \
 # Allow Universal Router for swaps
 HOOK=<hook> UNIVERSAL_ROUTER=<router> RPC=<rpc> bash scripts/allow-router.sh
 ```
+
+---
+
+## Hook Redeploy Guide (ETH Sepolia)
+
+Run this whenever the hook needs to be redeployed — for example, after the `ReputationManager` address changes.
+
+**Why the hook must be redeployed:** The `ReputationManager` address is baked in at construction time (`immutable`). There is no upgrade path — a new hook contract must be deployed and a new pool initialized.
+
+### Prerequisites
+
+Your `.env` must have:
+```
+PRIVATE_KEY=0x...
+ETHEREUM_SEPOLIA_RPC_URL=https://...
+USDC_ADDRESS_ETHSEPOLIA=0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238
+ECOP_ADDRESS_ETHSEPOLIA=0x19ac2612e560b2bbedf88660a2566ef53c0a15a1
+```
+
+The deployer EOA must hold the **LP_Individuals NFT** (`0xE244e4B2B37EA6f6453d3154da548e7f2e1e5Df3`) — this is required to pass the hook's own KYC gate when adding liquidity.
+
+### Step 1 — Deploy the new hook
+
+```bash
+./scripts/redeploy-hook.sh
+```
+
+The script iterates CREATE2 salts until it finds an address whose lower 14 bits equal `0x0A80` (Uniswap V4 permission requirement). Copy the address printed on the line:
+
+```
+[SUCCESS] PassportGatedHook deployed at: 0x...
+```
+
+Export it for the remaining steps:
+
+```bash
+export NEW_HOOK=0x<address from above>
+```
+
+### Step 2 — Allow the Universal Router
+
+The Universal Router (`0x3A9D48AB9751398BbFa63ad67599Bb04e4BdF98b`) handles swaps. The Position Manager (`0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4`) handles liquidity. Both must be whitelisted on the new hook.
+
+```bash
+# Universal Router (swaps)
+NEW_HOOK=$NEW_HOOK ./scripts/allow-router.sh
+
+# Position Manager (add/remove liquidity)
+NEW_HOOK=$NEW_HOOK ROUTER=0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4 \
+  ./scripts/allow-router.sh
+```
+
+Each command prints `true` at the end to confirm the router is now allowed.
+
+### Step 3 — Initialize the pool
+
+```bash
+NEW_HOOK=$NEW_HOOK ./scripts/pool-init.sh
+```
+
+This creates the USDC/ECOP pool at **rate 3650 COP/USDC** using the new hook. The pool is identified by `(currency0, currency1, fee=500, tickSpacing=10, hook)` — changing the hook means a completely new pool.
+
+> Note: V4 automatically orders `currency0 < currency1` by address. On ETH Sepolia, ECOP (`0x19ac...`) < USDC (`0x1c7D...`), so ECOP is `currency0` and USDC is `currency1`. The script handles this automatically.
+
+### Step 4 — Seed liquidity
+
+```bash
+# Concentrated ±5% range — 6,250 USDC (main depth)
+NEW_HOOK=$NEW_HOOK ./scripts/pool-add-liquidity.sh 6250000000
+
+# Full-range backstop — 500 USDC (prevents breakdown if price moves outside band)
+NEW_HOOK=$NEW_HOOK FULL_RANGE=true ./scripts/pool-add-liquidity.sh 500000000
+```
+
+### Step 5 — Update addresses.json
+
+After liquidity is added, update `addresses.json` for chain `11155111`:
+
+1. Move the current `passport_gated_hook.address` into `passport_gated_hook.deprecated`
+2. Set `passport_gated_hook.address` to `$NEW_HOOK`
+3. Update `usdc_ecop_pool.hook` to `$NEW_HOOK`
+4. Set `usdc_ecop_pool.status` to `"LIVE — concentrated 6250 USDC + full-range backstop 500 USDC"`
+
+### Troubleshooting
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `HookAddressNotValid` on pool init | Hook address bits don't match permissions | The redeploy script always finds a valid address — this shouldn't happen |
+| `RouterNotAllowed` on add liquidity | Position Manager not yet whitelisted | Run Step 2 for `0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4` |
+| `MustHaveKYCVerification` on add liquidity | Deployer EOA has no NFT | Mint LP_Individuals NFT first: `forge script script/MintTestNFT.s.sol --rpc-url $ETHEREUM_SEPOLIA_RPC_URL --broadcast` |
+| `Pool already initialized` on pool init | Pool with this hook already exists | Skip Step 3, go straight to Step 4 |
+| `NEW_HOOK not set` | Forgot to export after Step 1 | `export NEW_HOOK=0x...` |
 
 ---
 

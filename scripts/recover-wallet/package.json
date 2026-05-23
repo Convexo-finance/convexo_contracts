@@ -1,0 +1,14 @@
+{
+  "name": "recover-wallet",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "recover": "node --env-file=.env recover.mjs"
+  },
+  "dependencies": {
+    "@account-kit/infra": "^4.0.0",
+    "@account-kit/smart-contracts": "^4.0.0",
+    "@aa-sdk/core": "^4.0.0",
+    "viem": "^2.0.0"
+  }
+}

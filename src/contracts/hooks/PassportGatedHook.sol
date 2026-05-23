@@ -27,7 +27,7 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 contract PassportGatedHook is BaseHook, AccessControl {
     bytes32 public constant ROUTER_ADMIN_ROLE = keccak256("ROUTER_ADMIN_ROLE");
 
-    ReputationManager public immutable reputationManager;
+    ReputationManager public reputationManager;
 
     /// @notice Routers allowed to submit KYC'd user transactions to this pool.
     ///         The router is responsible for passing the real user address in hookData.
@@ -36,6 +36,7 @@ contract PassportGatedHook is BaseHook, AccessControl {
     event RouterAllowed(address indexed router);
     event RouterRevoked(address indexed router);
     event AccessGranted(address indexed user, string operation, ReputationManager.ReputationTier tier);
+    event ReputationManagerUpdated(address indexed oldRM, address indexed newRM);
 
     error RouterNotAllowed();
     error MustHaveKYCVerification();
@@ -73,6 +74,16 @@ contract PassportGatedHook is BaseHook, AccessControl {
             afterAddLiquidityReturnDelta: false,
             afterRemoveLiquidityReturnDelta: false
         });
+    }
+
+    // ─── RM management ───────────────────────────────────────────────────────
+
+    /// @notice Update the ReputationManager address. Use when RM is redeployed
+    ///         (e.g. new Passport contract) without redeploying the hook or pool.
+    function setReputationManager(address newRM) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (newRM == address(0)) revert InvalidReputationManager();
+        emit ReputationManagerUpdated(address(reputationManager), newRM);
+        reputationManager = ReputationManager(newRM);
     }
 
     // ─── Router management ────────────────────────────────────────────────────

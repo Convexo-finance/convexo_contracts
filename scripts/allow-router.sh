@@ -14,11 +14,17 @@
 # Add --broadcast to actually send the transaction (default: dry-run simulation)
 
 set -e
+source "$(dirname "$0")/../.env"
 
-# Default: ETH Sepolia (primary testnet — ZKPassport verifier is here)
-HOOK="${HOOK:-0xA4c7d0f1bb255460C7b3CBE9910318CB57Cb8A80}"
-UNIVERSAL_ROUTER="${UNIVERSAL_ROUTER:-0x3A9D48AB9751398BbFa63ad67599Bb04e4BdF98b}"
-RPC="${RPC:-${RPC_ETH_SEPOLIA:-https://rpc.sepolia.org}}"
+# Require NEW_HOOK (set after redeploy) or fall back to legacy hook address
+if [ -z "$NEW_HOOK" ] && [ -z "$HOOK" ]; then
+  echo "ERROR: Set NEW_HOOK=<deployed hook address> before running this script."
+  exit 1
+fi
+
+HOOK="${NEW_HOOK:-$HOOK}"
+UNIVERSAL_ROUTER="${ROUTER:-${UNIVERSAL_ROUTER:-0x3A9D48AB9751398BbFa63ad67599Bb04e4BdF98b}}"
+RPC="${RPC:-${ETHEREUM_SEPOLIA_RPC_URL:-https://rpc.sepolia.org}}"
 
 echo "Hook:             $HOOK"
 echo "Universal Router: $UNIVERSAL_ROUTER"

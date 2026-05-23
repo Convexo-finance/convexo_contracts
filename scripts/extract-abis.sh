@@ -1,6 +1,6 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# ABI Extraction Script for Convexo Protocol v3.17
+# ABI Extraction Script for Convexo Protocol v3.21
 # Extracts ABIs only for existing contracts
 # ═══════════════════════════════════════════════════════════════
 
@@ -11,7 +11,7 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 ABI_OUTPUT_DIR="$PROJECT_DIR/abis"
 
 echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║              Convexo ABI Extraction v3.17                 ║"
+echo "║              Convexo ABI Extraction v3.21                 ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -74,6 +74,10 @@ extract_abi "ContractSigner" "ContractSigner.sol"
 extract_abi "VaultFactory" "VaultFactory.sol"
 
 echo ""
+echo "Oracle System:"
+extract_abi "ManualPriceAggregator" "ManualPriceAggregator.sol"
+
+echo ""
 echo "Verification System:"
 extract_abi "VeriffVerifier" "VeriffVerifier.sol"
 extract_abi "SumsubVerifier" "SumsubVerifier.sol"
@@ -95,7 +99,7 @@ echo "📋 Creating combined.json..."
 
 cat > "$ABI_OUTPUT_DIR/combined.json" << 'EOF'
 {
-  "version": "3.17",
+  "version": "3.21",
   "description": "Convexo Protocol ABIs",
   "contracts": {}
 }

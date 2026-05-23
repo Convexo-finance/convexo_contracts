@@ -53,17 +53,20 @@ All chains: 8453 (Base), 130 (Unichain), 84532 (Base Sepolia), 11155111 (Eth Sep
 | PassportGatedHook | per-chain (see addresses.json) — Base Sepolia redeployed 2026-04-10, ETH Sepolia redeployed 2026-04-11 |
 | VaultFactory | per-chain (see addresses.json) |
 
-**ETH Sepolia PassportGatedHook (current — PRIMARY TESTNET):** `0xA4c7d0f1bb255460C7b3CBE9910318CB57Cb8A80`
-Note: old hook `0x6B5659...` had extra `afterInitialize` bit set in address but not implemented → `InvalidHookResponse()` on pool init. Redeployed via `RedeployPassportGatedHook.s.sol`.
+**ETH Sepolia PassportGatedHook (current — PRIMARY TESTNET):** `0xd3f980f48638783a8324ff99301028f08bda8a80`
+v3.20 redeployed 2026-04-22. Points to RM `0x28a9b3bA5ddf3D7542a2BCC00Bc7eC72363bEB8b` (v3.19 — correct Passport).
+`setReputationManager(address)` now available — future RM changes need only a cast call, not a hook redeploy.
+Deprecated: `0xA4c7d0f1bb255460C7b3CBE9910318CB57Cb8A80` (wrong RM, empty pool), `0xaDdEb4E0cC9E7Eaf96ccC24aEEccb6C1c3758a80` (wrong bits).
 
 **Base Sepolia PassportGatedHook (secondary testnet):** `0xdCfF77e89904e9Bead3f456D04629Ca8Eb7e8a80`
 Note: ZKPassport verifier is NOT deployed on Base Sepolia — cannot run full KYC flow there.
 
-### USDC/ECOP Pool — ETH Sepolia LIVE (2026-04-11) — PRIMARY TESTNET
-Pool initialized at rate 3650 COP/USDC. Two positions seeded:
+### USDC/ECOP Pool — ETH Sepolia LIVE (2026-04-22) — PRIMARY TESTNET
+Pool initialized at rate 3650 COP/USDC. Two positions seeded (LP tokenId 26391):
 - Concentrated ±5%: 6,250 USDC (main depth — captures all swaps within band)
 - Full-range backstop: 500 USDC (prevents breakdown if price moves beyond main range)
 Universal Router `0x3A9D48AB9751398BbFa63ad67599Bb04e4BdF98b` is on the allowlist ✅
+Position Manager `0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4` is on the allowlist ✅
 Access: Tier >= 1 (Convexo Passport) can swap.
 
 ### USDC/ECOP Pool — Base Sepolia (2026-04-10) — secondary testnet

@@ -48,7 +48,7 @@ contract RedeployPassportGatedHook is Script {
     uint160 constant FORBIDDEN_MASK = uint160((1 << 14) - 1) & ~REQUIRED_MASK;
 
     // Known addresses
-    address constant REPUTATION_MANAGER_DEFAULT = 0x50b81F36a95E1363288Ef44aD7E48A8CaCDFa349;
+    address constant REPUTATION_MANAGER_DEFAULT = 0x28a9b3bA5ddf3D7542a2BCC00Bc7eC72363bEB8b;
     address constant ADMIN_DEFAULT              = 0x156d3C1648ef2f50A8de590a426360Cf6a89C6f8;
 
     // Safe Singleton Factory — same address on all EVM chains

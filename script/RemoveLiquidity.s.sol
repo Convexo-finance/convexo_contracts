@@ -25,13 +25,16 @@ import {Actions} from "v4-periphery/src/libraries/Actions.sol";
 ///
 /// Step 2 — Run this script:
 ///   PRIVATE_KEY=... \
-///   OLD_HOOK=0xA4c7d0f1bb255460C7b3CBE9910318CB57Cb8A80 \
+///   OLD_HOOK=0xaDdEb4E0cC9E7Eaf96ccC24aEEccb6C1c3758a80 \
 ///   TOKEN0=0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 \
 ///   TOKEN1=0x19ac2612e560b2bbedf88660a2566ef53c0a15a1 \
-///   TOKEN_IDS=<id1>,<id2> \
+///   TOKEN_IDS=25627 \
 ///   forge script script/RemoveLiquidity.s.sol \
 ///     --rpc-url https://eth-sepolia.g.alchemy.com/v2/<key> \
 ///     --broadcast -vv
+///
+///   Or use the convenience script:
+///     ./scripts/pool-remove-liquidity.sh 25627
 contract RemoveLiquidity is Script {
     uint24 constant FEE          = 500;
     int24  constant TICK_SPACING = 10;

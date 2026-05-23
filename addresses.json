@@ -1,7 +1,7 @@
 {
   "11155111": {
     "name": "Ethereum Sepolia",
-    "version": "convexo.v3.19",
+    "version": "convexo.v3.20",
     "external": {
       "usdc": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
       "pool_manager": "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
@@ -55,25 +55,42 @@
         "explorer": "https://sepolia.etherscan.io/address/0x69068b03dDb9Ca72B532dB694F075D91e08fB402"
       },
       "passport_gated_hook": {
-        "address": "0xaDdEb4E0cC9E7Eaf96ccC24aEEccb6C1c3758a80",
-        "explorer": "https://sepolia.etherscan.io/address/0xaDdEb4E0cC9E7Eaf96ccC24aEEccb6C1c3758a80",
-        "note": "v3.19 — points to new ReputationManager. UniversalRouter + PositionManager allowed."
+        "address": "0xd3f980f48638783a8324ff99301028f08bda8a80",
+        "explorer": "https://sepolia.etherscan.io/address/0xd3f980f48638783a8324ff99301028f08bda8a80",
+        "note": "v3.20 redeployed 2026-04-22 — correct RM (0x28a9b3bA5ddf3D7542a2BCC00Bc7eC72363bEB8b). setReputationManager() available.",
+        "deprecated": [
+          {
+            "address": "0xA4c7d0f1bb255460C7b3CBE9910318CB57Cb8A80",
+            "note": "v3.19 hook — wrong RM (pointed to old 0x50b81F36a95E1363288Ef44aD7E48A8CaCDFa349). Pool initialized but empty, abandoned."
+          },
+          {
+            "address": "0xaDdEb4E0cC9E7Eaf96ccC24aEEccb6C1c3758a80",
+            "note": "v3.18 hook — wrong v4-core permission bits. Position tokenId 25627 still has liquidity."
+          }
+        ]
       },
       "vault_factory": {
         "address": "0x3D0290F255D4eB1EFe1384618a827C2E26b0df67",
         "explorer": "https://sepolia.etherscan.io/address/0x3D0290F255D4eB1EFe1384618a827C2E26b0df67"
       },
       "usdc_ecop_pool": {
-        "hook": "0xaDdEb4E0cC9E7Eaf96ccC24aEEccb6C1c3758a80",
+        "hook": "0xd3f980f48638783a8324ff99301028f08bda8a80",
         "currency0_ecop": "0x19ac2612e560b2bbedf88660a2566ef53c0a15a1",
         "currency1_usdc": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
         "fee": 500,
         "tick_spacing": 10,
         "init_rate": 3650,
-        "status": "LIVE — concentrated 6250 USDC + full-range backstop 500 USDC. Both USDC+ECOP deposited."
+        "lp_position_ids": [26391],
+        "status": "LIVE — concentrated 6250 USDC + full-range backstop 500 USDC. LP tokenId 26391."
+      },
+      "manual_price_aggregator": {
+        "address": "0xBebDf2e6AdF4ca1e26531A778cdf669Da989EB79",
+        "explorer": "https://sepolia.etherscan.io/address/0xBebDf2e6AdF4ca1e26531A778cdf669Da989EB79",
+        "note": "v3.21 deployed 2026-05-03. decimals=8, description='USDC / COP'. Initial price: 4200 COP/USDC (420000000000, 8 dec). PRICE_SETTER_ROLE on ADMIN."
       }
     },
-    "contract_count": "13/13"
+    "version": "convexo.v3.21",
+    "contract_count": "14/14"
   },
   "84532": {
     "name": "Base Sepolia",
